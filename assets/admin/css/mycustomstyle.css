@@ -1,0 +1,12 @@
+
+.my-col-main {
+    color: #007bff;
+}
+
+.my-active-col {
+    background-color: #5ab6a0a1;
+}
+
+.my-nonactive-col {
+    background-color: #c15670a1;
+}
