@@ -48,7 +48,7 @@ class ItemInStoreController extends Controller
             $expire_date_search = $request->expire_date_search;
 
 
-            if ($item_code_search == '') {
+            if ($item_code_search == 'all') {
                 $filed1 = 'id';
                 $operator1 = '>';
                 $value1 = 0;

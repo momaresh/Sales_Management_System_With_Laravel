@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\ExchangeTransactionController;
 use App\Http\Controllers\Admin\ItemInStoreController;
 use App\Http\Controllers\Admin\PurchaseOrderHeaderGeneralReturnController;
 use App\Http\Controllers\Admin\SalesOrderHeaderController;
+use App\Http\Controllers\Admin\SalesOrderHeaderGeneralReturnController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -267,7 +269,29 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::post('sales_header/approve_pill/{id}', [SalesOrderHeaderController::class, 'approve_pill'])->name('admin.sales_header.approve_pill');
     Route::post('sales_header/check_shift_and_reload_money', [SalesOrderHeaderController::class, 'check_shift_and_reload_money'])->name('admin.sales_header.check_shift_and_reload_money');
     Route::post('sales_header/create_pill', [SalesOrderHeaderController::class, 'create_pill'])->name('admin.sales_header.create_pill');
+    Route::post('sales_header/add_to_customer', [SalesOrderHeaderController::class, 'add_to_customer'])->name('admin.sales_header.add_to_customer');
+    Route::post('sales_header/get_added_customer', [SalesOrderHeaderController::class, 'get_added_customer'])->name('admin.sales_header.get_added_customer');
     /* end sales_header */
+
+    /* begin sales_order_header_general_return */
+    Route::get('sales_order_header_general_return/index', [SalesOrderHeaderGeneralReturnController::class, 'index'])->name('admin.sales_order_header_general_return.index');
+    Route::post('sales_order_header_general_return/store', [SalesOrderHeaderGeneralReturnController::class, 'store'])->name('admin.sales_order_header_general_return.store');
+    Route::get('sales_order_header_general_return/delete/{id}', [SalesOrderHeaderGeneralReturnController::class, 'delete'])->name('admin.sales_order_header_general_return.delete');
+    Route::post('sales_order_header_general_return/ajax_search', [SalesOrderHeaderGeneralReturnController::class, 'ajax_search'])->name('admin.sales_order_header_general_return.ajax_search');
+    Route::post('sales_order_header_general_return/get_item_unit', [SalesOrderHeaderGeneralReturnController::class, 'get_item_unit'])->name('admin.sales_order_header_general_return.get_item_unit');
+    Route::post('sales_order_header_general_return/get_item_batch', [SalesOrderHeaderGeneralReturnController::class, 'get_item_batch'])->name('admin.sales_order_header_general_return.get_item_batch');
+    Route::post('sales_order_header_general_return/get_item_price', [SalesOrderHeaderGeneralReturnController::class, 'get_item_price'])->name('admin.sales_order_header_general_return.get_item_price');
+    Route::post('sales_order_header_general_return/add_new_item', [SalesOrderHeaderGeneralReturnController::class, 'add_new_item'])->name('admin.sales_order_header_general_return.add_new_item');
+    Route::post('sales_order_header_general_return/add_new_item_row', [SalesOrderHeaderGeneralReturnController::class, 'add_new_item_row'])->name('admin.sales_order_header_general_return.add_new_item_row');
+    Route::post('sales_order_header_general_return/add_to_pill', [SalesOrderHeaderGeneralReturnController::class, 'add_to_pill'])->name('admin.sales_order_header_general_return.add_to_pill');
+    Route::post('sales_order_header_general_return/load_pill_adding_items_modal', [SalesOrderHeaderGeneralReturnController::class, 'load_pill_adding_items_modal'])->name('admin.sales_order_header_general_return.load_pill_adding_items_modal');
+    Route::post('sales_order_header_general_return/store_item', [SalesOrderHeaderGeneralReturnController::class, 'store_item'])->name('admin.sales_order_header_general_return.store_item');
+    Route::post('sales_order_header_general_return/remove_item', [SalesOrderHeaderGeneralReturnController::class, 'remove_item'])->name('admin.sales_order_header_general_return.remove_item');
+    Route::post('sales_order_header_general_return/approve_pill/{id}', [SalesOrderHeaderGeneralReturnController::class, 'approve_pill'])->name('admin.sales_order_header_general_return.approve_pill');
+    Route::post('sales_order_header_general_return/check_shift_and_reload_money', [SalesOrderHeaderGeneralReturnController::class, 'check_shift_and_reload_money'])->name('admin.sales_order_header_general_return.check_shift_and_reload_money');
+    Route::post('sales_order_header_general_return/create_pill', [SalesOrderHeaderGeneralReturnController::class, 'create_pill'])->name('admin.sales_order_header_general_return.create_pill');
+     /* end sales_order_header_general_return */
+
 
     /* begin items_in_stores */
     Route::get('items_in_stores/index', [ItemInStoreController::class, 'index'])->name('admin.items_in_stores.index');

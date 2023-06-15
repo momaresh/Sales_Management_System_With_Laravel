@@ -9,46 +9,26 @@
 
         <h5 class="my-col-main" style="width:fit-content; margin: 10px auto">الفاتورة</h5>
         <div class="row">
-            <div class="col-md-3">
-                <label for="inputEmail3">رقم الفاتورة المسجل بالفاتورة الاصل</label>
-                <div class="form-group">
-                    <input type="text" readonly name="pill_number" id="pill_n" class="form-control" value="{{ $sales_data->pill_number }}">
-                </div>
-            </div>
 
             <input type="hidden" name="id" id="invoice_order_id" value="{{ $sales_data->id }}">
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="form-group">
                     <label>اسم العميل</label>
-                    <select name="customer_code" id="customer_code" class="form-control select2">
-                        <option value="">اختر العميل</option>
-                        @if (@isset($customers) && !@empty($customers))
-                            @foreach ($customers as $info )
-                                <option @if ($sales_data->customer_code == $info->customer_code) selected @endif value="{{ $info->customer_code }}"> {{ $info->first_name }}  {{ $info->last_name }} </option>
-                            @endforeach
-                        @endif
-                    </select>
+                    <input type="text" readonly name="customer_code" id="customer_code" class="form-control" value="{{ $sales_data->customer_name }}">
                 </div>
             </div>
 
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="form-group">
                     <label>اسم المندوب</label>
-                    <select name="delegate_code" id="delegate_code" class="form-control select2">
-                        <option value="">اختر المندوب</option>
-                        @if (@isset($delegates) && !@empty($delegates))
-                            @foreach ($delegates as $info )
-                                <option @if ($sales_data->delegate_code == $info->delegate_code) selected @endif value="{{ $info->delegate_code }}"> {{ $info->first_name }}  {{ $info->last_name }} </option>
-                            @endforeach
-                        @endif
-                    </select>
+                    <input type="text" readonly name="delegate_code" id="delegate_code" class="form-control" value="{{ $sales_data->delegate_name }}">
                 </div>
             </div>
 
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label for="inputEmail3">تاريخ الفاتورة</label>
                 <div class="form-group">
                     <input type="date" readonly name="order_date" id="pill_date" class="form-control" value="{{ $sales_data->order_date }}">
@@ -111,24 +91,39 @@
 
                 <div class="col-md-3 relatied_item_card" style="display: none">
                     <div class="form-group">
-                        <label>الكمية المستلمة</label>
+                        <label>الكمية المرتجعة</label>
                         <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="quantity_add" class="form-control" value="">
                     </div>
                 </div>
 
-                <div class="col-md-2 relatied_item_card" style="display: none">
+                <div class="col-md-3 relatied_item_card" style="display: none">
                     <div class="form-group">
                         <label>سعر الوحدة</label>
                         <input type="text" oninput="this.value=this.value.replace(/[^\d.-]+/g,'')" id="unit_price_add" class="form-control" value="">
                     </div>
                 </div>
 
-                <div class="col-md-2 relatied_item_card" style="display: none">
+                <div class="col-md-3 relatied_item_card related_date" style="display: none">
+                    <div class="form-group">
+                        <label>تاريخ الانتاج</label>
+                        <input type="date" id="production_date_add" class="form-control" value="">
+                    </div>
+                </div>
+
+                <div class="col-md-3 relatied_item_card related_date" style="display: none">
+                    <div class="form-group">
+                        <label>تاريخ الانتهاء</label>
+                        <input type="date" id="expire_date_add" class="form-control" value="">
+                    </div>
+                </div>
+
+                <div class="col-md-3 relatied_item_card" style="display: none">
                     <div class="form-group">
                         <label>السعر الاجمالي</label>
                         <input type="text" readonly id="total_price_add" class="form-control" value="">
                     </div>
                 </div>
+
                 <div class="col-md-2 pt-3" style="display: flex; align-items: center;">
                     <button type="button" class="btn btn-primary" id="add_to_detail_active">اضافة الصنف</button>
                 </div>
@@ -184,7 +179,7 @@
         <hr style="border: 1px solid #007bff">
 
 
-        <form action="{{ route('admin.sales_header.approve_pill', $sales_data->id) }}" method="post">
+        <form action="{{ route('admin.sales_order_header_general_return.approve_pill', $sales_data->id) }}" method="post">
             @csrf
             <h5 class="my-col-main" style="width:fit-content; margin: 10px auto">اضافة الخصومات والضرائب</h5>
             @if ($sales_data->is_approved == 0)
@@ -298,7 +293,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>اجمالي الخزينة</label>
-                                <input type="text" readonly class="form-control" id="treasury-money" name="treasuries_money" value="{{ $check_shift['treasuries_money'] }}">
+                                <input type="text" readonly class="form-control treasury_money_return" id="treasury-money" name="treasuries_money" value="{{ $check_shift['treasuries_money'] }}">
                             </div>
                         </div>
                     </div>
@@ -443,17 +438,16 @@
                     $('#what-paid').val(0);
                 }
 
-                $(document).on('change', '#item_code_add', function(e) {
-                    var has_fixed_price = $('#item_code_add').children('option:selected').data('has_fixed_price');
-                    if(has_fixed_price == 1) {
-                        $('#unit_price_add').prop('readonly', true);
+                $(document).on('change', '#batch_id_add', function(e) {
+                    if ($(this).val() != 'new') {
+                        $("#production_date_add").val("");
+                        $("#expire_date_add").val("");
+                        $(".related_date").hide();
                     }
                     else {
-                        $('#unit_price_add').prop('readonly', false);
+                        $(".related_date").show();
                     }
                 });
-
-                
             });
         </script>
     </body>

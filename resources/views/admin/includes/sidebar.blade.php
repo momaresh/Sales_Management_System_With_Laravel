@@ -279,9 +279,11 @@
 
 
             <li class="nav-item has-treeview
-                    {{ request()->is('admin/sales_header*') ?  'menu-open' : '' }}">
+                    {{ request()->is('admin/sales_header/*') ||
+                        request()->is('admin/sales_order_header_general_return/*')?  'menu-open' : '' }}">
                 <a href="#" class="nav-link
-                {{ request()->is('admin/sales_header*') ?  'active' : '' }}">
+                {{ request()->is('admin/sales_header/*') ||
+                    request()->is('admin/sales_order_header_general_return/*') ?  'active' : '' }}">
                 <i class="nav-icon fas fa-tachometer-alt"></i>
                 <p>
                     المبيعات
@@ -291,10 +293,19 @@
 
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="{{ route('admin.sales_header.index') }}" class="nav-link {{ request()->is('admin/sales_header*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.sales_header.index') }}" class="nav-link {{ request()->is('admin/sales_header/*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-th"></i>
                             <p>
                                 فواتير المبيعات
+                            </p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{{ route('admin.sales_order_header_general_return.index') }}" class="nav-link {{ request()->is('admin/sales_order_header_general_return/*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-th"></i>
+                            <p>
+                                فواتير المرتجعات العام
                             </p>
                         </a>
                     </li>

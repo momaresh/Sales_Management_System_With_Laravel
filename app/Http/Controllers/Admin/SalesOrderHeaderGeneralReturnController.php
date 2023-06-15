@@ -26,14 +26,14 @@ use Exception;
 use Illuminate\Console\View\Components\Alert;
 use Illuminate\Support\Arr;
 
-class SalesOrderHeaderController extends Controller
+class SalesOrderHeaderGeneralReturnController extends Controller
 {
 
     public function index()
     {
         //
         try {
-            $data = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_type' => 2, 'order_type' => 1])->orderBy('id' , 'desc')->paginate(PAGINATION_COUNT);
+            $data = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_type' => 2, 'order_type' => 3])->orderBy('id' , 'desc')->paginate(PAGINATION_COUNT);
             if (!empty($data)) {
                 foreach ($data as $d) {
                     $d['customer_code'] = SalesOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('customer_code');
@@ -77,7 +77,7 @@ class SalesOrderHeaderController extends Controller
             $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
             $items_card = InvItemCard::where(['active' => 1, 'com_code' => $com_code])->get(['item_code', 'name', 'item_type']);
 
-            return view('admin.sales_order_header.index', ['data' => $data, 'customers' => $customers, 'delegates' => $delegates, 'stores' => $stores, 'items_card' => $items_card]);
+            return view('admin.sales_order_header_general_return.index', ['data' => $data, 'customers' => $customers, 'delegates' => $delegates, 'stores' => $stores, 'items_card' => $items_card]);
         }
         catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
@@ -114,325 +114,7 @@ class SalesOrderHeaderController extends Controller
                 $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
 
 
-                return view('admin.sales_order_header.create_pill', ['items_card' => $items_card, 'customers' => $customers, 'delegates' => $delegates, 'stores' => $stores, 'check_shift' => $check_shift]);
-            }
-            catch (Exception $e) {
-                return redirect()->back()->with('error', $e->getMessage());
-            }
-
-        }
-    }
-
-    public function pill_mirror(Request $request)
-    {
-        # code...
-        if ($request->ajax()) {
-            try {
-                $com_code = auth()->user()->com_code;
-
-                $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
-                $items_card = InvItemCard::where(['active' => 1, 'com_code' => $com_code])->get(['item_code', 'name', 'item_type', 'has_fixed_price']);
-
-                $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
-                if (empty($check_shift)) {
-                    return Response()->json(['error' => ''], 404);
-                }
-                $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
-
-
-                return view('admin.sales_order_header.pill_mirror', ['items_card' => $items_card, 'stores' => $stores, 'check_shift' => $check_shift]);
-            }
-            catch (Exception $e) {
-                return redirect()->back()->with('error', $e->getMessage());
-            }
-
-        }
-    }
-
-    public function get_item_unit(Request $request)
-    {
-        if ($request->ajax()) {
-            $com_code = auth()->user()->com_code;
-            $item_code = $request->item_code;
-
-            $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get(['does_has_retailunit', 'retail_unit_id', 'unit_id'])->first();
-            if (!empty($item_card_data)) {
-
-                if ($item_card_data['does_has_retailunit'] == 1) {
-                    $item_card_data['parent_unit_name'] = InvUnit::where('id', $item_card_data['unit_id'])->value('name');
-                    $item_card_data['retail_unit_name'] = InvUnit::where('id', $item_card_data['retail_unit_id'])->value('name');
-                }
-                else {
-                    $item_card_data['parent_unit_name'] = InvUnit::where('id', $item_card_data['unit_id'])->value('name');
-                }
-            }
-
-            return view("admin.sales_order_header.get_item_unit", ['item_card_data' => $item_card_data]);
-        }
-    }
-
-    public function get_item_batch(Request $request)
-    {
-        if ($request->ajax()) {
-            $com_code = auth()->user()->com_code;
-            $item_code = $request->item_code;
-            $store_id = $request->store_id;
-            $unit_id = $request->unit_id;
-
-            $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent', 'item_type'])->first();
-            $unit_name = InvUnit::where(['id' => $unit_id, 'com_code' => $com_code])->value('name');
-
-            $item_card_batches = array();
-            if (!empty($item_card_data)) {
-                if (empty($store_id)) {
-                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'com_code' => $com_code])->orderBy('production_date', 'DESC')->get();
-                }
-                else {
-                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'store_id' => $store_id, 'com_code' => $com_code])->orderBy('production_date', 'DESC')->get();
-                }
-                /////////////////////////////////////////////
-
-                if ($unit_id == $item_card_data['unit_id'] || $unit_id == null) {
-                    if ($item_card_data['item_type'] == 2) {
-                        foreach ($item_card_batches as $batch) {
-                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ') ' . $unit_name . ' ' . 'انتاج' . ' (' . $batch['production_date'] . ') ' . 'بسعر' . ' (' . $batch['unit_cost_price'] .')';
-                        }
-                    }
-                    else {
-                        foreach ($item_card_batches as $batch) {
-                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ' )' . $unit_name . ' '. 'بسعر' . ' (' . $batch['unit_cost_price']  .')';
-                        }
-                    }
-                }
-                else {
-                    if ($item_card_data['item_type'] == 2) {
-                        foreach ($item_card_batches as $batch) {
-                            $quantity = $batch['quantity'] * $item_card_data['retail_uom_quntToParent'];
-                            $quantity = round($quantity, 0);
-                            $batch['quantity'] = $quantity;
-                            $price = $batch['unit_cost_price'] / $item_card_data['retail_uom_quntToParent'];
-                            $price = round($price, 2);
-                            $batch['all_data'] = 'عدد' . ' (' . $quantity . ') ' . $unit_name . ' ' . 'انتاج' . ' (' . $batch['production_date'] . ') ' . 'بسعر' . ' (' . $price . ')';
-                        }
-                    }
-                    else {
-                        foreach ($item_card_batches as $batch) {
-                            $quantity = $batch['quantity'] * $item_card_data['retail_uom_quntToParent'];
-                            $quantity = round($quantity, 0);
-                            $batch['quantity'] = $quantity;
-                            $price = $batch['unit_cost_price'] / $item_card_data['retail_uom_quntToParent'];
-                            $price = round($price, 2);
-                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ') ' . $unit_name . ' '. 'بسعر' . ' (' . $price . ')';
-                        }
-                    }
-                }
-            }
-
-            return view("admin.sales_order_header.get_item_batch", ['item_card_batches' => $item_card_batches]);
-        }
-    }
-
-    public function get_item_price(Request $request)
-    {
-        if ($request->ajax()) {
-            $com_code = auth()->user()->com_code;
-            $item_code = $request->item_code;
-            $sales_type = $request->sales_type;
-            $unit_id = $request->unit_id;
-
-            $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get()->first();
-
-            $unit_price = 0;
-            if (!empty($item_card_data)) {
-                if ($unit_id == $item_card_data['unit_id'] || $unit_id == null) {
-                    if ($sales_type == '1') {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_group_in_master_unit');
-                    }
-                    else if ($sales_type == '2') {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_half_group_in_master_unit');
-                    }
-                    else if ($sales_type == '3') {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_master_unit');
-                    }
-                    else {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_master_unit');
-                    }
-                }
-                else if ($unit_id == $item_card_data['retail_unit_id']) {
-                    if ($sales_type == 1) {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_group_in_retail_unit');
-                    }
-                    else if ($sales_type == 2) {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_half_group_in_retail_unit');
-                    }
-                    else if ($sales_type == 3) {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_retail_unit');
-                    }
-                    else {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_retail_unit');
-                    }
-                }
-            }
-
-            return $unit_price;
-        }
-    }
-
-    public function add_new_item_row(Request $request)
-    {
-        # code...
-        if ($request->ajax()) {
-            try {
-                $max = InvoiceOrderDetail::max('id');
-                $data['id'] = $max + 1;
-                $data['store_id'] = $request->store_id;
-                $data['sales_type'] = $request->sales_type;
-                $data['item_code'] = $request->item_code;
-                $data['unit_id'] = $request->unit_id;
-                $data['batch_id'] = $request->batch_id;
-                $data['quantity'] = $request->quantity;
-                $data['unit_price'] = $request->unit_price;
-                $data['total_price'] = $request->total_price;
-                $data['store_name'] = $request->store_name;
-                $data['sales_type_name'] = $request->sales_type_name;
-                $data['item_name'] = $request->item_name;
-                $data['unit_name'] = $request->unit_name;
-
-                return view('admin.sales_order_header.add_new_item_row', ['data' => $data]);
-            }
-            catch (Exception $e) {
-                return redirect()->back()->with('error', $e->getMessage());
-            }
-
-        }
-    }
-
-    public function store_item(Request $request)
-    {
-        # code...
-        if ($request->ajax()) {
-            try {
-                $dataInsert['invoice_order_id'] = $request->invoice_order_id;
-                $dataInsert['item_code'] = $request->item_code;
-                $dataInsert['unit_id'] = $request->unit_id;
-                $dataInsert['quantity'] = $request->quantity;
-                $dataInsert['unit_price'] = $request->unit_price;
-                $dataInsert['total_price'] = $request->total_price;
-                $dataInsert['batch_id'] = $request->batch_id;
-                $dataInsert['store_id'] = $request->store_id;
-                $dataInsert['sales_type'] = $request->sales_type;
-                $dataInsert['production_date'] = $request->production_date;
-                $dataInsert['expire_date'] = $request->expire_date;
-                $dataInsert['added_by'] = auth()->user()->id;
-                $dataInsert['created_at'] = date("Y-m-d H:i:s");
-                $dataInsert['com_code'] = auth()->user()->com_code;
-
-
-                InvoiceOrderDetail::create($dataInsert);
-                $total_before_discount = InvoiceOrderDetail::where('invoice_order_id', $request->invoice_order_id)->sum('total_price');
-                $update_invoice['total_before_discount'] = $total_before_discount;
-                InvoiceOrderHeader::where('id', $request->invoice_order_id)->update($update_invoice);
-
-
-                $data = InvoiceOrderDetail::where($dataInsert)->first();
-                $data['store_name'] = $request->store_name;
-                $data['sales_type_name'] = $request->sales_type_name;
-                $data['item_name'] = $request->item_name;
-                $data['unit_name'] = $request->unit_name;
-
-                $com_code = auth()->user()->com_code;
-                // get customer name
-                $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $data['invoice_order_id'], 'com_code' => $com_code])->value('customer_code');
-
-                if (!empty($data['customer_code'])) {
-                    // get the name from the customer_code
-                    // 1- get the person id from the customer model
-                    $person_id = Customer::where(['customer_code' => $data['customer_code'], 'com_code' => $com_code])->value('person_id');
-                    $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
-                    $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
-                    $data['customer_name'] = $first_name . ' ' . $last_name;
-                }
-                else {
-                    $data['customer_name'] = 'لا يوجد';
-                }
-
-
-                // Moving item from the batch
-                $item_card_data = InvItemCard::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent', 'item_type', 'does_has_retailunit'])->first();
-                //
-                if (!empty($item_card_data)) {
-                    // Now we will check if the unit is master or retail because we say that every item will be taken with master unit
-                    // if master we make the quantity is the same quantity
-                    $quantity = 0;
-                    if ($data['unit_id'] == $item_card_data['unit_id']) {
-                        $quantity = $data['quantity'];
-                    }
-                    else if ($data['unit_id'] == $item_card_data['retail_unit_id']) {
-                        $quantity = $data['quantity'] / $item_card_data['retail_uom_quntToParent'];
-                    }
-
-
-                    // before i make insert or update i should get the quantity in all store and current store from the batch
-                    $quantity_in_batch_before = InvItemCardBatch::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->sum('quantity');
-                    $quantity_in_batch_current_store_before = InvItemCardBatch::where(['item_code' => $data['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
-
-                    // now we check if there is like this batch in the item batches
-                    $batch_quantity = InvItemCardBatch::where('id', $data['batch_id'])->value('quantity');
-
-                    $updateBatch['quantity'] = $batch_quantity - $quantity;
-                    $updateBatch['updated_by'] = auth()->user()->id;
-                    $updateBatch['updated_at'] = date('Y-m-d H:i:s');
-
-                    InvItemCardBatch::where(['id' => $data['batch_id']])->update($updateBatch);
-
-                    // get the quantity in all store and current store from the batch and we will get the name of the master unit
-                    $quantity_in_batch_after = InvItemCardBatch::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->sum('quantity');
-                    $quantity_in_batch_current_store_after = InvItemCardBatch::where(['item_code' => $data['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
-                    $parent_unit_name = InvUnit::where('id', $item_card_data['unit_id'])->value('name');
-
-
-                    // Then we will save this change with item card in the item card movements table
-                    $insertItemMovement['inv_item_card_movements_categories_id'] = 2;
-                    $insertItemMovement['item_code'] = $data['item_code'];
-                    $insertItemMovement['inv_item_card_movements_types_id'] = 4;
-                    $insertItemMovement['order_header_id'] = $data['invoice_order_id'];
-                    $insertItemMovement['order_details_id'] = InvoiceOrderDetail::max('id');
-                    $insertItemMovement['store_id'] = $data['store_id'];
-                    $insertItemMovement['batch_id'] = $data['batch_id'];
-                    $insertItemMovement['quantity_before_movement'] = $quantity_in_batch_before . ' ' . $parent_unit_name;
-                    $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
-                    $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
-                    $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                    $insertItemMovement['byan'] = 'صرف نضير مبيعات للعميل ' . $data['customer_name'] . ' فاتورة رقم ' . $data['invoice_order_id'];
-                    $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
-                    $insertItemMovement['date'] = date('Y-m-d');
-                    $insertItemMovement['added_by'] = auth()->user()->id;
-                    $insertItemMovement['com_code'] = $com_code;
-
-                    InvItemCardMovement::create($insertItemMovement);
-
-
-                    // update the quantity in item_card
-                    $all_quantity = InvItemCardBatch::where(['id' => $data['batch_id']])->sum('quantity');
-                    if ($item_card_data['does_has_retailunit'] == 1) {
-                        $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
-                        $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);
-                        $remain_retail = fmod($all_retail, $item_card_data['retail_uom_quntToParent']);
-
-                        $update_item_card_quantity['all_quantity_with_master_unit'] = $all_master;
-                        $update_item_card_quantity['all_quantity_with_retail_unit'] = round($all_retail, 0);
-                        $update_item_card_quantity['remain_quantity_in_retail'] = round($remain_retail, 0);
-
-                    }
-                    else {
-                        $update_item_card_quantity['all_quantity_with_master_unit'] = intval($all_quantity);
-                    }
-
-                    InvItemCard::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->update($update_item_card_quantity);
-                }
-
-                return view('admin.sales_order_header.add_new_item_row', ['data' => $data]);
+                return view('admin.sales_order_header_general_return.create_pill', ['items_card' => $items_card, 'customers' => $customers, 'delegates' => $delegates, 'stores' => $stores, 'check_shift' => $check_shift]);
             }
             catch (Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage());
@@ -454,17 +136,16 @@ class SalesOrderHeaderController extends Controller
                     $inserted_invoice['id'] = 1;
                 }
 
-                $max_pill_code = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'order_type' => 1, 'invoice_type' => 2])->max('pill_code');
+                $max_pill_code = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'order_type' => 3, 'invoice_type' => 2])->max('pill_code');
                 if (!empty($max_pill_code)) {
                     $inserted_invoice['pill_code'] = $max_pill_code + 1;
                 } else {
                     $inserted_invoice['pill_code'] = 1;
                 }
 
-                $inserted_invoice['order_type'] = 1;
+                $inserted_invoice['order_type'] = 3;
                 $inserted_invoice['invoice_type'] = 2;
                 $inserted_invoice['order_date'] = $request->pill_date;
-                $inserted_invoice['pill_number'] = $request->pill_number;
                 $inserted_invoice['pill_type'] = $request->pill_type;
                 $inserted_invoice['notes'] = $request->notes;
                 $inserted_invoice['added_by'] = auth()->user()->id;
@@ -544,6 +225,20 @@ class SalesOrderHeaderController extends Controller
                     else {
                         $sales_data['total_cost'] = $sales_data['total_after_tax'] - $sales_data['discount_value'];
                     }
+
+                    if (!empty($sales_data['customer_code'])) {
+                        $person_id = Customer::where(['customer_code' => $sales_data['customer_code'], 'com_code' => $com_code])->value('person_id');
+                        $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                        $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                        $sales_data['customer_name'] = $first_name . ' ' . $last_name;
+                    }
+
+                    if (!empty($sales_data['delegate_code'])) {
+                        $person_id = Delegate::where(['delegate_code' => $sales_data['delegate_code'], 'com_code' => $com_code])->value('person_id');
+                        $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                        $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                        $sales_data['delegate_name'] = $first_name . ' ' . $last_name;
+                    }
                 }
 
                 $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
@@ -555,19 +250,225 @@ class SalesOrderHeaderController extends Controller
                 $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
                 $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
 
-                $customers = Person::where(['person_type' => 1, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
-                foreach ($customers as $sup) {
-                    $sup['customer_code'] = Customer::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('customer_code');
-                    $sup['customer_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
+                return view('admin.sales_order_header_general_return.pill_adding_items', ['items_card' => $items_card, 'stores' => $stores, 'check_shift' => $check_shift, 'sales_data' => $sales_data, 'items' => $items]);
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+
+        }
+    }
+
+    public function get_item_unit(Request $request)
+    {
+        if ($request->ajax()) {
+            $com_code = auth()->user()->com_code;
+            $item_code = $request->item_code;
+
+            $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get(['does_has_retailunit', 'retail_unit_id', 'unit_id'])->first();
+            if (!empty($item_card_data)) {
+
+                if ($item_card_data['does_has_retailunit'] == 1) {
+                    $item_card_data['parent_unit_name'] = InvUnit::where('id', $item_card_data['unit_id'])->value('name');
+                    $item_card_data['retail_unit_name'] = InvUnit::where('id', $item_card_data['retail_unit_id'])->value('name');
+                }
+                else {
+                    $item_card_data['parent_unit_name'] = InvUnit::where('id', $item_card_data['unit_id'])->value('name');
+                }
+            }
+
+            return view("admin.sales_order_header_general_return.get_item_unit", ['item_card_data' => $item_card_data]);
+        }
+    }
+
+    public function get_item_batch(Request $request)
+    {
+        if ($request->ajax()) {
+            $com_code = auth()->user()->com_code;
+            $item_code = $request->item_code;
+            $store_id = $request->store_id;
+            $unit_id = $request->unit_id;
+
+            $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent', 'item_type'])->first();
+            $unit_name = InvUnit::where(['id' => $unit_id, 'com_code' => $com_code])->value('name');
+
+            $item_card_batches = array();
+            if (!empty($item_card_data)) {
+                if (empty($store_id)) {
+                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'com_code' => $com_code])->orderBy('production_date', 'DESC')->get();
+                }
+                else {
+                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'store_id' => $store_id, 'com_code' => $com_code])->orderBy('production_date', 'DESC')->get();
+                }
+                /////////////////////////////////////////////
+
+                if ($unit_id == $item_card_data['unit_id'] || $unit_id == null) {
+                    if ($item_card_data['item_type'] == 2) {
+                        foreach ($item_card_batches as $batch) {
+                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ') ' . $unit_name . ' ' . 'انتاج' . ' (' . $batch['production_date'] . ') ' . 'بسعر' . ' (' . $batch['unit_cost_price'] .')';
+                        }
+                    }
+                    else {
+                        foreach ($item_card_batches as $batch) {
+                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ' )' . $unit_name . ' '. 'بسعر' . ' (' . $batch['unit_cost_price']  .')';
+                        }
+                    }
+                }
+                else {
+                    if ($item_card_data['item_type'] == 2) {
+                        foreach ($item_card_batches as $batch) {
+                            $quantity = $batch['quantity'] * $item_card_data['retail_uom_quntToParent'];
+                            $quantity = round($quantity, 0);
+                            $batch['quantity'] = $quantity;
+                            $price = $batch['unit_cost_price'] / $item_card_data['retail_uom_quntToParent'];
+                            $price = round($price, 2);
+                            $batch['all_data'] = 'عدد' . ' (' . $quantity . ') ' . $unit_name . ' ' . 'انتاج' . ' (' . $batch['production_date'] . ') ' . 'بسعر' . ' (' . $price . ')';
+                        }
+                    }
+                    else {
+                        foreach ($item_card_batches as $batch) {
+                            $quantity = $batch['quantity'] * $item_card_data['retail_uom_quntToParent'];
+                            $quantity = round($quantity, 0);
+                            $batch['quantity'] = $quantity;
+                            $price = $batch['unit_cost_price'] / $item_card_data['retail_uom_quntToParent'];
+                            $price = round($price, 2);
+                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ') ' . $unit_name . ' '. 'بسعر' . ' (' . $price . ')';
+                        }
+                    }
+                }
+            }
+
+            return view("admin.sales_order_header_general_return.get_item_batch", ['item_card_batches' => $item_card_batches]);
+        }
+    }
+
+    public function get_item_price(Request $request)
+    {
+        if ($request->ajax()) {
+            $com_code = auth()->user()->com_code;
+            $item_code = $request->item_code;
+            $sales_type = $request->sales_type;
+            $unit_id = $request->unit_id;
+
+            $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get()->first();
+
+            $unit_price = 0;
+            if (!empty($item_card_data)) {
+                if ($unit_id == $item_card_data['unit_id'] || $unit_id == null) {
+                    if ($sales_type == '1') {
+                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_group_in_master_unit');
+                    }
+                    else if ($sales_type == '2') {
+                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_half_group_in_master_unit');
+                    }
+                    else if ($sales_type == '3') {
+                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_master_unit');
+                    }
+                    else {
+                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_master_unit');
+                    }
+                }
+                else if ($unit_id == $item_card_data['retail_unit_id']) {
+                    if ($sales_type == 1) {
+                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_group_in_retail_unit');
+                    }
+                    else if ($sales_type == 2) {
+                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_half_group_in_retail_unit');
+                    }
+                    else if ($sales_type == 3) {
+                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_retail_unit');
+                    }
+                    else {
+                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_retail_unit');
+                    }
+                }
+            }
+
+            return $unit_price;
+        }
+    }
+
+    public function add_new_item_row(Request $request)
+    {
+        # code...
+        if ($request->ajax()) {
+            try {
+                $max = InvoiceOrderDetail::max('id');
+                $data['id'] = $max + 1;
+                $data['store_id'] = $request->store_id;
+                $data['sales_type'] = $request->sales_type;
+                $data['item_code'] = $request->item_code;
+                $data['unit_id'] = $request->unit_id;
+                $data['batch_id'] = $request->batch_id;
+                $data['quantity'] = $request->quantity;
+                $data['unit_price'] = $request->unit_price;
+                $data['total_price'] = $request->total_price;
+                $data['store_name'] = $request->store_name;
+                $data['sales_type_name'] = $request->sales_type_name;
+                $data['item_name'] = $request->item_name;
+                $data['unit_name'] = $request->unit_name;
+
+                return view('admin.sales_order_header_general_return.add_new_item_row', ['data' => $data]);
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+
+        }
+    }
+
+    public function store_item(Request $request)
+    {
+        # code...
+        if ($request->ajax()) {
+            try {
+                $dataInsert['invoice_order_id'] = $request->invoice_order_id;
+                $dataInsert['item_code'] = $request->item_code;
+                $dataInsert['unit_id'] = $request->unit_id;
+                $dataInsert['quantity'] = $request->quantity;
+                $dataInsert['unit_price'] = $request->unit_price;
+                $dataInsert['total_price'] = $request->total_price;
+                if ($request->batch_id != 'new') {
+                    $dataInsert['batch_id'] = $request->batch_id;
+                }
+                $dataInsert['store_id'] = $request->store_id;
+                $dataInsert['sales_type'] = $request->sales_type;
+                $dataInsert['production_date'] = $request->production_date;
+                $dataInsert['expire_date'] = $request->expire_date;
+                $dataInsert['added_by'] = auth()->user()->id;
+                $dataInsert['created_at'] = date("Y-m-d H:i:s");
+                $dataInsert['com_code'] = auth()->user()->com_code;
+
+
+                InvoiceOrderDetail::create($dataInsert);
+                $total_before_discount = InvoiceOrderDetail::where('invoice_order_id', $request->invoice_order_id)->sum('total_price');
+                $update_invoice['total_before_discount'] = $total_before_discount;
+                InvoiceOrderHeader::where('id', $request->invoice_order_id)->update($update_invoice);
+
+
+                $data = InvoiceOrderDetail::where($dataInsert)->first();
+                $data['store_name'] = $request->store_name;
+                $data['sales_type_name'] = $request->sales_type_name;
+                $data['item_name'] = $request->item_name;
+                $data['unit_name'] = $request->unit_name;
+
+                $com_code = auth()->user()->com_code;
+                // get customer name
+                $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $data['invoice_order_id'], 'com_code' => $com_code])->value('customer_code');
+
+                if (!empty($data['customer_code'])) {
+                    // get the name from the customer_code
+                    // 1- get the person id from the customer model
+                    $person_id = Customer::where(['customer_code' => $data['customer_code'], 'com_code' => $com_code])->value('person_id');
+                    $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                    $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                    $data['customer_name'] = $first_name . ' ' . $last_name;
+                }
+                else {
+                    $data['customer_name'] = 'لا يوجد';
                 }
 
-                $delegates = Person::where(['person_type' =>3, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
-                foreach ($delegates as $sup) {
-                    $sup['delegate_code'] = Delegate::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('delegate_code');
-                    $sup['delegate_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
-                }
-
-                return view('admin.sales_order_header.pill_adding_items', ['items_card' => $items_card, 'stores' => $stores, 'check_shift' => $check_shift, 'sales_data' => $sales_data, 'customers' => $customers, 'delegates' => $delegates, 'items' => $items]);
+                return view('admin.sales_order_header_general_return.add_new_item_row', ['data' => $data]);
             }
             catch (Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage());
@@ -581,66 +482,14 @@ class SalesOrderHeaderController extends Controller
         # code...
         if ($request->ajax()) {
             try {
+                InvoiceOrderDetail::where(['id' => $request->id,'invoice_order_id' => $request->invoice_order_id])->delete();
 
-                $data = InvoiceOrderDetail::where(['id' => $request->id,'invoice_order_id' => $request->invoice_order_id])->first();
-                $com_code = auth()->user()->com_code;
-
-
-                // adding item to the batch
-                $item_card_data = InvItemCard::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent', 'item_type', 'does_has_retailunit'])->first();
-                //
-                if (!empty($item_card_data)) {
-                    // Now we will check if the unit is master or retail because we say that every item will be taken with master unit
-                    // if master we make the quantity is the same quantity
-                    $quantity = 0;
-                    if ($data['unit_id'] == $item_card_data['unit_id']) {
-                        $quantity = $data['quantity'];
-                    }
-                    else if ($data['unit_id'] == $item_card_data['retail_unit_id']) {
-                        $quantity = $data['quantity'] / $item_card_data['retail_uom_quntToParent'];
-                    }
-
-
-                    // now we check if there is like this batch in the item batches
-                    $batch_quantity = InvItemCardBatch::where('id', $data['batch_id'])->value('quantity');
-
-                    $updateBatch['quantity'] = $batch_quantity + $quantity;
-                    $updateBatch['updated_by'] = auth()->user()->id;
-                    $updateBatch['updated_at'] = date('Y-m-d H:i:s');
-
-                    InvItemCardBatch::where(['id' => $data['batch_id']])->update($updateBatch);
-
-
-                    InvItemCardMovement::where(['order_header_id' => $data['invoice_order_id'], 'order_details_id' => $data['id']])->delete();
-
-
-                    // update the quantity in item_card
-                    $all_quantity = InvItemCardBatch::where(['id' => $data['batch_id']])->sum('quantity');
-                    if ($item_card_data['does_has_retailunit'] == 1) {
-                        $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
-                        $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);
-                        $remain_retail = fmod($all_retail, $item_card_data['retail_uom_quntToParent']);
-
-                        $update_item_card_quantity['all_quantity_with_master_unit'] = $all_master;
-                        $update_item_card_quantity['all_quantity_with_retail_unit'] = round($all_retail, 0);
-                        $update_item_card_quantity['remain_quantity_in_retail'] = round($remain_retail, 0);
-
-                    }
-                    else {
-                        $update_item_card_quantity['all_quantity_with_master_unit'] = intval($all_quantity);
-                    }
-
-                    InvItemCard::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->update($update_item_card_quantity);
-
-                    InvoiceOrderDetail::where(['id' => $request->id,'invoice_order_id' => $request->invoice_order_id])->delete();
-
-                    $total_before_discount = InvoiceOrderDetail::where('invoice_order_id', $request->invoice_order_id)->sum('total_price');
-                    $update_invoice['total_before_discount'] = $total_before_discount;
-                    InvoiceOrderHeader::where('id', $request->invoice_order_id)->update($update_invoice);
-                }
+                $total_before_discount = InvoiceOrderDetail::where('invoice_order_id', $request->invoice_order_id)->sum('total_price');
+                $update_invoice['total_before_discount'] = $total_before_discount;
+                InvoiceOrderHeader::where('id', $request->invoice_order_id)->update($update_invoice);
             }
             catch (Exception $e) {
-
+                return redirect()->back()->with('error', $e->getMessage());
             }
 
         }
@@ -715,7 +564,7 @@ class SalesOrderHeaderController extends Controller
 
 
             $data_in = SalesOrderHeader::where("$filed2", "$operator2", "$value2")->where("$filed3", "$operator3", "$value3")->get('invoice_id');
-            $data = InvoiceOrderHeader::whereIn('id', $data_in)->where("$filed1", "$operator1", "$value1")->where("$filed4", "$operator4", "$value4")->where("$filed5", "$operator5", "$value5")->where(['com_code' => auth()->user()->com_code, 'invoice_type' => 2, 'order_type' => 1])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
+            $data = InvoiceOrderHeader::whereIn('id', $data_in)->where("$filed1", "$operator1", "$value1")->where("$filed4", "$operator4", "$value4")->where("$filed5", "$operator5", "$value5")->where(['com_code' => auth()->user()->com_code, 'invoice_type' => 2, 'order_type' => 3])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
 
             if (!empty($data)) {
                 foreach ($data as $d) {
@@ -735,7 +584,7 @@ class SalesOrderHeaderController extends Controller
                     }
                 }
             }
-            return view('admin.sales_order_header.ajax_search', ['data' => $data]);
+            return view('admin.sales_order_header_general_return.ajax_search', ['data' => $data]);
 
         }
     }
@@ -753,7 +602,7 @@ class SalesOrderHeaderController extends Controller
                $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => auth()->user()->com_code])->value('name');
                $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => auth()->user()->com_code])->sum('money');
 
-               return view('admin.sales_order_header.check_shift_and_reload_money', ['check_shift' => $check_shift]);
+               return view('admin.sales_order_header_general_return.check_shift_and_reload_money', ['check_shift' => $check_shift]);
             }
             catch (Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage());
@@ -765,10 +614,9 @@ class SalesOrderHeaderController extends Controller
     public function approve_pill(Request $request, $auto_serial)
     {
         try {
-
             # code...
             $com_code = auth()->user()->com_code;
-            $data = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 1, 'invoice_type' => 2])->get()->first();
+            $data = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 2])->get()->first();
             $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('customer_code');
 
             if (empty($data)) {
@@ -778,9 +626,15 @@ class SalesOrderHeaderController extends Controller
                 return redirect()->back()->with('error', 'الفاتورة معتمدة من قبل');
             }
 
+            $items = InvoiceOrderDetail::where(['invoice_order_id' => $auto_serial, 'com_code' => $com_code])->first();
+            if (empty($items)) {
+                return redirect()->back()->with('error', 'الفاتورة لا تحتوي على اصناف لاعتمادها');
+            }
+
+
             $updateInvoice['tax_percent'] = $request->tax_percent;
             $updateInvoice['total_cost'] = $request->total_cost;
-            $updateInvoice['money_for_account'] = $request->total_cost * (1);
+            $updateInvoice['money_for_account'] = $request->total_cost * (-1);
             $updateInvoice['discount_type'] = $request->discount_type;
             $updateInvoice['pill_type'] = $request->pill_type;
 
@@ -811,13 +665,12 @@ class SalesOrderHeaderController extends Controller
             $updateInvoice['approved_by'] = auth()->user()->id;
             $updateInvoice['approved_at'] = date('Y-m-d H:i:s');
 
-            $flag = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 1, 'invoice_type' => 2])->update($updateInvoice);
+            $flag = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 2])->update($updateInvoice);
 
 
             if ($flag) {
                 // get the account number and name from the customer_code
                 // 1- get the person id from the customer model
-
                 if ($data['customer_code'] != '' && $data['customer_code'] != null) {
                     $person_id = Customer::where(['customer_code' => $data['customer_code'], 'com_code' => $com_code])->value('person_id');
                     $data['account_number'] = Person::where(['id' => $person_id,'com_code' => $com_code])->value('account_number');
@@ -827,7 +680,7 @@ class SalesOrderHeaderController extends Controller
 
                     // change the customer current balance in accounts
                     $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
-                    $update_account['current_balance'] = $get_current + $data['total_cost'];
+                    $update_account['current_balance'] = $get_current - $data['total_cost'];
                     Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
                 }
 
@@ -853,36 +706,36 @@ class SalesOrderHeaderController extends Controller
                         $insertTransaction['shift_code'] = $request->shift_code;
                     }
 
-                    $last_collection_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_collection_arrive');
+                    $last_exchange_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_exchange_arrive');
 
 
-                    if (empty($last_collection_arrive)) {
+                    if (empty($last_exchange_arrive)) {
                         return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
                     }
                     else {
-                        $insertTransaction['last_arrive'] = $last_collection_arrive + 1;
+                        $insertTransaction['last_arrive'] = $last_exchange_arrive + 1;
                     }
 
-                    // Move type will number 5 تحصيل ايراد مبيعات
-                    $insertTransaction['move_type'] = 5;
+                    // Move type will number 6 صرف نظير مرتجع مبيعات
+                    $insertTransaction['move_type'] = 6;
                     // Account number will be like the account number for the customer in the purchaseHeader
                     $insertTransaction['account_number'] = $data['account_number'];
-                    $insertTransaction['transaction_type'] = 2;
-                    $insertTransaction['money'] = $updateInvoice['what_paid'] * (1);
+                    $insertTransaction['transaction_type'] = 1;
+                    $insertTransaction['money'] = $updateInvoice['what_paid'] * (-1);
                     $insertTransaction['is_approved'] = 1;
                     $insertTransaction['invoice_id'] = $auto_serial;
                     $insertTransaction['treasuries_id'] = $request->treasuries_id;
                     $insertTransaction['move_date'] = date('Y-m-d');
 
                     if ($data['customer_code'] == '') {
-                        $insertTransaction['byan'] = ' تحصيل ايراد مبيعات ';
+                        $insertTransaction['byan'] = ' صرف نظير مرتجع مبيعات ';
                         $insertTransaction['is_account'] = 0;
                         $insertTransaction['money_for_account'] = null;
                     }
                     else {
-                        $insertTransaction['byan'] = ' تحصيل ايراد مبيعات  من العميل' . ' ' . $data['customer_name'];
+                        $insertTransaction['byan'] = ' صرف نظير مرتجع مبيعات للعميل' . ' ' . $data['customer_name'];
                         $insertTransaction['is_account'] = 1;
-                        $insertTransaction['money_for_account'] = $updateInvoice['what_paid'] * (-1);
+                        $insertTransaction['money_for_account'] = $updateInvoice['what_paid'] * (1);
                     }
 
                     $insertTransaction['added_by'] = auth()->user()->id;
@@ -892,13 +745,198 @@ class SalesOrderHeaderController extends Controller
                     $flag = TreasuryTransaction::create($insertTransaction);
 
                     if($flag) {
-                        $update_treasuries['last_exchange_arrive'] = $last_collection_arrive + 1;
+                        $update_treasuries['last_exchange_arrive'] = $last_exchange_arrive + 1;
                         Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
 
                         // change the customer current balance in accounts
                         $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
-                        $update_account['current_balance'] = $get_current - $data['what_paid'];
+                        $update_account['current_balance'] = $get_current + $data['what_paid'];
                         Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
+                    }
+                }
+
+                // get all items
+                $item_cards = InvoiceOrderDetail::where(['invoice_order_id' => $auto_serial, 'com_code' => $com_code])->get();
+                if (!empty($item_cards)) {
+                    foreach ($item_cards as $item) {
+                        $insertBatch = array();
+                        $item_card_data = InvItemCard::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent', 'item_type', 'does_has_retailunit'])->first();
+                        if (!empty($item_card_data)) {
+                            // Now we will check if the unit is master or retail because we say that every item will get int with master unit
+                            // if master we make the quantity is the same quantity
+                            $quantity = 1;
+                            $unit_price = 1;
+                            if ($item['unit_id'] == $item_card_data['unit_id']) {
+                                $quantity = $item['quantity'];
+                                $unit_price = $item['unit_price'];
+                            }
+                            else if ($item['unit_id'] == $item_card_data['retail_unit_id']) {
+                                // we will change it to master unit
+                                // by divide the quantity with retail_uom_quntToParent
+                                $quantity = $item['quantity'] / $item_card_data['retail_uom_quntToParent'];
+                                // also change the unit price from price with retail to price with master
+                                // by multiple it with retail_uom_quntToParent
+                                $unit_price =  $item['unit_price'] * $item_card_data['retail_uom_quntToParent'];
+                            }
+
+
+
+                            $update_item_batch_id = array();
+                            $update_item_batch_id['batch_id'] = $item['batch_id'];
+
+                            // before i make insert or update i should get the quantity in all store and current store from the batch
+                            $quantity_in_batch_before = InvItemCardBatch::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->sum('quantity');
+                            $quantity_in_batch_current_store_before = InvItemCardBatch::where(['item_code' => $item['item_code'], 'store_id' => $item['store_id'], 'com_code' => $com_code])->sum('quantity');
+
+                            if ($item['batch_id'] != null) {
+                                $old_batch = InvItemCardBatch::where('id', $item['batch_id'])->get(['quantity', 'unit_cost_price', 'total_cost_price'])->first();
+                                $updateOldBatch['quantity'] = $old_batch['quantity'] + $quantity;
+                                // the unit cost price may be different from the pill price
+                                $updateOldBatch['total_cost_price'] = $updateOldBatch['quantity'] * $old_batch['unit_cost_price'];
+                                $updateOldBatch['updated_by'] = auth()->user()->id;
+                                $updateOldBatch['updated_at'] = date('Y-m-d H:i:s');
+
+                                InvItemCardBatch::where(['id' => $item['batch_id']])->update($updateOldBatch);
+                            }
+                            else {
+                                // now we will enter the item into the batches and check some condition
+                                // 1- if the item type = 2 that means with production and expire date we check unit price, production_date and
+                                if ($item_card_data['item_type'] == 2) {
+                                    // we get the store id is the same as in purchase order header data
+                                    $insertBatch['store_id'] = $item['store_id'];
+                                    $insertBatch['item_code'] = $item['item_code'];
+                                    $insertBatch['inv_unit_id'] = $item_card_data['unit_id'];
+                                    $insertBatch['production_date'] = $item['production_date'];
+                                    $insertBatch['expire_date'] = $item['expire_date'];
+                                }
+                                // 1- if the item type = 1 that means invintory we check only unit price
+                                else if ($item_card_data['item_type'] == 1) {
+                                    // we get the store id is the same as in purchase order header data
+                                    $insertBatch['store_id'] = $item['store_id'];
+                                    $insertBatch['item_code'] = $item['item_code'];
+                                    $insertBatch['inv_unit_id'] = $item_card_data['unit_id'];
+                                }
+
+                                $unit_price_in_batch = InvItemCardBatch::where($insertBatch)->value('unit_cost_price');
+                                if ($unit_price <= $unit_price_in_batch + 3 && $unit_price >= $unit_price_in_batch - 3) {
+                                    $unit_price = $unit_price_in_batch;
+                                }
+                                $insertBatch['unit_cost_price'] = $unit_price;
+
+
+                                // now we check if there is like this batch in the item batches
+                                $check_if_like_batch = InvItemCardBatch::where($insertBatch)->get(['id', 'quantity', 'total_cost_price'])->first();
+
+                                // if there is we will only update the batch
+                                if (!empty($check_if_like_batch)) {
+                                    $updateOldBatch['quantity'] = $check_if_like_batch['quantity'] + $quantity;
+                                    // we don't need to update the unit_cost_price because they are the same
+                                    $updateOldBatch['total_cost_price'] = $updateOldBatch['quantity'] * $unit_price;
+                                    //$updateOldBatch['total_cost_price'] = $check_if_like_batch['total_cost_price'] + ($quantity * $unit_price);
+                                    $updateOldBatch['updated_by'] = auth()->user()->id;
+                                    $updateOldBatch['updated_at'] = date('Y-m-d H:i:s');
+
+                                    InvItemCardBatch::where(['id' => $check_if_like_batch['id']])->update($updateOldBatch);
+
+                                    // after we create the patch we will make the item batch id in this
+                                    $update_item_batch_id['batch_id'] = $check_if_like_batch['id'];
+                                }
+                                //else we make new batch
+                                else {
+                                    // we continue with insertBatch array
+                                    $insertBatch['quantity'] = $quantity;
+                                    $insertBatch['total_cost_price'] = $quantity * $unit_price;
+                                    $insertBatch['added_by'] = auth()->user()->id;
+                                    $insertBatch['created_at'] = date('Y-m-d H:i:s');
+                                    $insertBatch['com_code'] = $com_code;
+
+                                    $max_batch_code = InvItemCardBatch::where(['com_code' => $com_code])->max('batch_code');
+                                    if (empty($max_batch_code)) {
+                                        $insertBatch['batch_code'] = 1;
+                                    }
+                                    else {
+                                        $insertBatch['batch_code'] = $max_batch_code + 1;
+                                    }
+
+                                    InvItemCardBatch::create($insertBatch);
+                                    // after we create the patch we will make the item batch id in this
+                                    $update_item_batch_id['batch_id'] = InvItemCardBatch::max('id');
+                                }
+                                // after we create the patch we will make the item batch id in this
+                                InvoiceOrderDetail::where(['invoice_order_id' => $auto_serial, 'id' => $item['id'], 'com_code' => $com_code])->update($update_item_batch_id);
+                            }
+
+
+                            // get the quantity in all store and current store from the batch and we will get the name of the master unit
+                            $quantity_in_batch_after = InvItemCardBatch::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->sum('quantity');
+                            $quantity_in_batch_current_store_after = InvItemCardBatch::where(['item_code' => $item['item_code'], 'store_id' => $item['store_id'], 'com_code' => $com_code])->sum('quantity');
+                            $parent_unit_name = InvUnit::where('id', $item_card_data['unit_id'])->value('name');
+
+
+                            // Then we will save this change with item card in the item card movements table
+                            $insertItemMovement['inv_item_card_movements_categories_id'] = 2;
+                            $insertItemMovement['item_code'] = $item['item_code'];
+                            $insertItemMovement['inv_item_card_movements_types_id'] = 5;
+                            $insertItemMovement['order_header_id'] = $data['id'];
+                            $insertItemMovement['order_details_id'] = $item['id'];
+                            $insertItemMovement['store_id'] = $item['store_id'];
+                            $insertItemMovement['batch_id'] = $update_item_batch_id['batch_id'];
+                            $insertItemMovement['quantity_before_movement'] = $quantity_in_batch_before . ' ' . $parent_unit_name;
+                            $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
+                            $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
+                            $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
+                            $insertItemMovement['byan'] = 'صرف نضير مرتجع مبيعات للعميل ' . $data['customer_name'] . ' فاتورة رقم ' . $auto_serial;
+                            $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
+                            $insertItemMovement['date'] = date('Y-m-d');
+                            $insertItemMovement['added_by'] = auth()->user()->id;
+                            $insertItemMovement['com_code'] = $com_code;
+
+                            InvItemCardMovement::create($insertItemMovement);
+
+
+                            if ($item['batch_id'] == null) {
+                                // update the cost price in the item card
+                                // if has retail unit we will update the cost_price_in_master and cost_price_in_retail
+                                if ($item['unit_id'] == $item_card_data['unit_id']) {
+                                    $update_item_card_price_quantity['cost_price_in_master'] = $item['unit_price'];
+                                    if ($item_card_data['does_has_retailunit'] == 1) {
+                                        $update_item_card_price_quantity['cost_price_in_retail'] = $item['unit_price'] / $item_card_data['retail_uom_quntToParent'];
+                                        $update_item_card_price_quantity['price_per_one_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.1);
+                                        $update_item_card_price_quantity['price_per_half_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.07);
+                                        $update_item_card_price_quantity['price_per_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.05);
+                                    }
+                                }
+                                else if ($item['unit_id'] == $item_card_data['retail_unit_id']) {
+                                    $update_item_card_price_quantity['cost_price_in_retail'] = $item['unit_price'];
+                                    $update_item_card_price_quantity['cost_price_in_master'] = $item['unit_price'] * $item_card_data['retail_uom_quntToParent'];
+                                    $update_item_card_price_quantity['price_per_one_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.1);
+                                    $update_item_card_price_quantity['price_per_half_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.07);
+                                    $update_item_card_price_quantity['price_per_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.05);
+                                }
+
+                                // updates on prices that can be change if you don't like in the item card model it self
+                                $update_item_card_price_quantity['price_per_one_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.1);
+                                $update_item_card_price_quantity['price_per_half_group_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.07);
+                                $update_item_card_price_quantity['price_per_group_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.05);
+                            }
+
+                            // update the quantity in item_card
+                            $all_quantity = InvItemCardBatch::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->sum('quantity');
+                            if ($item_card_data['does_has_retailunit'] == 1) {
+                                $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
+                                $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);
+                                $remain_retail = fmod($all_retail, $item_card_data['retail_uom_quntToParent']);
+
+                                $update_item_card_price_quantity['all_quantity_with_master_unit'] = $all_master;
+                                $update_item_card_price_quantity['all_quantity_with_retail_unit'] = round($all_retail, 0);
+                                $update_item_card_price_quantity['remain_quantity_in_retail'] = round($remain_retail, 0);
+                            }
+                            else {
+                                $update_item_card_price_quantity['all_quantity_with_master_unit'] = intval($all_quantity);
+                            }
+
+                            InvItemCard::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->update($update_item_card_price_quantity);
+                        }
                     }
                 }
 
@@ -910,82 +948,5 @@ class SalesOrderHeaderController extends Controller
             return redirect()->back()->with('error', $e->getMessage())->withInput();
         }
     }
-
-    public function add_to_customer(Request $request)
-    {
-        # code...
-        if ($request->ajax()) {
-            if (!empty(Person::first())) {
-                $person_id = Person::max('id');
-            }
-            else {
-                $person_id = 1;
-            }
-
-            if (!empty(Customer::where('com_code', auth()->user()->com_code)->first())) {
-                $customer_code = Customer::where('com_code', auth()->user()->com_code)->max('customer_code');
-            }
-            else {
-                $customer_code = AdminPanelSetting::where('com_code', auth()->user()->com_code)->value('customer_first_code');
-            }
-
-            if (!empty(Account::first())) {
-                $account_number = Account::max('account_number');
-            }
-            else {
-                $account_number = 12345;
-            }
-
-            $account_insert['account_number'] = $account_number + 1;
-            $account_insert['account_type'] = 3;
-            $account_insert['is_parent'] = 0;
-            $account_insert['parent_account_number'] = AdminPanelSetting::where('com_code', auth()->user()->com_code)->value('customer_parent_account');
-            $account_insert['start_balance_status'] = $request->start_balance_status;
-            $account_insert['start_balance'] = $request->start_balance;
-            $account_insert['active'] = 1;
-            $account_insert['notes'] = $request->notes;
-            $account_insert['added_by'] = auth()->user()->id;
-            $account_insert['created_at'] = date('Y-m-d H:i:s');
-            $account_insert['com_code'] = auth()->user()->com_code;
-            $account_insert['date'] = date('Y-m-d');
-
-            Account::create($account_insert);
-
-
-            $person_insert['id'] = $person_id + 1;
-            $person_insert['first_name'] = $request->first_name;
-            $person_insert['last_name'] = $request->last_name;
-            $person_insert['account_number'] = $account_number + 1;
-            $person_insert['address'] = $request->address;
-            $person_insert['phone'] = $request->phone;
-            $person_insert['active'] = $request->active;
-            $person_insert['person_type'] = 1;
-            $person_insert['added_by'] = auth()->user()->id;
-            $person_insert['created_at'] = date('Y-m-d H:i:s');
-            $person_insert['com_code'] = auth()->user()->com_code;
-
-            if (Person::create($person_insert)) {
-                $customer_insert['person_id'] = $person_id + 1;
-                $customer_insert['customer_code'] = $customer_code + 1;
-                $customer_insert['created_at'] = date('Y-m-d H:i:s');
-                $customer_insert['com_code'] = auth()->user()->com_code;
-                Customer::create($customer_insert);
-            }
-
-            echo json_encode($person_insert['id']);
-        }
-    }
-
-    public function get_added_customer(Request $request)
-    {
-        # code...
-        if ($request->ajax()) {
-            $customers = Person::where(['id' => $request->id])->get(['first_name', 'last_name'])->first();
-            $customers['customer_code'] = Customer::where(['person_id' => $request->id])->value('customer_code');
-
-            return view('admin.sales_order_header.get_added_customer', ['customers' => $customers]);
-        }
-    }
-
 
 }

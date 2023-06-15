@@ -59,18 +59,11 @@ $(document).ready(function() {
                 success: function(data) {
                     $("#unit_add").html(data);
                     $('.relatied_item_card').show();
-                    var type = $('#item_code_add').children('option:selected').data('type');
-                    if (type == 2) {
-                        $('.related_date').show();
-                    }
-                    else {
-                        $('.related_date').hide();
-                    }
                 },
                 error: function() {
                     $("#unit_add").html("");
                     $('.relatied_item_card').hide();
-                    $('.related_date').hide();
+
                     alert("حدث خطا ما");
                 }
             });
@@ -114,6 +107,13 @@ $(document).ready(function() {
                 success: function(data) {
                     $("#unit_price_add").val(data);
                     calculate_total_price();
+                    var has_fixed_price = $('#item_code_add').children('option:selected').data('has_fixed_price');
+                    if(has_fixed_price == 1) {
+                        $('#unit_price_add').prop('readonly', true);
+                    }
+                    else {
+                        $('#unit_price_add').prop('readonly', false);
+                    }
                 },
                 error: function() {
                     $("#batch_add").html("");
@@ -248,6 +248,8 @@ $(document).ready(function() {
         });
 
     })
+
+    /////////////////////////////////////////
 
 
     $(document).on('input', '#quantity_add', function() {
@@ -598,7 +600,6 @@ $(document).ready(function() {
             },
             success: function(data) {
                 load_pill_adding_items_modal(data);
-                make_search();
             },
             error: function() {
             }
@@ -662,7 +663,7 @@ $(document).ready(function() {
             error: function() {
                 $("#batch_add").html("");
                 $('.relatied_item_card').hide();
-                $('.related_date').hide();
+
                 alert("حدث خطا ما");
             }
         });
@@ -711,7 +712,12 @@ $(document).ready(function() {
             return false;
         }
 
-
+        var unit_price = $('#unit_price_add').val();
+        if (unit_price == '') {
+            alert('من فضلك ادخل سعر الوحدة');
+            $('#unit_price_add').focus();
+            return false;
+        }
 
         var total_price = $('#total_price_add').val();
         if (total_price == '') {
@@ -720,35 +726,17 @@ $(document).ready(function() {
             return false;
         }
 
-        // in case is not return pill
-        if (batch_id != 'new') {
-            var batch_quantity = $('#batch_id_add').children('option:selected').data('quantity');
-            if (parseFloat(quantity) > parseFloat(batch_quantity)) {
-                alert('من فضلك الكمية غير كافية في الباتش الحالي');
-                $('#quantity_add').focus();
-                return false;
-            }
-        }
-
-        // in case is return pill
-        if (batch_id != 'new') {
-            var production_date = $('#batch_id_add').children('option:selected').data('production_date');
-            var expire_date = $('#batch_id_add').children('option:selected').data('expire_date');
-        }
-        else {
-            var production_date = $('#production_date_add').val();
-            var expire_date = $('#expire_date_add').val();
-        }
-
-        var unit_price = $('#unit_price_add').val();
-        if (unit_price == '') {
-            alert('من فضلك ادخل سعر الوحدة');
-            $('#unit_price_add').focus();
+        var batch_quantity = $('#batch_id_add').children('option:selected').data('quantity');
+        if (parseFloat(quantity) > parseFloat(batch_quantity)) {
+            alert('من فضلك الكمية غير كافية في الباتش الحالي');
+            $('#quantity_add').focus();
             return false;
         }
 
-
+        var production_date = $('#batch_id_add').children('option:selected').data('production_date');
+        var expire_date = $('#batch_id_add').children('option:selected').data('expire_date');
         var invoice_order_id = $('#invoice_order_id').val();
+
         var store_name = $('#store_id_add option:selected').text();
         var sales_type_name = $('#sales_type option:selected').text();
         var item_name = $('#item_code_add option:selected').text();
@@ -880,16 +868,8 @@ $(document).ready(function() {
             return false;
         }
 
-        var treasury_money = $('.treasury_money_return').val();
-        if (treasury_money == '') treasury_money = 0;
-        treasury_money = parseFloat(treasury_money);
-        if (what_paid > treasury_money) {
-            alert('عفوا ليس لديك رصيد كافي في الخزنة');
-            $("#what-paid").focus();
-            return false;
-        }
-
         if ($("#discount-type").val() != '') {
+
             if ($("#discount-type").val() == 1) {
                 if ($("#discount-percent").val() == '') {
                     alert('من فضلك ادخل نسبة الخصم');

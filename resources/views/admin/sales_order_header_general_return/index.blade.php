@@ -22,23 +22,19 @@
     <button id="create_pill_button"  style="background-color: #007bff; width: fit-content; color: white" class="btn">
          اضافة فاتورة
     </button>
-
-    <button id="pill_mirror_button"  style="background-color: #007bff; width: fit-content; color: white" class="btn">
-       عرض مرآة الاسعار
-    </button>
 </div>
 
 <div class="row">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات فواتير المبيعات</h3>
+          <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات فواتير المرتجعات العام</h3>
         </div>
         <!-- /.card-header -->
         <div class="card-body">
 
             <div class="mb-3" style="display: flex; flex-wrap: wrap">
-                <input type="hidden" id='ajax_search_route' value="{{ route('admin.sales_header.ajax_search') }}">
+                <input type="hidden" id='ajax_search_route' value="{{ route('admin.sales_order_header_general_return.ajax_search') }}">
                 <input type="hidden" id='ajax_token' value="{{ csrf_token() }}">
 
                 <div class="col-4">
@@ -132,7 +128,7 @@
                                     </button>
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.sales_header.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                    <a href="{{ route('admin.sales_order_header_general_return.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </a>
                                 </td>
@@ -163,19 +159,16 @@
 </div>
 
   <input type="hidden" id="token_search" value="{{ csrf_token() }}">
-  <input type="hidden" id="ajax_get_item_unit_route" value="{{ route('admin.sales_header.get_item_unit') }}">
-  <input type="hidden" id="ajax_create_pill_route" value="{{ route('admin.sales_header.create_pill') }}">
-  <input type="hidden" id="ajax_pill_mirror_route" value="{{ route('admin.sales_header.pill_mirror') }}">
-  <input type="hidden" id="ajax_get_item_batch_route" value="{{ route('admin.sales_header.get_item_batch') }}">
-  <input type="hidden" id="ajax_get_item_price_route" value="{{ route('admin.sales_header.get_item_price') }}">
-  <input type="hidden" id="ajax_add_new_item_row_route" value="{{ route('admin.sales_header.add_new_item_row') }}">
-  <input type="hidden" id="ajax_check_shift_and_reload_money_route" value="{{ route('admin.sales_header.check_shift_and_reload_money') }}">
-  <input type="hidden" id="ajax_store_route" value="{{ route('admin.sales_header.store') }}">
-  <input type="hidden" id="ajax_load_pill_adding_items_modal_route" value="{{ route('admin.sales_header.load_pill_adding_items_modal') }}">
-  <input type="hidden" id="ajax_store_item_route" value="{{ route('admin.sales_header.store_item') }}">
-  <input type="hidden" id="ajax_remove_item_route" value="{{ route('admin.sales_header.remove_item') }}">
-  <input type="hidden" id="ajax_add_to_customer_route" value="{{ route('admin.sales_header.add_to_customer') }}">
-  <input type="hidden" id="ajax_get_added_customer_route" value="{{ route('admin.sales_header.get_added_customer') }}">
+  <input type="hidden" id="ajax_get_item_unit_route" value="{{ route('admin.sales_order_header_general_return.get_item_unit') }}">
+  <input type="hidden" id="ajax_create_pill_route" value="{{ route('admin.sales_order_header_general_return.create_pill') }}">
+  <input type="hidden" id="ajax_get_item_batch_route" value="{{ route('admin.sales_order_header_general_return.get_item_batch') }}">
+  <input type="hidden" id="ajax_get_item_price_route" value="{{ route('admin.sales_order_header_general_return.get_item_price') }}">
+  <input type="hidden" id="ajax_add_new_item_row_route" value="{{ route('admin.sales_order_header_general_return.add_new_item_row') }}">
+  <input type="hidden" id="ajax_check_shift_and_reload_money_route" value="{{ route('admin.sales_order_header_general_return.check_shift_and_reload_money') }}">
+  <input type="hidden" id="ajax_store_route" value="{{ route('admin.sales_order_header_general_return.store') }}">
+  <input type="hidden" id="ajax_load_pill_adding_items_modal_route" value="{{ route('admin.sales_order_header_general_return.load_pill_adding_items_modal') }}">
+  <input type="hidden" id="ajax_store_item_route" value="{{ route('admin.sales_order_header_general_return.store_item') }}">
+  <input type="hidden" id="ajax_remove_item_route" value="{{ route('admin.sales_order_header_general_return.remove_item') }}">
 
 
 <div class="modal fade" id="create_pill" style="overflow: scroll">
@@ -192,28 +185,6 @@
         </div>
         <div class="modal-footer justify-content-between " >
             <button type="button" class="btn btn-default" data-dismiss="modal">الغاء</button>
-        </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="pill_mirror">
-    <div class="modal-dialog modal-xl" style="margin: 20px 35px 0 20px;">
-        <div class="modal-content" style="width: 115%;">
-        <div class="modal-header">
-            <h4 class="modal-title">مرآة فاتورة الاسعار</h4>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <div class="modal-body" id="pill_mirror_result">
-
-        </div>
-
-
-        <div class="modal-footer justify-content-between">
-            <button type="button" class="btn btn-default" data-dismiss="modal">الغاء</button>
-            <button type="button" class="btn btn-primary" id="add_to_pill">اضافة</button>
         </div>
         </div>
     </div>
@@ -237,91 +208,6 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="add_new_customer_modal">
-    <div class="modal-dialog modal-xl" style="margin: 70px 35px 0 20px;">
-        <div class="modal-content" style="width: 115%;">
-        <div class="modal-header" style="background-color: #0793a9; color: white">
-            <h4 class="modal-title">اضافة عميل</h4>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <div class="modal-body" id="add_new_customer_result">
-            <div class="row">
-                <div class="col-md-4">
-                    <label for="inputEmail3">اسم العميل الاول</label>
-                    <div class="form-group">
-                        <input type="text" name="first_name" id="first_name" class="form-control" placeholder="اسم العميل الاول">
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <label for="inputEmail3">اسم العميل الاخير</label>
-                    <div class="form-group">
-                        <input type="text" name="last_name" id="last_name" class="form-control" placeholder="اسم العميل الاخير">
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <label for="inputEmail3">العنوان</label>
-                    <div class="form-group">
-                        <input type="text" name="address" id="address" class="form-control" placeholder="العنوان">
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <label for="inputEmail3">الهاتف</label>
-                    <div class="form-group">
-                        <input type="text" name="phone" id="phone" class="form-control" placeholder="الهاتف">
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>حالة رصيد اول المدة</label>
-                        <select name="start_balance_status" id="start_balance_status" class="form-control">
-                            <option value="">اختر الحالة</option>
-                            <option value="1">دائن</option>
-                            <option value="2">مدين</option>
-                            <option value="3">متزن</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>رصيد أول المدة للحساب</label>
-                        <input name="start_balance" id="start_balance" class="form-control"  oninput="this.value=this.value.replace(/[^0-9.]/g,'');" >
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>ملاحظات</label>
-                        <input name="notes" id="notes" class="form-control" value="">
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <label>مفعلة</label>
-                    <div class="form-group">
-                        <select name="active" id="active" class="form-control">
-                            <option value="">اختر الحالة</option>
-                            <option value="0">No</option>
-                            <option value="1">Yes</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer justify-content-between">
-            <button type="button" class="btn btn-primary" id="add_to_customer">اضافة</button>
-            <button type="button" class="btn btn-default " data-dismiss="modal">الغاء</button>
-        </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('contentheader')
@@ -329,7 +215,7 @@
 @endsection
 
 @section('contentheaderlink')
-    <a href="{{ route('admin.sales_header.index') }}">المبيعات</a>
+    <a href="{{ route('admin.sales_order_header_general_return.index') }}">مرتجع المبيعات</a>
 @endsection
 
 @section('contentheaderactive')
