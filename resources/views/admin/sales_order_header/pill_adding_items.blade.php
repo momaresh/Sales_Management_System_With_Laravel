@@ -21,13 +21,8 @@
             <div class="col-md-3">
                 <div class="form-group">
                     <label>اسم العميل</label>
-                    <select name="customer_code" id="customer_code" class="form-control select2">
-                        <option value="">اختر العميل</option>
-                        @if (@isset($customers) && !@empty($customers))
-                            @foreach ($customers as $info )
-                                <option @if ($sales_data->customer_code == $info->customer_code) selected @endif value="{{ $info->customer_code }}"> {{ $info->first_name }}  {{ $info->last_name }} </option>
-                            @endforeach
-                        @endif
+                    <select disabled name="customer_code" id="customer_code" class="form-control select2">
+                        <option value="">{{ $sales_data->customer_name }}</option>
                     </select>
                 </div>
             </div>
@@ -36,13 +31,8 @@
             <div class="col-md-3">
                 <div class="form-group">
                     <label>اسم المندوب</label>
-                    <select name="delegate_code" id="delegate_code" class="form-control select2">
-                        <option value="">اختر المندوب</option>
-                        @if (@isset($delegates) && !@empty($delegates))
-                            @foreach ($delegates as $info )
-                                <option @if ($sales_data->delegate_code == $info->delegate_code) selected @endif value="{{ $info->delegate_code }}"> {{ $info->first_name }}  {{ $info->last_name }} </option>
-                            @endforeach
-                        @endif
+                    <select disabled name="delegate_code" id="delegate_code" class="form-control select2">
+                        <option value="">{{ $sales_data->delegate_name }}</option>
                     </select>
                 </div>
             </div>
@@ -429,6 +419,13 @@
                 theme: 'bootstrap4'
                 })
 
+                if ($(window).width() < 1100) {
+                    $('table').addClass('table-responsive');
+                }
+                else {
+                    $('table').removeClass('table-responsive');
+                }
+
                 if ($('#pill-type').val() == 1) {
                     var total_cost = $("#total-cost").val();
                     $('#what-paid').val(total_cost);
@@ -453,7 +450,7 @@
                     }
                 });
 
-                
+
             });
         </script>
     </body>

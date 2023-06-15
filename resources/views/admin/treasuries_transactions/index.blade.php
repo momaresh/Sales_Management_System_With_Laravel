@@ -150,8 +150,8 @@
         <!-- /.card-header -->
         <div class="card-body">
 
-            <div class="mb-3" style="display: flex; flex-wrap: wrap">
-                <div class="col-4">
+            <div class="mb-3 row">
+                <div class="col-md-4">
                     <input type="radio" checked name="search_by_radio" id="code" value="code">
                     <label class="control-label" for="code">بالكود</label>
                     <input type="radio" name="search_by_radio" id="arrive" value="arrive">
@@ -161,7 +161,7 @@
 
                     <input class="form-control" type="search" placeholder="بالكود - بالايصال - بالشفت" id="text_search">
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالحسابات المالية</label>
                     <select class="form-control select2" name="account_number_search" id="account_number_search">
                         <option value="all">بحث بالكل</option>

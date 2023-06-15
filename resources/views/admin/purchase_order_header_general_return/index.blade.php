@@ -46,15 +46,15 @@
         <!-- /.card-header -->
         <div class="card-body">
 
-            <div class="mb-3" style="display: flex; flex-wrap: wrap">
+            <div class="mb-3 row">
                 <input type="hidden" id='ajax_search_route' value="{{ route('admin.purchase_order_header_general_return.ajax_search') }}">
                 <input type="hidden" id='ajax_token' value="{{ csrf_token() }}">
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="purchase_code">بحث بكود الفاتورة</label>
                     <input class="form-control" type="search" placeholder="بحث بكود الفاتورة" id="purchase_code">
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالمورد</label>
                     <select class="form-control select2" name="supplier_code_search" id="supplier_code_search">
                         <option value="all">بحث بالكل</option>
@@ -65,7 +65,7 @@
                         @endif
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالمخزن</label>
                     <select class="form-control select2" name="store_id_search" id="store_id_search">
                         <option value="all">بحث بالكل</option>
@@ -76,12 +76,12 @@
                         @endif
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="from_date_search">من تاريخ</label>
                     <input class="form-control" type="date" id="from_date_search" name="from_date_search" >
                 </div>
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="to_date_search">الى تاريخ</label>
                     <input class="form-control" type="date" id="to_date_search" name="to_date_search" >
                 </div>
@@ -184,10 +184,10 @@
 <input type="hidden" id="ajax_remove_item_route" value="{{ route('admin.purchase_order_header_general_return.remove_item') }}">
 
 <div class="modal fade" id="create_pill">
-    <div class="modal-dialog modal-xl" style="margin: 20px 35px 0 20px;">
-        <div class="modal-content" style="width: 115%;">
+    <div class="modal-dialog modal-xl" style="width: 95%;">
+        <div class="modal-content" >
         <div class="modal-header">
-            <h4 class="modal-title">اضافة اصناف للفاتورة</h4>
+            <h4 class="modal-title">اضافة فاتورة</h4>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
             </button>
@@ -206,8 +206,8 @@
 </div>
 
 <div class="modal fade" id="pill_mirror">
-    <div class="modal-dialog modal-xl" style="margin: 20px 35px 0 20px;">
-        <div class="modal-content" style="width: 115%;">
+    <div class="modal-dialog modal-xl" style="width: 95%;">
+        <div class="modal-content">
         <div class="modal-header">
             <h4 class="modal-title">مرآة فاتورة الاسعار</h4>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -228,8 +228,8 @@
 </div>
 
 <div class="modal fade" id="pill_adding_items_modal" style="overflow: scroll !important;">
-    <div class="modal-dialog modal-xl" style="margin: 20px 35px 0 20px;">
-        <div class="modal-content" style="width: 115%;">
+    <div class="modal-dialog modal-xl" style="width: 95%;">
+        <div class="modal-content">
         <div class="modal-header">
             <h4 class="modal-title">اضافة اصناف للفاتورة</h4>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">

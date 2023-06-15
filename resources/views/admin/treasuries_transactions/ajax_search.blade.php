@@ -39,3 +39,14 @@
     @endif
 
 </table>
+
+<script>
+    $(function () {
+        if ($(window).width() < 1100) {
+            $('table').addClass('table-responsive');
+        }
+        else {
+            $('table').removeClass('table-responsive');
+        }
+    });
+</script>

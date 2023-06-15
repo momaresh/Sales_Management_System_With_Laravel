@@ -34,12 +34,12 @@
         <div class="card-body">
 
 
-            <div class="mb-3" style="display: flex">
-                <div class="col-4">
+            <div class="mb-3 row">
+                <div class="col-md-4 col-md-4">
                     <label class="control-label">اسم الوحدة</label>
                     <input class="form-control" type="search" placeholder="بحث بالاسم" id="ajax_search">
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">نوع الوحدة</label>
                     <select class="form-control" id="master_search">
                         <option value="all">بحث بالكل</option>

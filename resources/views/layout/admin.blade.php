@@ -26,6 +26,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <link rel="stylesheet" href="{{ asset('assets/admin/plugins/select2/css/select2.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/admin/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
 
+  <style>
+    @media only screen and (max-width: 768px) {
+        * {
+            font-size: 13px;
+        }
+    }
+  </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
@@ -64,6 +71,26 @@ scratch. This page gets rid of all links and provides the needed markup only.
         $('.select2').select2({
         theme: 'bootstrap4'
         })
+
+        if ($(window).width() < 1100) {
+            $('table').addClass('table-responsive');
+        }
+        else {
+            $('table').removeClass('table-responsive');
+        }
+
+        function resize() {
+            if ($(window).width() < 1100) {
+                $('table').addClass('table-responsive');
+            }
+            else {
+                $('table').removeClass('table-responsive');
+            }
+        }
+
+        $(window).on('resize', function() {
+            resize()
+        });
     });
 </script>
 @yield('script')

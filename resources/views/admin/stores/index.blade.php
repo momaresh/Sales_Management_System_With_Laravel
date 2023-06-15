@@ -33,7 +33,7 @@
         <!-- /.card-header -->
         <div class="card-body">
 
-            <input class="form-control col-4 mb-3" type="search" placeholder="بحث بالاسم" id="ajax_search">
+            <input class="form-control col-md-4 mb-3" type="search" placeholder="بحث بالاسم" id="ajax_search">
 
             <div id="ajax_search_result">
                 <table id="example2" class="table table-bordered table-hover table-responsive">

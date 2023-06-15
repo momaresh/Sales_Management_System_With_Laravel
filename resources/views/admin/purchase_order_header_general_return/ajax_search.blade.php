@@ -70,3 +70,14 @@
 <div style="width: fit-content; margin:auto;" id="ajax_search_pagination">
     {{ $data->links() }}
 </div>
+
+<script>
+    $(function () {
+        if ($(window).width() < 1100) {
+            $('table').addClass('table-responsive');
+        }
+        else {
+            $('table').removeClass('table-responsive');
+        }
+    });
+</script>

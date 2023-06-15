@@ -79,7 +79,7 @@
 
                 <div class="col-md-2 relatied_item_card" style="display: none">
                     <div class="form-group">
-                        <label>الكمية المستلمة</label>
+                        <label>الكمية المرتجعة</label>
                         <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="quantity_add" class="form-control" value="">
                     </div>
                 </div>
@@ -381,6 +381,14 @@
         <script src="{{ asset('assets/admin/plugins/select2/js/select2.full.min.js') }}"></script>
         <script>
             $(function () {
+
+                if ($(window).width() < 1100) {
+                    $('table').addClass('table-responsive');
+                }
+                else {
+                    $('table').removeClass('table-responsive');
+                }
+
                 //Initialize Select2 Elements
                 $('.select2').select2({
                 theme: 'bootstrap4'

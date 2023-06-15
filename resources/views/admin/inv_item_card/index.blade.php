@@ -33,8 +33,8 @@
         <!-- /.card-header -->
         <div class="card-body">
 
-            <div class="mb-3" style="display: flex">
-                <div class="col-4">
+            <div class="mb-3 row" style="display: flex">
+                <div class="col-md-4">
                     <label class="control-label" for="barcode">بحث بالباركود</label>
                     <input type="radio" checked name="search_by_radio" id="barcode" value="barcode">
                     <label class="control-label" for="item_code">بحث item_code</label>
@@ -44,7 +44,7 @@
 
                     <input class="form-control" type="search" placeholder="الباركود" id="ajax_search">
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بنوع الصنف</label>
                     <select class="form-control" id="type_search">
                         <option value="all">بحث بالكل</option>
@@ -53,7 +53,7 @@
                         <option value="3">عهدة</option>
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بفئة الصنف</label>
                     <select class="form-control" id="category_search">
                         <option value="all">بحث بالكل</option>

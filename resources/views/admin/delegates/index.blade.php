@@ -34,7 +34,7 @@
         <div class="card-body">
 
             <div class="mb-3" style="display: flex">
-                <div class="col-6">
+                <div class="col-md-6">
                     <label class="control-label" for="cus_code">بحث برقم المندوب</label>
                     <input type="radio" checked name="search_by_radio" id="cus_code" value="cus_code">
                     <label class="control-label" for="acc_number">بحث برقم الحساب</label>

@@ -33,15 +33,15 @@
         <!-- /.card-header -->
         <div class="card-body">
 
-            <div class="mb-3" style="display: flex; flex-wrap: wrap">
+            <div class="mb-3 row">
                 <input type="hidden" id='ajax_search_route' value="{{ route('admin.sales_order_header_general_return.ajax_search') }}">
                 <input type="hidden" id='ajax_token' value="{{ csrf_token() }}">
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="auto_serial">بحث بكود الفاتورة</label>
                     <input type="search" class="form-control" name="search_by_code" id="sales_code" placeholder="بحث بكود الفاتورة">
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالعملاء</label>
                     <select class="form-control select2" name="customer_code_search" id="customer_code_search">
                         <option value="all">بحث بالكل</option>
@@ -52,7 +52,7 @@
                         @endif
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالمناديب</label>
                     <select class="form-control select2" name="delegate_code_search" id="delegate_code_search">
                         <option value="all">بحث بالكل</option>
@@ -63,12 +63,12 @@
                         @endif
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="from_date_search">من تاريخ</label>
                     <input class="form-control" type="date" id="from_date_search" name="from_date_search" >
                 </div>
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="to_date_search">الى تاريخ</label>
                     <input class="form-control" type="date" id="to_date_search" name="to_date_search" >
                 </div>
@@ -172,8 +172,8 @@
 
 
 <div class="modal fade" id="create_pill" style="overflow: scroll">
-    <div class="modal-dialog modal-xl" style="margin: 10px 35px 0 20px;">
-        <div class="modal-content" style="width: 115%;">
+    <div class="modal-dialog modal-xl" style="width: 95%;">
+        <div class="modal-content">
         <div class="modal-header" style="background-color: #0d7383; color: white">
             <h4 class="modal-title">اضافة اصناف للفاتورة</h4>
             <button style="color: rgb(223, 0, 0);" type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -191,8 +191,8 @@
 </div>
 
 <div class="modal fade" id="pill_adding_items_modal" style="overflow: scroll !important;">
-    <div class="modal-dialog modal-xl" style="margin: 20px 35px 0 20px;">
-        <div class="modal-content" style="width: 115%;">
+    <div class="modal-dialog modal-xl" style="width: 95%;">
+        <div class="modal-content">
         <div class="modal-header">
             <h4 class="modal-title">اضافة اصناف للفاتورة</h4>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">

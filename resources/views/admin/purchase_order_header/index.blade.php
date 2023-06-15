@@ -33,15 +33,15 @@
         <!-- /.card-header -->
         <div class="card-body">
 
-            <div class="mb-3" style="display: flex; flex-wrap: wrap">
+            <div class="mb-3 row">
                 <input type="hidden" id='ajax_search_route' value="{{ route('admin.purchase_header.ajax_search') }}">
                 <input type="hidden" id='ajax_token' value="{{ csrf_token() }}">
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="purchase_code">بحث بكود الفاتورة</label>
                     <input class="form-control" type="search" placeholder="بحث بكود الفاتورة" id="purchase_code">
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالمورد</label>
                     <select class="form-control select2" name="supplier_code_search" id="supplier_code_search">
                         <option value="all">بحث بالكل</option>
@@ -52,7 +52,7 @@
                         @endif
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالمخزن</label>
                     <select class="form-control select2" name="store_id_search" id="store_id_search">
                         <option value="all">بحث بالكل</option>
@@ -63,12 +63,12 @@
                         @endif
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="from_date_search">من تاريخ</label>
                     <input class="form-control" type="date" id="from_date_search" name="from_date_search" >
                 </div>
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="to_date_search">الى تاريخ</label>
                     <input class="form-control" type="date" id="to_date_search" name="to_date_search" >
                 </div>

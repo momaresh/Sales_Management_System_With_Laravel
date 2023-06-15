@@ -228,8 +228,8 @@
         <!-- /.card-header -->
         <div class="card-body">
 
-            <div class="mb-3" style="display: flex; flex-wrap: wrap">
-                <div class="col-4">
+            <div class="mb-3 row">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالمخازن</label>
                     <select class="form-control select2" name="store_search" id="store_search">
                         <option value="all">بحث بالكل</option>
@@ -269,12 +269,12 @@
                     </div>
                 </div>
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="from_date_search">من تاريخ</label>
                     <input class="form-control" type="date" id="from_date_search" name="from_date_search" >
                 </div>
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="to_date_search">الى تاريخ</label>
                     <input class="form-control" type="date" id="to_date_search" name="to_date_search" >
                 </div>

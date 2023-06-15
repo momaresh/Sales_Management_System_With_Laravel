@@ -27,11 +27,11 @@
         <!-- /.card-header -->
         <div class="card-body">
 
-            <div class="mb-3" style="display: flex; flex-wrap: wrap">
+            <div class="mb-3 row">
                 <input type="hidden" id='ajax_search_route' value="{{ route('admin.purchase_header.ajax_search') }}">
                 <input type="hidden" id='ajax_token' value="{{ csrf_token() }}">
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالاصناف</label>
                     <select class="form-control select2" name="item_code_search" id="item_code_search">
                         <option value="all">بحث بالكل</option>
@@ -42,7 +42,7 @@
                         @endif
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالمخازن</label>
                     <select class="form-control select2" name="store_id_search" id="store_id_search">
                         <option value="all">بحث بالكل</option>
@@ -54,7 +54,7 @@
                     </select>
                 </div>
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label">بحث بالمخازن</label>
                     <select class="form-control select2" name="unit_id_search" id="unit_id_search">
                         <option value="all">بحث بالكل</option>
@@ -66,12 +66,12 @@
                     </select>
                 </div>
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="production_date_search">تاريخ الانتاج</label>
                     <input class="form-control" type="date" id="production_date_search" name="production_date_search" >
                 </div>
 
-                <div class="col-4">
+                <div class="col-md-4">
                     <label class="control-label" for="expire_date_search">تاريخ الانتهاء</label>
                     <input class="form-control" type="date" id="expire_date_search" name="expire_date_search" >
                 </div>

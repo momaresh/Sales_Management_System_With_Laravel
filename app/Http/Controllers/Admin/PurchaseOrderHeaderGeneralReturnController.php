@@ -825,7 +825,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                     $flag = TreasuryTransaction::create($insertTransaction);
 
                     if($flag) {
-                        $update_treasuries['last_exchange_arrive'] = $last_collection_arrive + 1;
+                        $update_treasuries['last_collection_arrive'] = $last_collection_arrive + 1;
                         Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
 
                         // change the supplier current balance in accounts

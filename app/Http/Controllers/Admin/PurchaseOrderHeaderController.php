@@ -93,6 +93,13 @@ class PurchaseOrderHeaderController extends Controller
                 $inserted_invoice['id'] = 1;
             }
 
+            $max_pill_code = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'order_type' =>1, 'invoice_type' => 1])->max('pill_code');
+            if (!empty($max_pill_code)) {
+                $inserted_invoice['pill_code'] = $max_pill_code + 1;
+            } else {
+                $inserted_invoice['pill_code'] = 1;
+            }
+
             $inserted_invoice['order_type'] = 1;
             $inserted_invoice['invoice_type'] = 1;
             $inserted_invoice['pill_type'] = $request->pill_type;

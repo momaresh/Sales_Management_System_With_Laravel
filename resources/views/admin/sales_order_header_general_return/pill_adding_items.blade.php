@@ -424,6 +424,15 @@
                 theme: 'bootstrap4'
                 })
 
+
+                if ($(window).width() < 1100) {
+                    $('table').addClass('table-responsive');
+                }
+                else {
+                    $('table').removeClass('table-responsive');
+                }
+
+
                 if ($('#pill-type').val() == 1) {
                     var total_cost = $("#total-cost").val();
                     $('#what-paid').val(total_cost);

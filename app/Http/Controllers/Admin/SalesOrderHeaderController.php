@@ -544,6 +544,20 @@ class SalesOrderHeaderController extends Controller
                     else {
                         $sales_data['total_cost'] = $sales_data['total_after_tax'] - $sales_data['discount_value'];
                     }
+
+                    if (!empty($sales_data['customer_code'])) {
+                        $person_id = Customer::where(['customer_code' => $sales_data['customer_code'], 'com_code' => $com_code])->value('person_id');
+                        $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                        $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                        $sales_data['customer_name'] = $first_name . ' ' . $last_name;
+                    }
+
+                    if (!empty($sales_data['delegate_code'])) {
+                        $person_id = Delegate::where(['delegate_code' => $sales_data['delegate_code'], 'com_code' => $com_code])->value('person_id');
+                        $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                        $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                        $sales_data['delegate_name'] = $first_name . ' ' . $last_name;
+                    }
                 }
 
                 $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
@@ -555,19 +569,7 @@ class SalesOrderHeaderController extends Controller
                 $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
                 $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
 
-                $customers = Person::where(['person_type' => 1, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
-                foreach ($customers as $sup) {
-                    $sup['customer_code'] = Customer::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('customer_code');
-                    $sup['customer_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
-                }
-
-                $delegates = Person::where(['person_type' =>3, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
-                foreach ($delegates as $sup) {
-                    $sup['delegate_code'] = Delegate::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('delegate_code');
-                    $sup['delegate_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
-                }
-
-                return view('admin.sales_order_header.pill_adding_items', ['items_card' => $items_card, 'stores' => $stores, 'check_shift' => $check_shift, 'sales_data' => $sales_data, 'customers' => $customers, 'delegates' => $delegates, 'items' => $items]);
+                return view('admin.sales_order_header.pill_adding_items', ['items_card' => $items_card, 'stores' => $stores, 'check_shift' => $check_shift, 'sales_data' => $sales_data, 'items' => $items]);
             }
             catch (Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage());
@@ -892,7 +894,7 @@ class SalesOrderHeaderController extends Controller
                     $flag = TreasuryTransaction::create($insertTransaction);
 
                     if($flag) {
-                        $update_treasuries['last_exchange_arrive'] = $last_collection_arrive + 1;
+                        $update_treasuries['last_collection_arrive'] = $last_collection_arrive + 1;
                         Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
 
                         // change the customer current balance in accounts
