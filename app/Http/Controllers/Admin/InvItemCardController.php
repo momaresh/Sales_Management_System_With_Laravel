@@ -332,7 +332,7 @@ class InvItemCardController extends Controller
             $categories = InvItemCardMovementCategory::get();
             $types = InvItemCardMovementType::get();
             $stores = Store::where('com_code', $com_code)->get();
-            $moves = InvItemCardMovement::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->paginate(PAGINATION_COUNT);
+            $moves = InvItemCardMovement::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
             if (!empty($moves)) {
                 foreach ($moves as $move) {
                     $move['store_name'] = Store::where(['id' => $move['store_id'], 'com_code' => $com_code])->value('name');

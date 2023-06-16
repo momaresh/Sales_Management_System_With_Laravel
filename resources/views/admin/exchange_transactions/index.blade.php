@@ -333,13 +333,36 @@
                 else if (account_type == 6) {
                     $('#move_type').val(18);
                 }
+                else if (account_type == 4) {
+                    $('#move_type').val(27);
+                }
                 else {
                     $('#move_type').val(3);
                 }
 
-
             });
 
+            $(document).on('change', '#move_type', function() {
+                var account_type = $('#account_number option:selected').data('account_type');
+                if (account_type == "") {
+                    $('#move_type').val('');
+                }
+                else if (account_type == 2) {
+                    $('#move_type').val(9);
+                }
+                else if (account_type == 3) {
+                    $('#move_type').val(6);
+                }
+                else if (account_type == 6) {
+                    $('#move_type').val(18);
+                }
+                else if (account_type == 4) {
+                    $('#move_type').val(27);
+                }
+                else {
+                    $('#move_type').val(3);
+                }
+            });
  // ajax search
             function make_search() {
                 // get the value from the input to search by

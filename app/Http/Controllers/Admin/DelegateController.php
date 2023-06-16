@@ -30,8 +30,8 @@ class DelegateController extends Controller
             if (!empty($data)) {
                 foreach ($data as $d) {
                     $d['delegate_code'] = Delegate::where(['person_id' => $d['id'], 'com_code' => $com_code ])->value('delegate_code');
-                    $d['delegate_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
-                    $d['delegate_start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
+                    $d['current_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
+                    $d['start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
                 }
             }
 
@@ -85,7 +85,7 @@ class DelegateController extends Controller
             }
 
             $account_insert['account_number'] = $account_number + 1;
-            $account_insert['account_type'] = 3;
+            $account_insert['account_type'] = 4;
             $account_insert['is_parent'] = 0;
             $account_insert['parent_account_number'] = AdminPanelSetting::where('com_code', auth()->user()->com_code)->value('delegate_parent_account');
             $account_insert['start_balance_status'] = $request->start_balance_status;
@@ -265,9 +265,9 @@ class DelegateController extends Controller
             }
             if (!empty($data)) {
                 foreach ($data as $d) {
-                    $d['delegate_code'] = Delegate::where(['person_id' => $d['id'], 'com_code' => auth()->user()->com_code])->value('delegate_code');
-                    $d['delegate_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
-                    $d['delegate_start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
+                    $d['delegate_code'] = Delegate::where(['person_id' => $d['id'], 'com_code' => $com_code ])->value('delegate_code');
+                    $d['current_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
+                    $d['start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
                 }
             }
 

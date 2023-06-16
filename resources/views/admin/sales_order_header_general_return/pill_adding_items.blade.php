@@ -12,6 +12,15 @@
 
             <input type="hidden" name="id" id="invoice_order_id" value="{{ $sales_data->id }}">
 
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>نوع البيع</label>
+                    <select name="sales_type" id="sales_type" class="form-control select2">
+                        <option value="{{ $sales_data->sales_type }}">{{ $sales_data->sales_type_name }}</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="col-md-4">
                 <div class="form-group">
                     <label>اسم العميل</label>
@@ -51,18 +60,6 @@
                                 <option value="{{ $info->id }}"> {{ $info->name }} </option>
                             @endforeach
                             @endif
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label>نوع البيع</label>
-                        <select name="sales_type" id="sales_type" class="form-control select2">
-                            <option value="">اختر النوع</option>
-                            <option value="1">جملة</option>
-                            <option value="2">نص جملة</option>
-                            <option value="3">تجزئة</option>
                         </select>
                     </div>
                 </div>
@@ -151,13 +148,6 @@
             <tbody id="add_new_item_row_result">
                 @foreach ($items as $data)
                     <tr>
-                        <input type="hidden" name="store_id_array[]" class="store_id_array" value="{{ $data['store_id'] }}">
-                        <input type="hidden" name="sales_type_array[]" class="sales_type_array" value="{{ $data['sales_type'] }}">
-                        <input type="hidden" name="item_code_array[]" class="item_code_array" value="{{ $data['item_code'] }}">
-                        <input type="hidden" name="unit_id_array[]" class="unit_id_array" value="{{ $data['unit_id'] }}">
-                        <input type="hidden" name="batch_id_array[]" class="batch_id_array" value="{{ $data['batch_id'] }}">
-                        <input type="hidden" name="quantity_array[]" class="quantity_array" value="{{ $data['quantity'] }}">
-                        <input type="hidden" name="unit_price_array[]" class="unit_price_array" value="{{ $data['unit_price'] }}">
                         <input type="hidden" name="total_price_array[]" class="total_price_array" value="{{ $data['total_price'] }}">
 
 

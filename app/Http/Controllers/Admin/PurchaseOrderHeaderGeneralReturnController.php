@@ -806,7 +806,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                     $insertTransaction['move_type'] = 10;
                     // Account number will be like the account number for the supplier in the purchaseHeader
                     $insertTransaction['account_number'] = $data['account_number'];
-                    $insertTransaction['transaction_type'] = 1;
+                    $insertTransaction['transaction_type'] = 2;
                     $insertTransaction['money'] = $updateInvoice['what_paid'] * (1);
                     $insertTransaction['is_approved'] = 1;
                     $insertTransaction['invoice_id'] = $auto_serial;

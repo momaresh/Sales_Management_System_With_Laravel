@@ -218,37 +218,6 @@ $(document).ready(function() {
         });
     })
 
-    $(document).on('change', '#sales_type', function() {
-        var search_token = $('#token_search').val();
-        var item_code = $('#item_code_add').val();
-        var unit_id = $('#unit_id_add').val();
-        var search_url = $('#ajax_get_item_price_route').val();
-        var sales_type = $('#sales_type').val();
-        jQuery.ajax({
-            url: search_url,
-            type: 'post',
-            dataType: 'html',
-            cache: false,
-            data: {
-                item_code:item_code,
-                sales_type:sales_type,
-                unit_id:unit_id,
-                '_token':search_token
-            },
-            success: function(data) {
-                $("#unit_price_add").val(data);
-                calculate_total_price();
-            },
-            error: function() {
-                $("#batch_add").html("");
-                $('.relatied_item_card').hide();
-
-                alert("حدث خطا ما");
-            }
-        });
-
-    })
-
 
     $(document).on('input', '#quantity_add', function() {
         calculate_total_price();
@@ -570,6 +539,14 @@ $(document).ready(function() {
         var customer_code = $("#customer_code").val();
         var delegate_code = $("#delegate_code").val();
         var notes = $("#notes").text();
+
+        var sales_type = $('#sales_type').val();
+        if (sales_type == '') {
+            alert('من فضلك اختر نوع البيع');
+            $('#sales_type').focus();
+            return false;
+        }
+
         if (pill_date == '') {
             alert('من فضلك ادخل تاريخ الفاتورة');
             $("#pill_date").focus();
@@ -591,6 +568,7 @@ $(document).ready(function() {
                 pill_number:pill_number,
                 pill_type:pill_type,
                 pill_date:pill_date,
+                sales_type:sales_type,
                 customer_code:customer_code,
                 delegate_code:delegate_code,
                 notes:notes,
@@ -676,13 +654,6 @@ $(document).ready(function() {
             return false;
         }
 
-        var sales_type = $('#sales_type').val();
-        if (sales_type == '') {
-            alert('من فضلك اختر نوع البيع');
-            $('#sales_type').focus();
-            return false;
-        }
-
         var item_code = $('#item_code_add').val();
         if (item_code == '') {
             alert('من فضلك اختر الصنف');
@@ -710,8 +681,6 @@ $(document).ready(function() {
             $('#quantity_add').focus();
             return false;
         }
-
-
 
         var total_price = $('#total_price_add').val();
         if (total_price == '') {
@@ -755,6 +724,7 @@ $(document).ready(function() {
         var unit_name = $('#unit_id_add option:selected').text();
         var search_token = $('#token_search').val();
         var search_url = $('#ajax_add_new_item_row_route').val();
+
         jQuery.ajax({
             url:search_url,
             type:'post',
@@ -768,7 +738,6 @@ $(document).ready(function() {
                 total_price:total_price,
                 batch_id:batch_id,
                 store_id:store_id,
-                sales_type:sales_type,
                 store_name:store_name,
                 sales_type_name:sales_type_name,
                 item_name:item_name,
@@ -780,9 +749,10 @@ $(document).ready(function() {
                 calc_total_cost();
             },
             error: function(data) {
-
+                alert('حدث جطأ ما');
             }
         });
+
 
         var search_url = $('#ajax_store_item_route').val();
         jQuery.ajax({
@@ -799,7 +769,6 @@ $(document).ready(function() {
                 total_price:total_price,
                 batch_id:batch_id,
                 store_id:store_id,
-                sales_type:sales_type,
                 production_date:production_date,
                 expire_date:expire_date,
                 '_token':search_token

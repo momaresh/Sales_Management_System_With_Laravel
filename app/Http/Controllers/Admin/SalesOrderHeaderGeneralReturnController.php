@@ -194,21 +194,24 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                 $com_code = auth()->user()->com_code;
 
                 $sales_data = InvoiceOrderHeader::where('id', $request->id)->first();
+                $sales_data['sales_type'] = SalesOrderHeader::where('invoice_id', $request->id)->value('sales_type');
+                if ($sales_data['sales_type'] == 1) {
+                    $sales_data['sales_type_name'] = 'جملة';
+                }
+                else if ($sales_data['sales_type'] == 2) {
+                    $sales_data['sales_type_name'] = 'نص جملة';
+                }
+                else if ($sales_data['sales_type'] == 3) {
+                    $sales_data['sales_type_name'] = 'قطاعي';
+                }
+
                 $items = InvoiceOrderDetail::where('invoice_order_id', $request->id)->get();
                 if (!empty($items)) {
                     foreach($items as $i) {
                         $i['store_name'] = Store::where('id', $i['store_id'])->value('name');
                         $i['unit_name'] = InvUnit::where('id', $i['unit_id'])->value('name');
                         $i['item_name'] = InvItemCard::where('item_code', $i['item_code'])->value('name');
-                        if ($i['sales_type'] == 1) {
-                            $i['sales_type_name'] = 'جملة';
-                        }
-                        else if ($i['sales_type'] == 2) {
-                            $i['sales_type_name'] = 'نص جملة';
-                        }
-                        else if ($i['sales_type'] == 3) {
-                            $i['sales_type_name'] = 'قطاعي';
-                        }
+                        $i['sales_type_name'] = $sales_data['sales_type_name'];
                     }
                 }
 
@@ -432,7 +435,6 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                     $dataInsert['batch_id'] = $request->batch_id;
                 }
                 $dataInsert['store_id'] = $request->store_id;
-                $dataInsert['sales_type'] = $request->sales_type;
                 $dataInsert['production_date'] = $request->production_date;
                 $dataInsert['expire_date'] = $request->expire_date;
                 $dataInsert['added_by'] = auth()->user()->id;
@@ -618,6 +620,8 @@ class SalesOrderHeaderGeneralReturnController extends Controller
             $com_code = auth()->user()->com_code;
             $data = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 2])->get()->first();
             $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('customer_code');
+            $data['delegate_code'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('delegate_code');
+            $data['sales_type'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('sales_type');
 
             if (empty($data)) {
                 return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
@@ -631,6 +635,44 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                 return redirect()->back()->with('error', 'الفاتورة لا تحتوي على اصناف لاعتمادها');
             }
 
+
+            if ($data['delegate_code'] != '' && $data['delegate_code'] != null) {
+                $delegate_data = Delegate::where(['delegate_code' => $data['delegate_code'], 'com_code' => $com_code])->get(['person_id', 'percent_type', 'percent_sales_commission_group', 'percent_sales_commission_half_group', 'percent_sales_commission_one'])->first();
+                $data['delegate_account_number'] = Person::where(['id' => $delegate_data['person_id'],'com_code' => $com_code])->value('account_number');
+                $first_name = Person::where(['id' => $delegate_data['person_id'], 'com_code' => $com_code])->value('first_name');
+                $last_name = Person::where(['id' => $delegate_data['person_id'], 'com_code' => $com_code])->value('last_name');
+                $data['delegate_name'] = $first_name . ' ' . $last_name;
+
+                $updateSalesInvoice['delegate_commission_type'] = $delegate_data['percent_type'];
+                if ($delegate_data['percent_type'] == 1) { // نسبة
+                    if ($data['sales_type'] == 1) {
+                        $updateSalesInvoice['delegate_commission'] = $delegate_data['percent_sales_commission_group'];
+                        $updateSalesInvoice['money_for_delegate'] = $data['total_cost'] * ($delegate_data['percent_sales_commission_group'] / 100) * (1);
+                    }
+                    else if ($data['sales_type'] == 2) {
+                        $updateSalesInvoice['delegate_commission'] = $delegate_data['percent_sales_commission_half_group'];
+                        $updateSalesInvoice['money_for_delegate'] = $data['total_cost'] * ($delegate_data['percent_sales_commission_half_group'] / 100) * (1);
+                    }
+                    else if ($data['sales_type'] == 3) {
+                        $updateSalesInvoice['delegate_commission'] = $delegate_data['percent_sales_commission_one'];
+                        $updateSalesInvoice['money_for_delegate'] = $data['total_cost'] * ($delegate_data['percent_sales_commission_one'] / 100) * (1);
+                    }
+                }
+                else if ($delegate_data['percent_type'] == 2) { // نسبة
+                    if ($data['sales_type'] == 1) {
+                        $updateSalesInvoice['delegate_commission'] = $delegate_data['percent_sales_commission_group'];
+                        $updateSalesInvoice['money_for_delegate'] = $delegate_data['percent_sales_commission_group'] * (1);
+                    }
+                    else if ($data['sales_type'] == 2) {
+                        $updateSalesInvoice['delegate_commission'] = $delegate_data['percent_sales_commission_half_group'];
+                        $updateSalesInvoice['money_for_delegate'] = $delegate_data['percent_sales_commission_half_group'] * (1);
+                    }
+                    else if ($data['sales_type'] == 3) {
+                        $updateSalesInvoice['delegate_commission'] = $delegate_data['percent_sales_commission_one'];
+                        $updateSalesInvoice['money_for_delegate'] = $delegate_data['percent_sales_commission_one'] * (1);
+                    }
+                }
+            }
 
             $updateInvoice['tax_percent'] = $request->tax_percent;
             $updateInvoice['total_cost'] = $request->total_cost;
@@ -669,6 +711,9 @@ class SalesOrderHeaderGeneralReturnController extends Controller
 
 
             if ($flag) {
+
+                SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->update($updateSalesInvoice);
+
                 // get the account number and name from the customer_code
                 // 1- get the person id from the customer model
                 if ($data['customer_code'] != '' && $data['customer_code'] != null) {
@@ -684,6 +729,12 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                     Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
                 }
 
+                if ($data['delegate_code'] != '' && $data['delegate_code'] != null) {
+                    // change the delegate current balance in accounts
+                    $get_current = Account::where(['account_number' => $data['delegate_account_number'], 'com_code' => $com_code])->value('current_balance');
+                    $update_account['current_balance'] = $get_current + $updateSalesInvoice['money_for_delegate'];
+                    Account::where(['account_number' => $data['delegate_account_number'], 'com_code' => $com_code])->update($update_account);
+                }
 
                 // there is many action to take
                 // first if the what_paid > 0, we will make transaction action and will be in minus,

@@ -326,6 +326,9 @@
                 else if (account_type == 6) {
                     $('#move_type').val(25);
                 }
+                else if (account_type == 4) {
+                    $('#move_type').val(28);
+                }
                 else {
                     $('#move_type').val(4);
                 }
@@ -344,6 +347,9 @@
                 }
                 else if (account_type == 6) {
                     $('#move_type').val(25);
+                }
+                else if (account_type == 4) {
+                    $('#move_type').val(28);
                 }
                 else {
                     $('#move_type').val(4);

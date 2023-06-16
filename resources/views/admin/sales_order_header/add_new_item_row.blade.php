@@ -1,11 +1,4 @@
 <tr>
-    <input type="hidden" name="store_id_array[]" class="store_id_array" value="{{ $data['store_id'] }}">
-    <input type="hidden" name="sales_type_array[]" class="sales_type_array" value="{{ $data['sales_type'] }}">
-    <input type="hidden" name="item_code_array[]" class="item_code_array" value="{{ $data['item_code'] }}">
-    <input type="hidden" name="unit_id_array[]" class="unit_id_array" value="{{ $data['unit_id'] }}">
-    <input type="hidden" name="batch_id_array[]" class="batch_id_array" value="{{ $data['batch_id'] }}">
-    <input type="hidden" name="quantity_array[]" class="quantity_array" value="{{ $data['quantity'] }}">
-    <input type="hidden" name="unit_price_array[]" class="unit_price_array" value="{{ $data['unit_price'] }}">
     <input type="hidden" name="total_price_array[]" class="total_price_array" value="{{ $data['total_price'] }}">
 
 

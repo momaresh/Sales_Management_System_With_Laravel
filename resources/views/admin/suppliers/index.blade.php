@@ -72,8 +72,24 @@
                                 <td>{{ $datum['supplier_code'] }}</td>
                                 <td>{{ $datum->first_name }}  {{ $datum->last_name }}</td>
                                 <td>{{ $datum['account_number'] }}</td>
-                                <td>{{ $datum['current_balance'] }}</td>
-                                <td>{{ $datum['start_balance'] }}</td>
+                                <td>
+                                    @if($datum->current_balance == 0)
+                                    متزن
+                                    @elseif ($datum->current_balance > 0)
+                                        مدين ({{ $datum->current_balance }})
+                                    @else
+                                        دائن ({{ $datum->current_balance * (-1) }})
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($datum->start_balance == 0)
+                                        متزن
+                                    @elseif ($datum->start_balance > 0)
+                                        مدين ({{ $datum->start_balance }})
+                                    @else
+                                        دائن ({{ $datum->start_balance * (-1) }})
+                                    @endif
+                                </td>
                                 <td>
                                     <button data-id="{{ $datum->id }}" class="details_button btn" style="color: rgb(38, 123, 29); font-size: 25px;">
                                         <i class="fa-solid fa-circle-info"></i>

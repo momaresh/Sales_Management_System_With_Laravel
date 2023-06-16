@@ -30,8 +30,8 @@ class CustomerController extends Controller
             if (!empty($data)) {
                 foreach ($data as $d) {
                     $d['customer_code'] = Customer::where(['person_id' => $d['id'], 'com_code' => $com_code ])->value('customer_code');
-                    $d['customer_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
-                    $d['customer_start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
+                    $d['current_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
+                    $d['start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
                 }
             }
 
@@ -249,12 +249,12 @@ class CustomerController extends Controller
             }
             if (!empty($data)) {
                 foreach ($data as $d) {
-                    $d['customer_code'] = Customer::where(['person_id' => $d['id'], 'com_code' => auth()->user()->com_code])->value('customer_code');
-                    $d['customer_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
-                    $d['customer_start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
+                    $d['customer_code'] = Customer::where(['person_id' => $d['id'], 'com_code' => $com_code ])->value('customer_code');
+                    $d['current_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
+                    $d['start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
                 }
             }
-
+            
             return view('admin.customers.ajax_search', ['data' => $data]);
 
         }

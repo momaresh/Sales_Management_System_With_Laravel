@@ -249,12 +249,12 @@ class SupplierController extends Controller
             }
             if (!empty($data)) {
                 foreach ($data as $d) {
-                    $d['supplier_code'] = Supplier::where(['person_id' => $d['id'], 'com_code' => auth()->user()->com_code])->value('supplier_code');
-                    $d['supplier_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
-                    $d['supplier_start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
+                    $d['supplier_code'] = Supplier::where(['person_id' => $d['id'], 'com_code' => $com_code])->value('supplier_code');
+                    $d['current_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
+                    $d['start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
                 }
             }
-
+            
             return view('admin.suppliers.ajax_search', ['data' => $data]);
 
         }

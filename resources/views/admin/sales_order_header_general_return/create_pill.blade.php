@@ -13,6 +13,18 @@
 
             <div class="col-md-3">
                 <div class="form-group">
+                    <label>نوع البيع</label>
+                    <select name="sales_type" id="sales_type" class="form-control select2">
+                        <option value="">اختر النوع</option>
+                        <option value="1">جملة</option>
+                        <option value="2">نص جملة</option>
+                        <option value="3">تجزئة</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-group">
                     <label>نوع الفاتورة</label>
                     <select name="pill_type" id="pill_type" class="form-control select2">
                         <option value="1">نقدا</option>
