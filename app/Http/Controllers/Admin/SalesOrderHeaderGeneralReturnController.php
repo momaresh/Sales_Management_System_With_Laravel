@@ -84,6 +84,34 @@ class SalesOrderHeaderGeneralReturnController extends Controller
         }
     }
 
+    public function delete($id)
+    {
+        try {
+            $com_code = auth()->user()->com_code;
+            $data = InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->get('is_approved')->first();
+
+            if (empty($data)) {
+                return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
+            }
+
+            if ($data['is_approved'] == 1) {
+                return redirect()->back()->with('error', 'لا يمكن حذف الفاتورة المعتمدة');
+            }
+
+            $count = InvoiceOrderDetail::where(['invoice_order_id' => $id, 'com_code' => $com_code])->count();
+            if ($count > 0) {
+                return redirect()->back()->with('error', 'لا يمكن حذف الفاتورة التي تحتوي على اصناف الا عند حذف الاصناف من شاشتهم');
+            }
+
+            SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->delete();
+            InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->delete();
+            return redirect()->back()->with('success', 'تم الحذف بنجاح');
+        }
+        catch (Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
     public function create_pill(Request $request)
     {
         # code...
@@ -171,6 +199,7 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                     }
                     $inserted_sales['customer_code'] = $request->customer_code;
                     $inserted_sales['delegate_code'] = $request->delegate_code;
+                    $inserted_sales['sales_type'] = $request->sales_type;
                     $inserted_sales['added_by'] = auth()->user()->id;
                     $inserted_sales['created_at'] = date("Y-m-d H:i:s");
                     $inserted_sales['com_code'] = auth()->user()->com_code;
@@ -202,7 +231,7 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                     $sales_data['sales_type_name'] = 'نص جملة';
                 }
                 else if ($sales_data['sales_type'] == 3) {
-                    $sales_data['sales_type_name'] = 'قطاعي';
+                    $sales_data['sales_type_name'] = 'تجزئة';
                 }
 
                 $items = InvoiceOrderDetail::where('invoice_order_id', $request->id)->get();
@@ -999,5 +1028,42 @@ class SalesOrderHeaderGeneralReturnController extends Controller
             return redirect()->back()->with('error', $e->getMessage())->withInput();
         }
     }
+
+    public function printA4($id, $type) {
+        $com_code = auth()->user()->com_code;
+        $data = InvoiceOrderHeader::where('id', $id)->get()->first();
+        if (!empty($data)) {
+            $data['tax_value'] = $data['total_before_discount'] * $data['tax_percent'] / 100;
+
+            $data['customer_code'] = SalesOrderHeader::where('invoice_id', $id)->value('customer_code');
+            if (!empty($data['customer_code'])) {
+                $person_id = Customer::where(['customer_code' => $data['customer_code'], 'com_code' => $com_code])->value('person_id');
+                $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                $data['customer_phone'] = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('phone');
+                $data['customer_name'] = $first_name . ' ' . $last_name;
+            }
+            else {
+                $data['customer_name'] = 'لا يوجد';
+            }
+            $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
+            $sales_invoices_details = InvoiceOrderDetail::where('invoice_order_id', $id)->get();
+            if (!empty($sales_invoices_details)) {
+                foreach($sales_invoices_details as $s) {
+                    $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                    $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
+                    $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                }
+            }
+        }
+
+        if ($type == 'A4') {
+            return view('admin.sales_order_header_general_return.printA4', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
+        }
+        else if ($type == 'A6') {
+            return view('admin.sales_order_header_general_return.printA6', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
+        }
+    }
+
 
 }

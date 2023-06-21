@@ -15,7 +15,7 @@ class SalesOrderHeader extends Model
         'customer_code', 'delegate_code',
         'sales_code', 'sales_type', 'delegate_commission_type',
         'delegate_commission', 'money_for_delegate','added_by', 'created_at',
-        'updated_at', 'updated_by', 'com_code'
+        'updated_at', 'updated_by', 'date', 'com_code'
     ];
 
     public $incrementing = false;

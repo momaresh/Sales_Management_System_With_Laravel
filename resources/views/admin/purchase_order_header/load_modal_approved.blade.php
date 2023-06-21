@@ -58,6 +58,7 @@
                     <label>نسبة الخصم</label>
                     <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="discount-percent" class="form-control" name="discount_percent" value="">
                     <span style="color: rgb(199, 8, 8)" id="discount-value-span"></span>
+                    <input type="hidden" name="discount_val" id="discount-value-input">
                     @error('discount_percent')
                         <span class="text-danger">{{ $message }}</span>
                     @enderror

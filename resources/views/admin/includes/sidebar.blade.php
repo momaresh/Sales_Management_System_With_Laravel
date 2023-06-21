@@ -231,12 +231,14 @@
             <li class="nav-item has-treeview
                     {{ request()->is('admin/purchase_header/*') ||
                         request()->is('admin/purchase_order_header_general_return/*') ||
-                        request()->is('admin/items_in_stores*') ?  'menu-open' : '' }}">
+                        request()->is('admin/items_in_stores*') ||
+                        request()->is('admin/inv_stores_inventory/*') ?  'menu-open' : '' }}">
 
                 <a href="#" class="nav-link
                     {{ request()->is('admin/purchase_header/*') ||
                         request()->is('admin/purchase_order_header_general_return/*') ||
-                        request()->is('admin/items_in_stores/*') ?  'active' : '' }}">
+                        request()->is('admin/items_in_stores/*') ||
+                        request()->is('admin/inv_stores_inventory/*') ?  'active' : '' }}">
 
                 <i class="nav-icon fas fa-tachometer-alt"></i>
                 <p>
@@ -269,6 +271,15 @@
                             <i class="nav-icon fas fa-th"></i>
                             <p>
                                 الاصناف في المخازن
+                            </p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{{ route('admin.inv_stores_inventory.index') }}" class="nav-link {{ request()->is('admin/inv_stores_inventory/*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-th"></i>
+                            <p>
+                                جرد المخازن
                             </p>
                         </a>
                     </li>
@@ -355,6 +366,41 @@
                             <i class="nav-icon fas fa-th"></i>
                             <p>
                                 شفتات الخزن
+                            </p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-treeview
+                    {{ request()->is('admin/reports/*') ?  'menu-open' : '' }}">
+
+                <a href="#" class="nav-link
+                {{ request()->is('admin/reports/*') ?  'active' : '' }}">
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <p>
+                    التقارير
+                    <i class="right fas fa-angle-left"></i>
+                </p>
+                </a>
+
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{{ route('admin.reports.supplier_account_report') }}" class="nav-link {{ request()->is('admin/reports/supplier_account_report') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-th"></i>
+                            <p>
+                                كشف حساب مورد
+                            </p>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{{ route('admin.reports.customer_account_report') }}" class="nav-link {{ request()->is('admin/reports/customer_account_report') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-th"></i>
+                            <p>
+                                كشف حساب عميل
                             </p>
                         </a>
                     </li>

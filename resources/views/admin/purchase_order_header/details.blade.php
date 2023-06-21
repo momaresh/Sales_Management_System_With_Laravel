@@ -78,11 +78,9 @@
                 </tr>
 
                 <tr>
-                    <th>اجمالي الفاتورة</th>
+                    <th>اجمالي الاصناف على الفاتورة</th>
                     <td id="reload_total_price_result">{{ $data['total_before_discount'] }}</td>
                 </tr>
-
-
 
                 <tr>
                     <th>الخصم على الفاتورة</th>
@@ -104,6 +102,11 @@
                 <tr>
                     <th>نسبة الضريبة</th>
                     <td>{{ $data['tax_percent'] }}%</td>
+                </tr>
+
+                <tr>
+                    <th>اجمالي الفاتورة</th>
+                    <td id="reload_total_price_result">{{ $data['total_cost'] }}</td>
                 </tr>
 
                 <tr>

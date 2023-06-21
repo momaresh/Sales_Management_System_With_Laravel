@@ -345,6 +345,7 @@ $(document).ready(function() {
             discount_percent = parseFloat(discount_percent);
             discount_value = total_after_tax * (discount_percent / 100);
             $('#discount-value-span').text(discount_value);
+            $('#discount-value-input').val(discount_value);
         }
         else if (discount_type == 2) {
             var discount_val = $('#discount-value').val();;

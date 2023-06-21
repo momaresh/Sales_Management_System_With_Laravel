@@ -5,14 +5,13 @@
         <tr style="background-color: #007bff; color:white;">
             <th>تعديل</th>
             <th>كود الفاتورة</th>
-            <th>اسم المورد</th>
+            <th>اسم العميل</th>
             <th>اسم المندوب</th>
             <th>نوع الفاتورة</th>
             <th>تاريخ الفاتورة</th>
             <th>حالة الفاتورة</th>
             <th>اجمالي الفاتورة</th>
-            <th>التفاصيل</th>
-            <th>حذف</th>
+            <th>التحكم</th>
         </tr>
 
         @foreach ($data as $datum)
@@ -35,21 +34,27 @@
                     @endif
                 </td>
                 <td>{{ $datum->order_date }}</td>
-                <td>
-                    @if ($datum->is_approved == 0)
+                @if ($datum->is_approved == 0)
+                    <td style="background-color: #5ab6a0a1;">
                         مفتوحة
-                    @elseif ($datum->is_approved == 1)
+                    </td>
+                @elseif ($datum->is_approved == 1)
+                    <td style="background-color: #c15670a1;;">
                         معتمدة
-                    @endif
-                </td>
+                    </td>
+                @endif
                 <td>{{ $datum->total_cost }}</td>
                 <td>
-                    <a href="{{ route('admin.purchase_header.details', $datum->id) }}" style="color: rgb(39, 149, 35); font-size: 25px;">
-                        <i class="fa-solid fa-circle-info"></i>
+                    <a href="{{ route('admin.sales_order_header_general_return.printA4', [$datum->id, 'A4']) }}" class="btn btn-success">
+                        A4 <i class="fa-solid fa-print"></i>
                     </a>
-                </td>
-                <td>
-                    <a href="{{ route('admin.purchase_header.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
+                    <a href="{{ route('admin.sales_order_header_general_return.printA4', [$datum->id, 'A6']) }}" class="btn btn-success">
+                        A6 <i class="fa-solid fa-print"></i>
+                    </a>
+                    <button data-id={{ $datum->id }} id="update_pill" class="btn btn-info">
+                        <i class="fa-solid fa-circle-info"></i>
+                    </button>
+                    <a href="{{ route('admin.sales_order_header_general_return.delete', $datum->id) }}" class="are_you_sure btn btn-danger">
                         <i class="fa-solid fa-trash-can"></i>
                     </a>
                 </td>

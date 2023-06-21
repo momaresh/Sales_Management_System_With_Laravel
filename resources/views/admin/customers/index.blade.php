@@ -44,9 +44,30 @@
 
                     <input class="form-control" type="search" placeholder="رقم العميل - رقم الحساب - الاسم الاخير" id="ajax_search">
                 </div>
+
+                <div class="col-md-3">
+                    <label class="control-label">حالة الحساب</label>
+                    <select class="form-control select2" id="current_status_search">
+                        <option value="all">بحث بالكل</option>
+                        <option value="0">دائن</option>
+                        <option value="1">متزن</option>
+                        <option value="2">مدين</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="control-label">حالة الحساب اول المدة</label>
+                    <select class="form-control select2" id="start_status_search">
+                        <option value="all">بحث بالكل</option>
+                        <option value="0">دائن</option>
+                        <option value="1">متزن</option>
+                        <option value="2">مدين</option>
+                    </select>
+                </div>
             </div>
 
             <div id="ajax_search_result">
+
                 <table id="example2" class="table table-bordered table-hover">
 
                     @if (!@empty($data[0]))
@@ -168,6 +189,8 @@
         function make_search() {
             // get the value from the input to search by
             var search_by_name = $('#ajax_search').val();
+            var current_status_search = $('#current_status_search').val();
+            var start_status_search = $('#start_status_search').val();
             var search_by_radio = $('input[type=radio][name=search_by_radio]:checked').val();
 
             jQuery.ajax({
@@ -180,7 +203,12 @@
                 // first argument is
                 cache:false,
                 // forth we send the search data and the token
-                data:{search_by_name:search_by_name,search_by_radio:search_by_radio, '_token':"{{ csrf_token() }}"},
+                data:{
+                    search_by_name:search_by_name,
+                    search_by_radio:search_by_radio,
+                    current_status_search:current_status_search,
+                    start_status_search:start_status_search,
+                    '_token':"{{ csrf_token() }}"},
                 // If the form and everything okay
                 success:function(data){
                     $('#ajax_search_result').html(data);
@@ -192,17 +220,23 @@
             });
         }
 
-
         $(document).on('input', '#ajax_search', function() {
+            make_search();
+        });
+
+        $(document).on('change', '#current_status_search', function() {
+            make_search();
+        });
+
+        $(document).on('change', '#start_status_search', function() {
             make_search();
         });
 
         $(document).on('click', '#ajax_search_pagination a', function(e) {
             e.preventDefault();
-            // get the value from the input to search by
             var search_by_name = $('#ajax_search').val();
-            var search_by_type = $('#type_search').val();
-            var search_by_category = $('#category_search').val();
+            var current_status_search = $('#current_status_search').val();
+            var start_status_search = $('#start_status_search').val();
             var search_by_radio = $('input[type=radio][name=search_by_radio]:checked').val();
 
             jQuery.ajax({
@@ -215,7 +249,12 @@
                 // first argument is
                 cache:false,
                 // forth we send the search data and the token
-                data:{search_by_name:search_by_name,search_by_radio,search_by_radio, '_token':"{{ csrf_token() }}"},
+                data:{
+                    search_by_name:search_by_name,
+                    search_by_radio,search_by_radio,
+                    current_status_search:current_status_search,
+                    start_status_search:start_status_search,
+                    '_token':"{{ csrf_token() }}"},
                 // If the form and everything okay
                 success:function(data){
                     $('#ajax_search_result').html(data);

@@ -44,6 +44,26 @@
 
                     <input class="form-control" type="search" placeholder="رقم المورد - رقم الحساب - الاسم الاخير" id="ajax_search">
                 </div>
+
+                <div class="col-md-3">
+                    <label class="control-label">حالة الحساب</label>
+                    <select class="form-control select2" id="current_status_search">
+                        <option value="all">بحث بالكل</option>
+                        <option value="0">دائن</option>
+                        <option value="1">متزن</option>
+                        <option value="2">مدين</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="control-label">حالة الحساب اول المدة</label>
+                    <select class="form-control select2" id="start_status_search">
+                        <option value="all">بحث بالكل</option>
+                        <option value="0">دائن</option>
+                        <option value="1">متزن</option>
+                        <option value="2">مدين</option>
+                    </select>
+                </div>
             </div>
 
             <div id="ajax_search_result">
@@ -126,7 +146,7 @@
   </div>
 
 <div class="modal fade" id="details_modal">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog">
         <div class="modal-content">
         <div class="modal-header">
             <h4 class="modal-title">باقي تفاصيل العميل</h4>
@@ -168,6 +188,8 @@
             // get the value from the input to search by
             var search_by_name = $('#ajax_search').val();
             var search_by_radio = $('input[type=radio][name=search_by_radio]:checked').val();
+            var current_status_search = $('#current_status_search').val();
+            var start_status_search = $('#start_status_search').val();
 
             jQuery.ajax({
                 // first argument is the where the from route to
@@ -179,7 +201,12 @@
                 // first argument is
                 cache:false,
                 // forth we send the search data and the token
-                data:{search_by_name:search_by_name,search_by_radio:search_by_radio, '_token':"{{ csrf_token() }}"},
+                data:{
+                    search_by_name:search_by_name,
+                    search_by_radio:search_by_radio,
+                    current_status_search:current_status_search,
+                    start_status_search:start_status_search,
+                    '_token':"{{ csrf_token() }}"},
                 // If the form and everything okay
                 success:function(data){
                     $('#ajax_search_result').html(data);
@@ -193,6 +220,14 @@
 
 
         $(document).on('input', '#ajax_search', function() {
+            make_search();
+        });
+
+        $(document).on('change', '#current_status_search', function() {
+            make_search();
+        });
+
+        $(document).on('change', '#start_status_search', function() {
             make_search();
         });
 

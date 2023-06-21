@@ -67,14 +67,16 @@
 
                 <tr>
                     <td>{{ $data->inv_itemcard_categories_name }}</td>
-                    <td>{{ $data->parent_inv_itemcard_name }}</td>
+                    <td> @if (@empty($data->parent_inv_itemcard_name)) لا يوجد @else {{ $data->parent_inv_itemcard_name }} @endif</td>
                     <td>{{ $data->unit_name }}</td>
                 </tr>
 
                 <tr>
                     <th> هل للصنف وحدة قياس فرعية</th>
-                    <th> وحدة القياس التجزئة</th>
-                    <th> عدد وحدات التجزئة ({{ $data->retail_unit_name }}) بالنسبة للاب ({{ $data->unit_name }})</th>
+                    @if ($data->does_has_retailunit == 1)
+                        <th> وحدة القياس التجزئة</th>
+                        <th> عدد وحدات التجزئة ({{ $data->retail_unit_name }}) بالنسبة للاب ({{ $data->unit_name }})</th>
+                    @endif
                 </tr>
 
                 <tr>
@@ -85,8 +87,10 @@
                             لا
                         @endif
                     </td>
-                    <td>{{ $data->retail_unit_name }}</td>
-                    <td>{{ $data->retail_uom_quntToParent }}</td>
+                    @if ($data->does_has_retailunit == 1)
+                        <td>{{ $data->retail_unit_name }}</td>
+                        <td>{{ $data->retail_uom_quntToParent }}</td>
+                    @endif
                 </tr>
 
                 <tr>
@@ -101,27 +105,34 @@
                     <td>{{ $data->price_per_group_in_master_unit }}</td>
                 </tr>
 
+                @if ($data->does_has_retailunit == 1)
                 <tr>
-                    <th> سعر تكلفة الشراء لوحدة ({{ $data->unit_name }}) </th>
                     <th> سعر القطاعي بوحدة ({{ $data->retail_unit_name }}) </th>
                     <th> سعر النص جملة بوحدة ({{ $data->retail_unit_name }}) </th>
+                    <th> سعر الجملة بوحدة ({{ $data->retail_unit_name }}) </th>
                 </tr>
 
                 <tr>
-                    <td>{{ $data->cost_price_in_master }}</td>
                     <td>{{ $data->price_per_one_in_retail_unit }}</td>
                     <td>{{ $data->price_per_half_group_in_retail_unit }}</td>
+                    <td>{{ $data->price_per_group_in_retail_unit }}</td>
                 </tr>
+                @endif
+
 
                 <tr>
-                    <th> سعر الجملة بوحدة ({{ $data->retail_unit_name }}) </th>
-                    <th> سعر تكلفة الشراء لوحدة ({{ $data->retail_unit_name }}) </th>
+                    <th> سعر تكلفة الشراء لوحدة ({{ $data->unit_name }}) </th>
+                    @if ($data->does_has_retailunit == 1)
+                        <th> سعر تكلفة الشراء لوحدة ({{ $data->retail_unit_name }}) </th>
+                    @endif
                     <th>هل للصنف سعر ثابت</th>
                 </tr>
 
                 <tr>
-                    <td>{{ $data->price_per_group_in_retail_unit }}</td>
-                    <td>{{ $data->cost_price_in_retail }}</td>
+                    <td>{{ $data->cost_price_in_master }}</td>
+                    @if ($data->does_has_retailunit == 1)
+                        <td>{{ $data->cost_price_in_retail }}</td>
+                    @endif
                     <td>
                         @if ($data->has_fixed_price == 1)
                             نعم
@@ -133,14 +144,18 @@
 
                 <tr>
                     <th>كل الكمية بوحدة ({{ $data->unit_name }})</th>
-                    <th>المتبقي من ({{ $data->unit_name }})</th>
-                    <th>كل الكمية بوحدة ({{ $data->retail_unit_name }})</th>
+                    @if ($data->does_has_retailunit == 1)
+                        <th>المتبقي من ({{ $data->unit_name }})</th>
+                        <th>كل الكمية بوحدة ({{ $data->retail_unit_name }})</th>
+                    @endif
                 </tr>
 
                 <tr>
                     <td>{{ $data->all_quantity_with_master_unit }}</td>
-                    <td>{{ $data->remain_quantity_in_retail }}</td>
-                    <td>{{ $data->all_quantity_with_retail_unit }}</td>
+                    @if ($data->does_has_retailunit == 1)
+                        <td>{{ $data->remain_quantity_in_retail }}</td>
+                        <td>{{ $data->all_quantity_with_retail_unit }}</td>
+                    @endif
                 </tr>
 
 

@@ -1,3 +1,14 @@
+{{-- <table id="example2" class="table table-bordered table-hover">
+    <tr style="background-color: #007bff; color:white;">
+        <th>اجمالي المستحق تسليمة للعملاء</th>
+        <th>اجمالي المستحق تحصيلة من العملاء</th>
+    </tr>
+    <tr>
+        <td>{{ $data['all_debit'] }}</td>
+        <td>{{ $data['all_credit'] }}</td>
+    </tr>
+</table> --}}
+
 <table id="example2" class="table table-bordered table-hover">
 
     @if (!@empty($data[0]))

@@ -20,8 +20,10 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminShiftController;
 use App\Http\Controllers\Admin\CollectTransactionController;
 use App\Http\Controllers\Admin\ExchangeTransactionController;
+use App\Http\Controllers\Admin\InvStoreInventoryController;
 use App\Http\Controllers\Admin\ItemInStoreController;
 use App\Http\Controllers\Admin\PurchaseOrderHeaderGeneralReturnController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SalesOrderHeaderController;
 use App\Http\Controllers\Admin\SalesOrderHeaderGeneralReturnController;
 
@@ -192,6 +194,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::post('purchase_header/load_modal_approved', [PurchaseOrderHeaderController::class, 'load_modal_approved'])->name('admin.purchase_header.load_modal_approved');
     Route::post('purchase_header/check_shift_and_reload_money', [PurchaseOrderHeaderController::class, 'check_shift_and_reload_money'])->name('admin.purchase_header.check_shift_and_reload_money');
     Route::post('purchase_header/do_approve/{id}', [PurchaseOrderHeaderController::class, 'do_approve'])->name('admin.purchase_header.do_approve');
+    Route::get('purchase_header/printA4/{id}/{type}', [PurchaseOrderHeaderController::class, 'printA4'])->name('admin.purchase_header.printA4');
     /* end purchase_header */
 
     /* begin purchase_order_header_general_return */
@@ -211,7 +214,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::post('purchase_order_header_general_return/approve_pill/{id}', [PurchaseOrderHeaderGeneralReturnController::class, 'approve_pill'])->name('admin.purchase_order_header_general_return.approve_pill');
     Route::post('purchase_order_header_general_return/check_shift_and_reload_money', [PurchaseOrderHeaderGeneralReturnController::class, 'check_shift_and_reload_money'])->name('admin.purchase_order_header_general_return.check_shift_and_reload_money');
     Route::post('purchase_order_header_general_return/create_pill', [PurchaseOrderHeaderGeneralReturnController::class, 'create_pill'])->name('admin.purchase_order_header_general_return.create_pill');
-     /* end purchase_order_header_general_return */
+    Route::get('purchase_order_header_general_return/printA4/{id}/{type}', [PurchaseOrderHeaderGeneralReturnController::class, 'printA4'])->name('admin.purchase_order_header_general_return.printA4');
+    /* end purchase_order_header_general_return */
 
 
     /* begin admins */
@@ -271,6 +275,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::post('sales_header/create_pill', [SalesOrderHeaderController::class, 'create_pill'])->name('admin.sales_header.create_pill');
     Route::post('sales_header/add_to_customer', [SalesOrderHeaderController::class, 'add_to_customer'])->name('admin.sales_header.add_to_customer');
     Route::post('sales_header/get_added_customer', [SalesOrderHeaderController::class, 'get_added_customer'])->name('admin.sales_header.get_added_customer');
+    Route::get('sales_header/printA4/{id}/{type}', [SalesOrderHeaderController::class, 'printA4'])->name('admin.sales_header.printA4');
     /* end sales_header */
 
     /* begin sales_order_header_general_return */
@@ -290,13 +295,40 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::post('sales_order_header_general_return/approve_pill/{id}', [SalesOrderHeaderGeneralReturnController::class, 'approve_pill'])->name('admin.sales_order_header_general_return.approve_pill');
     Route::post('sales_order_header_general_return/check_shift_and_reload_money', [SalesOrderHeaderGeneralReturnController::class, 'check_shift_and_reload_money'])->name('admin.sales_order_header_general_return.check_shift_and_reload_money');
     Route::post('sales_order_header_general_return/create_pill', [SalesOrderHeaderGeneralReturnController::class, 'create_pill'])->name('admin.sales_order_header_general_return.create_pill');
-     /* end sales_order_header_general_return */
+    Route::get('sales_order_header_general_return/printA4/{id}/{type}', [SalesOrderHeaderGeneralReturnController::class, 'printA4'])->name('admin.sales_order_header_general_return.printA4');
+    /* end sales_order_header_general_return */
 
 
     /* begin items_in_stores */
     Route::get('items_in_stores/index', [ItemInStoreController::class, 'index'])->name('admin.items_in_stores.index');
     Route::post('items_in_stores/ajax_search', [ItemInStoreController::class, 'ajax_search'])->name('admin.items_in_stores.ajax_search');
     /* end items_in_stores */
+
+    /* begin reports */
+    Route::get('reports/index', [ReportController::class, 'index'])->name('admin.reports.index');
+    Route::get('reports/supplier_account_report', [ReportController::class, 'supplier_account_report'])->name('admin.reports.supplier_account_report');
+    Route::post('reports/supplier_account_report', [ReportController::class, 'supplier_account_report'])->name('admin.reports.supplier_account_report');
+    Route::get('reports/customer_account_report', [ReportController::class, 'customer_account_report'])->name('admin.reports.customer_account_report');
+    Route::post('reports/customer_account_report', [ReportController::class, 'customer_account_report'])->name('admin.reports.customer_account_report');
+    /* end reports */
+
+    /* begin inv_stores_inventory */
+    Route::get('inv_stores_inventory/index', [InvStoreInventoryController::class, 'index'])->name('admin.inv_stores_inventory.index');
+    Route::get('inv_stores_inventory/create', [InvStoreInventoryController::class, 'create'])->name('admin.inv_stores_inventory.create');
+    Route::post('inv_stores_inventory/store', [InvStoreInventoryController::class, 'store'])->name('admin.inv_stores_inventory.store');
+    Route::get('inv_stores_inventory/edit/{id}', [InvStoreInventoryController::class, 'edit'])->name('admin.inv_stores_inventory.edit');
+    Route::post('inv_stores_inventory/update/{id}', [InvStoreInventoryController::class, 'update'])->name('admin.inv_stores_inventory.update');
+    Route::post('inv_stores_inventory/ajax_search', [InvStoreInventoryController::class, 'ajax_search'])->name('admin.inv_stores_inventory.ajax_search');
+    Route::get('inv_stores_inventory/delete/{id}', [InvStoreInventoryController::class, 'delete'])->name('admin.inv_stores_inventory.delete');
+    Route::get('inv_stores_inventory/details/{id}', [InvStoreInventoryController::class, 'details'])->name('admin.inv_stores_inventory.details');
+    Route::post('inv_stores_inventory/create_detail/{id}', [InvStoreInventoryController::class, 'create_detail'])->name('admin.inv_stores_inventory.create_detail');
+    Route::post('inv_stores_inventory/load_modal_update_batch', [InvStoreInventoryController::class, 'load_modal_update_batch'])->name('admin.inv_stores_inventory.load_modal_update_batch');
+    Route::post('inv_stores_inventory/edit_detail', [InvStoreInventoryController::class, 'edit_detail'])->name('admin.inv_stores_inventory.edit_detail');
+    Route::get('inv_stores_inventory/delete_detail/{detail_id}/{header_id}', [InvStoreInventoryController::class, 'delete_detail'])->name('admin.inv_stores_inventory.delete_detail');
+    Route::get('inv_stores_inventory/close_detail/{detail_id}/{header_id}', [InvStoreInventoryController::class, 'close_detail'])->name('admin.inv_stores_inventory.close_detail');
+    Route::get('inv_stores_inventory/close_header/{header_id}', [InvStoreInventoryController::class, 'close_header'])->name('admin.inv_stores_inventory.close_header');
+    Route::get('inv_stores_inventory/printA4/{header_id}', [InvStoreInventoryController::class, 'printA4'])->name('admin.inv_stores_inventory.printA4');
+    /* end inv_stores_inventory */
 
 });
 

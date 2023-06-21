@@ -217,44 +217,109 @@ class SupplierController extends Controller
         if ($request->ajax()) {
             $com_code = auth()->user()->com_code;
             $search_by_name = $request->search_by_name;
+            $current_status_search = $request->current_status_search;
+            $start_status_search = $request->start_status_search;
             $search_by_radio = $request->search_by_radio;
 
+            $field1 = "id";
+            $operator1 = ">";
+            $value1 = 0;
+
+            $field2 = "person_id";
+            $operator2 = ">";
+            $value2 = 0;
             if ($search_by_radio == 'name') {
                 if ($search_by_name == '') {
-                    $data = Person::where(['person_type' => 2, 'com_code' => $com_code])->orderBy('id', 'DESC')->paginate(PAGINATION_COUNT);
+                    $field1 = "id";
+                    $operator1 = ">";
+                    $value1 = 0;
                 }
                 else {
-                    $data = Person::where('last_name', 'LIKE', "%$search_by_name%")->where(['person_type' => 2, 'com_code' => $com_code])->orderBy('id', 'DESC')->paginate(PAGINATION_COUNT);
+                    $field1 = "last_name";
+                    $operator1 = "LIKE";
+                    $value1 = '%'.$search_by_name.'%';
                 }
             }
             else if ($search_by_radio == 'acc_number') {
                 if ($search_by_name == '') {
-                    $data = Person::where(['person_type' => 2, 'com_code' => $com_code])->orderBy('id', 'DESC')->paginate(PAGINATION_COUNT);
+                    $field1 = "id";
+                    $operator1 = ">";
+                    $value1 = 0;
                 }
                 else {
-                    $data = Person::where('account_number', 'LIKE', "%$search_by_name%")->where(['person_type' => 2,'com_code' => $com_code])->orderBy('id', 'DESC')->paginate(PAGINATION_COUNT);
+                    $field1 = "account_number";
+                    $operator1 = "LIKE";
+                    $value1 = '%'.$search_by_name.'%';
                 }
             }
             else if ($search_by_radio == 'cus_code') {
                 if ($search_by_name == '') {
-                    $data = Person::where(['person_type' => 2, 'com_code' => $com_code])->orderBy('id', 'DESC')->paginate(PAGINATION_COUNT);
+                    $field2 = "person_id";
+                    $operator2 = ">";
+                    $value2 = 0;
                 }
                 else {
-                    $person_id = Supplier::where('supplier_code', 'LIKE' ,"%$search_by_name%")->where(['com_code' => auth()->user()->com_code])->get('person_id');
-                    $data = Person::whereIn('id', $person_id)->where('com_code', $com_code)->orderBy('id', 'DESC')->paginate(PAGINATION_COUNT);
+                    $field2 = "supplier_code";
+                    $operator2 = "LIKE";
+                    $value2 = '%'.$search_by_name.'%';
                 }
             }
-            else {
-                $data = Person::where(['person_type' => 2, 'com_code' => $com_code])->orderBy('id', 'DESC')->paginate(PAGINATION_COUNT);
+
+            if ($current_status_search == 'all') {
+                $field3 = "id";
+                $operator3 = ">";
+                $value3 = 0;
             }
+            else if ($current_status_search == '0') {
+                $field3 = "current_balance";
+                $operator3 = "<";
+                $value3 = 0;
+            }
+            else if ($current_status_search == '1') {
+                $field3 = "current_balance";
+                $operator3 = "=";
+                $value3 = 0;
+            }
+            else if ($current_status_search == '2') {
+                $field3 = "current_balance";
+                $operator3 = ">";
+                $value3 = 0;
+            }
+
+            if ($start_status_search == 'all') {
+                $field4 = "id";
+                $operator4 = ">";
+                $value4 = 0;
+            }
+            else if ($start_status_search == '0') {
+                $field4 = "start_balance";
+                $operator4 = "<";
+                $value4 = 0;
+            }
+            else if ($start_status_search == '1') {
+                $field4 = "start_balance";
+                $operator4 = "=";
+                $value4 = 0;
+            }
+            else if ($start_status_search == '2') {
+                $field4 = "start_balance";
+                $operator4 = ">";
+                $value4 = 0;
+            }
+
+
+            $account_in = Account::where($field3, $operator3, $value3)->where($field4, $operator4, $value4)->where(['account_type' => 2,'com_code' => $com_code])->orderBy('id', 'DESC')->get('account_number');
+            $supplier_in = Supplier::where($field2, $operator2, $value2)->where(['com_code' => $com_code])->get('person_id');
+
+            $data = Person::whereIn('account_number', $account_in)->whereIn('id', $supplier_in)->where($field1, $operator1, $value1)->where(['person_type' => 2, 'com_code' => $com_code])->orderBy('id', 'DESC')->paginate(PAGINATION_COUNT);
             if (!empty($data)) {
                 foreach ($data as $d) {
-                    $d['supplier_code'] = Supplier::where(['person_id' => $d['id'], 'com_code' => $com_code])->value('supplier_code');
+                    $d['supplier_code'] = Supplier::where(['person_id' => $d['id'], 'com_code' => $com_code ])->value('supplier_code');
                     $d['current_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('current_balance');
                     $d['start_balance'] = Account::where(['account_number' => $d['account_number'], 'com_code' => $com_code, 'active' => 1])->value('start_balance');
                 }
             }
-            
+
             return view('admin.suppliers.ajax_search', ['data' => $data]);
 
         }

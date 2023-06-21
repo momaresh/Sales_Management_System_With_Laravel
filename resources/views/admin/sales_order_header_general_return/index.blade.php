@@ -82,14 +82,13 @@
                         <tr style="background-color: #007bff; color:white;">
                             <th>تعديل</th>
                             <th>كود الفاتورة</th>
-                            <th>اسم المورد</th>
+                            <th>اسم العميل</th>
                             <th>اسم المندوب</th>
                             <th>نوع الفاتورة</th>
                             <th>تاريخ الفاتورة</th>
                             <th>حالة الفاتورة</th>
                             <th>اجمالي الفاتورة</th>
-                            <th>التفاصيل</th>
-                            <th>حذف</th>
+                            <th>التحكم</th>
                         </tr>
 
                         @foreach ($data as $datum)
@@ -123,12 +122,16 @@
                                 @endif
                                 <td>{{ $datum->total_cost }}</td>
                                 <td>
-                                    <button data-id={{ $datum->id }} id="update_pill" class="btn" style="color: rgb(38, 123, 29); font-size: 25px;">
+                                    <a href="{{ route('admin.sales_order_header_general_return.printA4', [$datum->id, 'A4']) }}" class="btn btn-success">
+                                        A4 <i class="fa-solid fa-print"></i>
+                                    </a>
+                                    <a href="{{ route('admin.sales_order_header_general_return.printA4', [$datum->id, 'A6']) }}" class="btn btn-success">
+                                        A6 <i class="fa-solid fa-print"></i>
+                                    </a>
+                                    <button data-id={{ $datum->id }} id="update_pill" class="btn btn-info">
                                         <i class="fa-solid fa-circle-info"></i>
                                     </button>
-                                </td>
-                                <td>
-                                    <a href="{{ route('admin.sales_order_header_general_return.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                    <a href="{{ route('admin.sales_order_header_general_return.delete', $datum->id) }}" class="are_you_sure btn btn-danger">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </a>
                                 </td>

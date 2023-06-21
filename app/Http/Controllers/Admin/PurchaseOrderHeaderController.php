@@ -11,6 +11,7 @@ use App\Models\Admin;
 use App\Models\Person;
 use App\Models\Supplier;
 use App\Http\Requests\PurchaseOrderHeaderRequest;
+use App\Models\AdminPanelSetting;
 use App\Models\AdminShift;
 use App\Models\InvItemCard;
 use App\Models\InvUnit;
@@ -288,14 +289,12 @@ class PurchaseOrderHeaderController extends Controller
             $count = InvoiceOrderDetail::where(['invoice_order_id' => $id, 'com_code' => $com_code])->count();
             $flag = 1;
             if ($count > 0) {
-                InvoiceOrderDetail::where(['invoice_order_id' => $id, 'com_code' => $com_code])->delete();
+                return redirect()->back()->with('error', 'لا يمكن حذف الفاتورة التي تحتوي على اصناف الا عند حذف الاصناف من شاشتهم');
             }
 
-            if ($flag) {
-                PurchaseOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->delete();
-                InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->delete();
-                return redirect()->back()->with('success', 'تم الحذف بنجاح');
-            }
+            PurchaseOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->delete();
+            InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->delete();
+            return redirect()->back()->with('success', 'تم الحذف بنجاح');
         }
         catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
@@ -648,7 +647,9 @@ class PurchaseOrderHeaderController extends Controller
 
             if ($request->discount_type == 1) {
                 $updateInvoice['discount_percent'] = $request->discount_percent;
+                $updateInvoice['discount_value'] = $request->discount_val;
             }
+
             else if ($request->discount_type == 2) {
                 $updateInvoice['discount_value'] = $request->discount_value;
             }
@@ -692,7 +693,7 @@ class PurchaseOrderHeaderController extends Controller
 
                 // change the supplier current balance in accounts
                 $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
-                $update_account['current_balance'] = $get_current - $data['total_cost'];
+                $update_account['current_balance'] = $get_current - $request->total_cost;
                 Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
 
                 // there is many action to take
@@ -945,6 +946,42 @@ class PurchaseOrderHeaderController extends Controller
         }
         catch(Exception $e) {
             return redirect()->back()->with('error', $e->getMessage())->withInput();
+        }
+    }
+
+    public function printA4($id, $type) {
+        $com_code = auth()->user()->com_code;
+        $data = InvoiceOrderHeader::where('id', $id)->get()->first();
+        if (!empty($data)) {
+            $data['tax_value'] = $data['total_before_discount'] * $data['tax_percent'] / 100;
+            $data['store_id'] = PurchaseOrderHeader::where('invoice_id', $id)->value('store_id');
+            $data['store_name'] = Store::where('id', $data['store_id'])->value('name');
+            $data['supplier_code'] = PurchaseOrderHeader::where('invoice_id', $id)->value('supplier_code');
+            if (!empty($data['supplier_code'])) {
+                $person_id = Supplier::where(['supplier_code' => $data['supplier_code'], 'com_code' => $com_code])->value('person_id');
+                $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                $data['supplier_phone'] = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('phone');
+                $data['supplier_name'] = $first_name . ' ' . $last_name;
+            }
+            else {
+                $data['supplier_name'] = 'لا يوجد';
+            }
+            $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
+            $sales_invoices_details = InvoiceOrderDetail::where('invoice_order_id', $id)->get();
+            if (!empty($sales_invoices_details)) {
+                foreach($sales_invoices_details as $s) {
+                    $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                    $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                }
+            }
+        }
+
+        if ($type == 'A4') {
+            return view('admin.purchase_order_header.printA4', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
+        }
+        else if ($type == 'A6') {
+            return view('admin.purchase_order_header.printA6', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
         }
     }
 }

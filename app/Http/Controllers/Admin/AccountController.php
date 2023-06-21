@@ -163,7 +163,7 @@ class AccountController extends Controller
 
         $account_types = AccountType::where(["active" => 1])->get(['id', 'name', 'related_internal_accounts']);
 
-        $parent_accounts = Account::where(["active" => 1, "active" => 0, "com_code" => $com_code, 'parent_account_number' => null])->get(['account_number', 'notes']);
+        $parent_accounts = Account::where(["active" => 1, "com_code" => $com_code, 'parent_account_number' => null])->get(['account_number', 'notes']);
         $person_account = Account::where(["id" => $id, "com_code" => $com_code])->value('account_number');
         $person_name = Person::where(["com_code" => $com_code, 'account_number' => $person_account])->get(['id', 'first_name', 'last_name'])->first();
 

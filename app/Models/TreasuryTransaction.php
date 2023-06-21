@@ -16,6 +16,6 @@ class TreasuryTransaction extends Model
         'transaction_code', 'shift_code', 'move_type', 'account_number', 'last_arrive', 'transaction_type',
         'treasuries_id', 'invoice_id',
         'is_account', 'is_approved', 'money', 'money_for_account',
-        'byan', 'move_date', 'added_by', 'updated_by', 'com_code'
+        'byan', 'move_date', 'added_by', 'updated_by', 'date', 'com_code'
     ];
 }
