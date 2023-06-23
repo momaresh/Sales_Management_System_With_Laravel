@@ -146,9 +146,11 @@
                 @endif
 
             </table>
-            <a href="{{ route('admin.panelSetting.edit', $data->id) }}" class="btn btn-primary mt-3">
-                تعديل
-            </a>
+            @if (check_control_menu_role('الضبط العام', 'الضبط العام' , 'تعديل') == true)
+                <a href="{{ route('admin.panelSetting.edit', $data->id) }}" class="btn btn-primary mt-3">
+                    تعديل
+                </a>
+            @endif
             </div>
             <!-- /.card-body -->
         </div>

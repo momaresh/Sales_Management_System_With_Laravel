@@ -24,6 +24,9 @@ use App\Http\Controllers\Admin\InvStoreInventoryController;
 use App\Http\Controllers\Admin\ItemInStoreController;
 use App\Http\Controllers\Admin\PurchaseOrderHeaderGeneralReturnController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\RoleMainMenuController;
+use App\Http\Controllers\Admin\RoleSubMenuController;
 use App\Http\Controllers\Admin\SalesOrderHeaderController;
 use App\Http\Controllers\Admin\SalesOrderHeaderGeneralReturnController;
 
@@ -236,6 +239,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::get('admin_shifts/index', [AdminShiftController::class, 'index'])->name('admin.admin_shifts.index');
     Route::get('admin_shifts/create', [AdminShiftController::class, 'create'])->name('admin.admin_shifts.create');
     Route::post('admin_shifts/store', [AdminShiftController::class, 'store'])->name('admin.admin_shifts.store');
+    Route::get('admin_shifts/end_shift/{id}', [AdminShiftController::class, 'end_shift'])->name('admin.admin_shifts.end_shift');
+    Route::get('admin_shifts/printA4/{id}', [AdminShiftController::class, 'printA4'])->name('admin.admin_shifts.printA4');
+    Route::post('admin_shifts/review_shift', [AdminShiftController::class, 'review_shift'])->name('admin.admin_shifts.review_shift');
     /* end admin_shifts */
 
     /* begin treasuries_transactions */
@@ -330,6 +336,52 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::get('inv_stores_inventory/printA4/{header_id}', [InvStoreInventoryController::class, 'printA4'])->name('admin.inv_stores_inventory.printA4');
     /* end inv_stores_inventory */
 
+    /* begin roles */
+    Route::get('roles/index', [RoleController::class, 'index'])->name('admin.roles.index');
+    Route::get('roles/create', [RoleController::class, 'create'])->name('admin.roles.create');
+    Route::post('roles/store', [RoleController::class, 'store'])->name('admin.roles.store');
+    Route::get('roles/edit/{id}', [RoleController::class, 'edit'])->name('admin.roles.edit');
+    Route::post('roles/update/{id}', [RoleController::class, 'update'])->name('admin.roles.update');
+    Route::get('roles/delete/{id}', [RoleController::class, 'destroy'])->name('admin.roles.delete');
+    Route::post('roles/ajax_search', [RoleController::class, 'ajax_search'])->name('admin.roles.ajax_search');
+    Route::get('roles/details/{id}', [RoleController::class, 'details'])->name('admin.roles.details');
+    Route::post('roles/store_permission_main_menu', [RoleController::class, 'store_permission_main_menu'])->name('admin.roles.store_permission_main_menu');
+    Route::get('roles/delete_permission_main_menu/{role_id}/{main_id}', [RoleController::class, 'delete_permission_main_menu'])->name('admin.roles.delete_permission_main_menu');
+    Route::get('roles/main_menu_details/{role_id}/{main_id}', [RoleController::class, 'main_menu_details'])->name('admin.roles.main_menu_details');
+    Route::post('roles/store_permission_sub_menu', [RoleController::class, 'store_permission_sub_menu'])->name('admin.roles.store_permission_sub_menu');
+    Route::post('roles/store_permission_sub_menu_control', [RoleController::class, 'store_permission_sub_menu_control'])->name('admin.roles.store_permission_sub_menu_control');
+    Route::post('roles/load_control_modal', [RoleController::class, 'load_control_modal'])->name('admin.roles.load_control_modal');
+    Route::get('roles/delete_permission_sub_menu/{role_id}/{main_id}/{sub_id}', [RoleController::class, 'delete_permission_sub_menu'])->name('admin.roles.delete_permission_sub_menu');
+    Route::get('roles/delete_permission_sub_menu_control/{role_id}/{main_id}/{sub_id}/{control_id}', [RoleController::class, 'delete_permission_sub_menu_control'])->name('admin.roles.delete_permission_sub_menu_control');
+    Route::get('roles/sub_menu_details/{role_id}/{main_id}/{sub_id}', [RoleController::class, 'sub_menu_details'])->name('admin.roles.sub_menu_details');
+
+    /* end roles */
+
+    /* begin roles_main_menu */
+    Route::get('roles_main_menu/index', [RoleMainMenuController::class, 'index'])->name('admin.roles_main_menu.index');
+    Route::get('roles_main_menu/create', [RoleMainMenuController::class, 'create'])->name('admin.roles_main_menu.create');
+    Route::post('roles_main_menu/store', [RoleMainMenuController::class, 'store'])->name('admin.roles_main_menu.store');
+    Route::get('roles_main_menu/edit/{id}', [RoleMainMenuController::class, 'edit'])->name('admin.roles_main_menu.edit');
+    Route::post('roles_main_menu/update/{id}', [RoleMainMenuController::class, 'update'])->name('admin.roles_main_menu.update');
+    Route::get('roles_main_menu/delete/{id}', [RoleMainMenuController::class, 'destroy'])->name('admin.roles_main_menu.delete');
+    Route::post('roles_main_menu/ajax_search', [RoleMainMenuController::class, 'ajax_search'])->name('admin.roles_main_menu.ajax_search');
+    /* end roles_main_menu */
+
+    /* begin roles_sub_menu */
+    Route::get('roles_sub_menu/index', [RoleSubMenuController::class, 'index'])->name('admin.roles_sub_menu.index');
+    Route::get('roles_sub_menu/create', [RoleSubMenuController::class, 'create'])->name('admin.roles_sub_menu.create');
+    Route::post('roles_sub_menu/store', [RoleSubMenuController::class, 'store'])->name('admin.roles_sub_menu.store');
+    Route::get('roles_sub_menu/edit/{id}', [RoleSubMenuController::class, 'edit'])->name('admin.roles_sub_menu.edit');
+    Route::post('roles_sub_menu/update/{id}', [RoleSubMenuController::class, 'update'])->name('admin.roles_sub_menu.update');
+    Route::get('roles_sub_menu/delete/{id}', [RoleSubMenuController::class, 'destroy'])->name('admin.roles_sub_menu.delete');
+    Route::get('roles_sub_menu/details/{id}', [RoleSubMenuController::class, 'details'])->name('admin.roles_sub_menu.details');
+    Route::get('roles_sub_menu/create_control/{id}', [RoleSubMenuController::class, 'create_control'])->name('admin.roles_sub_menu.create_control');
+    Route::get('roles_sub_menu/edit_control/{id}', [RoleSubMenuController::class, 'edit_control'])->name('admin.roles_sub_menu.edit_control');
+    Route::get('roles_sub_menu/delete_control/{id}', [RoleSubMenuController::class, 'delete_control'])->name('admin.roles_sub_menu.delete_control');
+    Route::post('roles_sub_menu/store_control/{id}', [RoleSubMenuController::class, 'store_control'])->name('admin.roles_sub_menu.store_control');
+    Route::post('roles_sub_menu/update_control/{id}', [RoleSubMenuController::class, 'update_control'])->name('admin.roles_sub_menu.update_control');
+    Route::post('roles_sub_menu/ajax_search', [RoleSubMenuController::class, 'ajax_search'])->name('admin.roles_sub_menu.ajax_search');
+    /* end roles_sub_menu */
 });
 
 Route::group(['namespace' => 'Admin', 'prefix' => 'admin', 'middleware' => 'guest:admin'], function(){

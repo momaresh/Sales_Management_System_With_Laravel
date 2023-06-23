@@ -23,25 +23,29 @@ class TreasuryController extends Controller
     public function index()
     {
         //
-        $data = Treasury::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'asc')->paginate(PAGINATION_COUNT);
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'عرض') == true) {
+            $data = Treasury::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'asc')->paginate(PAGINATION_COUNT);
 
-        if (!empty($data)) {
-            foreach ($data as $d) {
-                if ($d['added_by'] != null) {
-                    $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
-                }
+            if (!empty($data)) {
+                foreach ($data as $d) {
+                    if ($d['added_by'] != null) {
+                        $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                    }
 
-                if ($d['updated_by'] != null) {
-                    $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
-                }
+                    if ($d['updated_by'] != null) {
+                        $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
+                    }
 
-                if ($d['com_code'] != null) {
-                    $d['com_code_name'] = AdminPanelSetting::where('id', $d['com_code'])->value('system_name');
+                    if ($d['com_code'] != null) {
+                        $d['com_code_name'] = AdminPanelSetting::where('id', $d['com_code'])->value('system_name');
+                    }
                 }
             }
+            return view('admin.treasuries.index', ['data' => $data]);
         }
-
-        return view('admin.treasuries.index', ['data' => $data]);
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -52,7 +56,12 @@ class TreasuryController extends Controller
     public function create()
     {
         //
-        return view('admin.treasuries.create');
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'اضافة') == true) {
+            return view('admin.treasuries.create');
+        }
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -64,18 +73,23 @@ class TreasuryController extends Controller
     public function store(CreateTreasuriesRequest $request)
     {
         //
-        $inserted['name'] = $request->name;
-        $inserted['active'] = $request->active;
-        $inserted['master'] = $request->master;
-        $inserted['last_exchange_arrive'] = $request->last_exchange_arrive;
-        $inserted['last_collection_arrive'] = $request->last_collection_arrive;
-        $inserted['added_by'] = auth()->user()->id;
-        $inserted['created_at'] = date('Y-m-d H:i:s');
-        $inserted['com_code'] = auth()->user()->com_code;
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'اضافة') == true) {
+            $inserted['name'] = $request->name;
+            $inserted['active'] = $request->active;
+            $inserted['master'] = $request->master;
+            $inserted['last_exchange_arrive'] = $request->last_exchange_arrive;
+            $inserted['last_collection_arrive'] = $request->last_collection_arrive;
+            $inserted['added_by'] = auth()->user()->id;
+            $inserted['created_at'] = date('Y-m-d H:i:s');
+            $inserted['com_code'] = auth()->user()->com_code;
 
-        Treasury::create($inserted);
+            Treasury::create($inserted);
 
-        return redirect()->route('admin.treasuries.index')->with('success', 'تم اضافة الخزنة بنجاح');
+            return redirect()->route('admin.treasuries.index')->with('success', 'تم اضافة الخزنة بنجاح');
+        }
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -87,33 +101,37 @@ class TreasuryController extends Controller
     public function details($id)
     {
         //
-        try {
-            $data = Treasury::find($id);
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'التفاصيل') == true) {
+            try {
+                $data = Treasury::find($id);
 
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا يوجد خزينة كهذه');
-            }
-
-            // foreach ($data as $d) {
-            //     $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
-            //     $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
-            // }
-
-
-            $treasuries = TreasuryDelivery::where('treasuries_id', $id)->get();
-            if (!empty($treasuries)) {
-                foreach($treasuries as $tr) {
-                    $tr['treasury_id'] = Treasury::where('id', $tr['treasuries_receive_from_id'])->value('id');
-                    $tr['treasury_name'] = Treasury::where('id', $tr['treasuries_receive_from_id'])->value('name');
-                    $tr['added_by_admin'] = Admin::where('id', $tr['added_by'])->value('name');
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا يوجد خزينة كهذه');
                 }
-            }
 
-            return view('admin.treasuries.details', ['data' => $data, 'treasuries' => $treasuries]);
+                $data['added_by_name'] = Admin::where('id', $data['added_by'])->value('name');
+                $data['updated_by_name'] = Admin::where('id', $data['updated_by'])->value('name');
+
+
+                $treasuries = TreasuryDelivery::where('treasuries_id', $id)->get();
+                if (!empty($treasuries)) {
+                    foreach($treasuries as $tr) {
+                        $tr['treasury_id'] = Treasury::where('id', $tr['treasuries_receive_from_id'])->value('id');
+                        $tr['treasury_name'] = Treasury::where('id', $tr['treasuries_receive_from_id'])->value('name');
+                        $tr['added_by_admin'] = Admin::where('id', $tr['added_by'])->value('name');
+                    }
+                }
+
+                return view('admin.treasuries.details', ['data' => $data, 'treasuries' => $treasuries]);
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -125,11 +143,16 @@ class TreasuryController extends Controller
     public function edit($id)
     {
         //
-        $data = Treasury::find($id);
-        if (empty($data)) {
-            return redirect()->route('admin.treasuries.index')->with('error', 'لا يوجد بيانات كهذه');
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'تعديل') == true) {
+            $data = Treasury::find($id);
+            if (empty($data)) {
+                return redirect()->route('admin.treasuries.index')->with('error', 'لا يوجد بيانات كهذه');
+            }
+            return view('admin.treasuries.edit', ['data' => $data]);
         }
-        return view('admin.treasuries.edit', ['data' => $data]);
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -142,18 +165,23 @@ class TreasuryController extends Controller
     public function update(UpdateTreasuriesRequest $request, $id)
     {
         //
-        $updated['name'] = $request->name;
-        $updated['active'] = $request->active;
-        $updated['master'] = $request->master;
-        $updated['last_exchange_arrive'] = $request->last_exchange_arrive;
-        $updated['last_collection_arrive'] = $request->last_collection_arrive;
-        $updated['updated_by'] = auth()->user()->id;
-        $updated['updated_at'] = date('Y-m-d H:i:s');
-        $updated['com_code'] = auth()->user()->com_code;
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'تعديل') == true) {
+            $updated['name'] = $request->name;
+            $updated['active'] = $request->active;
+            $updated['master'] = $request->master;
+            $updated['last_exchange_arrive'] = $request->last_exchange_arrive;
+            $updated['last_collection_arrive'] = $request->last_collection_arrive;
+            $updated['updated_by'] = auth()->user()->id;
+            $updated['updated_at'] = date('Y-m-d H:i:s');
+            $updated['com_code'] = auth()->user()->com_code;
 
-        Treasury::where('id', $id)->update($updated);
+            Treasury::where('id', $id)->update($updated);
 
-        return redirect()->route('admin.treasuries.index')->with('success', 'تم تعديل الخزنة بنجاح');
+            return redirect()->route('admin.treasuries.index')->with('success', 'تم تعديل الخزنة بنجاح');
+        }
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -178,18 +206,23 @@ class TreasuryController extends Controller
     public function create_delivery($id)
     {
         # code...
-        try {
-            $data_check = Treasury::find($id);
-            if (empty($data_check)) {
-                return redirect()->back()->with('error', 'لا يوجد خزينة كهذه');
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'اضافة خزنة استلام') == true) {
+            try {
+                $data_check = Treasury::find($id);
+                if (empty($data_check)) {
+                    return redirect()->back()->with('error', 'لا يوجد خزينة كهذه');
+                }
+
+                $data = Treasury::all();
+
+                return view('admin.treasuries.create_delivery', ['data' => $data, 'master_id' => $id]);
             }
-
-            $data = Treasury::all();
-
-            return view('admin.treasuries.create_delivery', ['data' => $data, 'master_id' => $id]);
+            catch(Exception $e) {
+                return redirect()->back()->with('error', 'حدث خطأ'.$e->getMessage());
+            }
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', 'حدث خطأ'.$e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
@@ -200,57 +233,67 @@ class TreasuryController extends Controller
             'receive_from_id' => 'required',
         ]);
 
-        try {
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'اضافة خزنة استلام') == true) {
+            try {
 
-            $data_check = TreasuryDelivery::where('treasuries_id', '=', $id)->where('treasuries_receive_from_id', '=', $request->receive_from_id)->get();
+                $data_check = TreasuryDelivery::where('treasuries_id', '=', $id)->where('treasuries_receive_from_id', '=', $request->receive_from_id)->get();
 
 
-            if (!empty($data_check[0])) {
-                return redirect()->back()->with('error', 'اسم الخزينة موجود مسبقا');
+                if (!empty($data_check[0])) {
+                    return redirect()->back()->with('error', 'اسم الخزينة موجود مسبقا');
+                }
+
+                $inserted['treasuries_id'] = $id;
+                $inserted['treasuries_receive_from_id'] = $request->receive_from_id;
+                $inserted['added_by'] = auth()->user()->id;
+                $inserted['created_at'] = date('Y-m-d H:i:s');
+                $inserted['com_code'] = auth()->user()->com_code;
+
+                TreasuryDelivery::create($inserted);
+
+
+                return redirect()->back()->with('success', 'تم الاضافة بنجاح');
+
             }
-
-            $inserted['treasuries_id'] = $id;
-            $inserted['treasuries_receive_from_id'] = $request->receive_from_id;
-            $inserted['added_by'] = auth()->user()->id;
-            $inserted['created_at'] = date('Y-m-d H:i:s');
-            $inserted['com_code'] = auth()->user()->com_code;
-
-            TreasuryDelivery::create($inserted);
-
-
-            return redirect()->back()->with('success', 'تم الاضافة بنجاح');
-
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
     public function delete_delivery($id, $id_from)
     {
         # code...
-        try {
+        if (check_control_menu_role('الضبط العام', 'الخزن' , 'حذف خزنة استلام') == true) {
+            try {
 
-            $data_check = TreasuryDelivery::where('treasuries_id', '=', $id_from)->where('treasuries_receive_from_id', '=', $id)->first();
+                $data_check = TreasuryDelivery::where('treasuries_id', '=', $id_from)->where('treasuries_receive_from_id', '=', $id)->first();
 
 
-            if (empty($data_check)) {
-                return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                if (empty($data_check)) {
+                    return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                }
+
+
+                $flag = TreasuryDelivery::where(['treasuries_id' => $id_from, 'treasuries_receive_from_id' => $id])->delete();
+
+                if ($flag) {
+                    return redirect()->back()->with('success', 'تم الحذف بنجاح');
+                }
+                else {
+                    return redirect()->back()->with('error', 'غير قادر على الحذف ');
+                }
+
             }
-
-
-            $flag = TreasuryDelivery::where(['treasuries_id' => $id_from, 'treasuries_receive_from_id' => $id])->delete();
-
-            if ($flag) {
-                return redirect()->back()->with('success', 'تم الحذف بنجاح');
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
             }
-            else {
-                return redirect()->back()->with('error', 'غير قادر على الحذف ');
-            }
-
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 }

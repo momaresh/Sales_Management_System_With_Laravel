@@ -134,8 +134,8 @@
 
 
 <div>
-    <button data-toggle="modal" data-target="#adding_item_inventory" style="background-color: #007bff; font-size: 20px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-save"></i> اضافة جديد
+    <button data-toggle="modal" data-target="#adding_item_inventory" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+        <i class="fas fa-plus-circle"></i> اضافة جديد
     </button>
 </div>
 

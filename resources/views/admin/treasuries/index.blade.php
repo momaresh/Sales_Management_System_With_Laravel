@@ -19,9 +19,11 @@
 @endif
 
 <div>
-    <a href="{{ route('admin.treasuries.create') }}" style="background-color: #007bff; font-size: 20px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-save"></i> اضافة جديد
-    </a>
+    @if (check_control_menu_role('الضبط العام', 'الخزن' , 'اضافة') == true)
+        <a href="{{ route('admin.treasuries.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </a>
+    @endif
 </div>
 
 <div class="row">
@@ -109,9 +111,11 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.treasuries.details', $datum->id) }}" class="btn btn-primary">
-                                        عرض
-                                    </a>
+                                    @if (check_control_menu_role('الضبط العام', 'الخزن' , 'التفاصيل') == true)
+                                        <a href="{{ route('admin.treasuries.details', $datum->id) }}" class="btn btn-info">
+                                            عرض
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

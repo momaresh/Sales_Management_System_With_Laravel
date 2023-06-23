@@ -128,9 +128,11 @@
 
 
 <div>
-    <a href="{{ route('admin.treasuries_delivery.create', $data->id) }}" style="background-color: #007bff; font-size: 20px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-save"></i> اضافة جديد
-    </a>
+    @if (check_control_menu_role('الضبط العام', 'الخزن' , 'اضافة خزنة استلام') == true)
+        <a href="{{ route('admin.treasuries_delivery.create', $data->id) }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </a>
+    @endif
 </div>
 
 <div class="row">
@@ -174,9 +176,11 @@
                                 </td>
 
                                 <td>
-                                    <a href="{{ route('admin.treasuries_delivery.delete', [$treasury->treasury_id, $data->id]) }}" class="btn btn-danger are_you_sure">
-                                        حذف
-                                    </a>
+                                    @if (check_control_menu_role('الضبط العام', 'الخزن' , 'حذف خزنة استلام') == true)
+                                        <a href="{{ route('admin.treasuries_delivery.delete', [$treasury->treasury_id, $data->id]) }}" class="btn btn-danger are_you_sure">
+                                            حذف
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

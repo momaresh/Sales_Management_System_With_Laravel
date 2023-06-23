@@ -56,6 +56,11 @@
                 </tr>
 
                 <tr>
+                    <th>نوع المستخدم</th>
+                    <td>{{ $data->roles_name }}</td>
+                </tr>
+
+                <tr>
                     <th>حالة التفعيل</th>
                     <td>
                         @if ($data->active == 1)
@@ -78,7 +83,7 @@
 
                             {{ $date }}
                             بواسطة
-                            {{ $data['added_by_admin'] }}
+                            {{ $data['added_by_name'] }}
                         @else
                             لا يوجد اي بيانات
                         @endif
@@ -97,7 +102,7 @@
 
                             {{ $date }}
                             بواسطة
-                            {{ $data['updated_by_admin'] }}
+                            {{ $data['updated_by_name'] }}
                         @else
                             لا يوجد اي تحديث
                         @endif
@@ -122,8 +127,8 @@
 
 
 <div>
-    <a href="{{ route('admin.admins.create_treasuries', $data->id) }}" style="background-color: #007bff; font-size: 20px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-save"></i> اضافة جديد
+    <a href="{{ route('admin.admins.create_treasuries', $data->id) }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+        <i class="fas fa-plus-circle"></i> اضافة جديد
     </a>
 </div>
 

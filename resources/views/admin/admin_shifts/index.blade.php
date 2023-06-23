@@ -20,9 +20,11 @@
 
 
 <div>
-    <a href="{{ route('admin.admin_shifts.create') }}" style="background-color: #007bff; font-size: 20px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-save"></i> استلام شفت
-    </a>
+    @if (check_control_menu_role('حركة شفتات الخزن', 'شفتات الخزن', 'اضافة') == true)
+        <a href="{{ route('admin.admin_shifts.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-save"></i> استلام شفت
+        </a>
+    @endif
 </div>
 
 
@@ -42,24 +44,18 @@
                     @if (!@empty($data[0]))
 
                         <tr style="background-color: #007bff; color:white;">
-                            <th>تعديل</th>
                             <th>كود الشفت</th>
                             <th>اسم المستخدم</th>
                             <th>اسم الخزنة</th>
                             <th>تاريخ البداية</th>
                             <th>تاريخ النهاية</th>
                             <th>تم الانتهاء</th>
-                            <th>حذف</th>
+                            <th>التحكم</th>
                         </tr>
 
                         @foreach ($data as $datum)
                             <tr>
-                                <td>
-                                    <a href="{{ route('admin.accounts.edit', $datum->shift_code) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </td>
-                                @if ($datum->is_finished == 0)
+                                @if ($datum->is_finished == 0 && $datum->admin_id == auth()->user()->id)
                                     <td style="background-color: #eee880a1">{{ $datum->shift_code }}</td>
                                 @else
                                     <td>{{ $datum->shift_code }}</td>
@@ -69,16 +65,30 @@
                                 <td>{{ $datum->start_date }}</td>
                                 <td>{{ $datum->end_date }}</td>
                                 @if ($datum->is_finished == 1)
-                                    <td style="background-color: #5ab6a0a1">نعم</td>
+                                    <td style="background-color: #c15670a1">مغلق</td>
                                 @else
-                                    <td style="background-color: #c15670a1">لا</td>
+                                    <td style="background-color: #5ab6a0a1">مفتوح</td>
                                 @endif
 
                                 <td>
-                                    <a href="{{ route('admin.accounts.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </a>
-                                </td>
+
+                                    @if ($datum->is_finished == 0 && check_control_menu_role('حركة شفتات الخزن', 'شفتات الخزن', 'انهاء شفت') == true)
+                                        <a href="{{ route('admin.admin_shifts.end_shift', $datum->id) }}" class="btn btn-danger">
+                                            انهاء
+                                        </a>
+                                    @endif
+
+                                    @if (check_control_menu_role('حركة شفتات الخزن', 'شفتات الخزن', 'مراجعة شفت') == true && $datum->is_finished == 1 && @empty($datum->delivered_to_shift_id) && !@empty($check_shift) && $datum->allowed_review == true)
+                                        <button data-id="{{ $datum->id }}"  data-money="{{ $datum->money_should_delivered }}" class="btn btn-info review_shift_btn">
+                                            مراجعة
+                                        </button>
+                                    @endif
+
+                                    @if (check_control_menu_role('حركة شفتات الخزن', 'شفتات الخزن', 'طباعة') == true)
+                                        <a href="{{ route('admin.admin_shifts.printA4', [$datum->id]) }}" class="btn btn-success">
+                                            A4 <i class="fa-solid fa-print"></i>
+                                        </a>
+                                    @endif
                             </tr>
                         @endforeach
 
@@ -102,7 +112,48 @@
       <!-- /.card -->
     </div>
     <!-- /.col -->
-  </div>
+</div>
+
+<div class="modal fade" id="review_shift_modal">
+    <div class="modal-dialog modal-xl" style="width: 95%;">
+        <div class="modal-content">
+        <div class="modal-header" style="background-color: #0793a9; color: white">
+            <h4 class="modal-title">مراجعة الشفت</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body" id="add_new_customer_result">
+            <form action="{{ route('admin.admin_shifts.review_shift') }}" method="POST">
+                @csrf
+                <div class="row">
+                    <div class="col-md-12">
+                        <label>المبلغ الذي يجب استلامه من الشفت</label>
+                        <input type="text" readonly oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="should_paid" name="should_paid" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <label>المبلغ الذي تم استلامه من الشفت</label>
+                        <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="what_paid" name="what_paid" class="form-control">
+                    </div>
+                </div>
+
+                <input type="hidden" name="do_review_shift_id" value="{{ $check_shift['id'] }}">
+                <input type="hidden" name="was_review_shift_id" id="was_review_shift_id" value="">
+
+                <div class="col-md-12 text-center mt-3">
+                    <button type="submit" class="btn btn-primary" id="review_sub">استلام ومراجعة</button>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-default " data-dismiss="modal">الغاء</button>
+        </div>
+        </div>
+    </div>
+</div>
 
 @endsection
 
@@ -118,76 +169,41 @@
     عرض
 @endsection
 
-
-{{-- @section('script')
-
+@section('script')
     <script>
         $(function() {
-            function make_search() {
-                var search_by_text = $("#search_by_text").val();
-                var account_type = $("#account_type_search").val();
-                var is_parent = $("#is_parent_search").val();
-                var active_search = $("#active_search").val();
+            $(document).on('click', '.review_shift_btn', function() {
+                var money = $(this).data('money');
+                var id = $(this).data('id');
+                $("#should_paid").val(money);
+                $("#what_paid").val(money);
+                $("#was_review_shift_id").val(id);
 
-                jQuery.ajax({
-                    url: "{{ route('admin.accounts.ajax_search') }}",
-                    type: 'post',
-                    dataType: 'html',
-                    cache: false,
-                    data: {
-                        search_by_text: search_by_text,
-                        account_type: account_type,
-                        is_parent: is_parent,
-                        active_search: active_search,
-                        '_token':"{{ csrf_token() }}"
-                    },
-                    success: function(data) {
-                        $("#ajax_search_result").html(data);
-                    },
-                    error: function() {}
-                });
-            }
-
-            $(document).on('input', '#search_by_text', function(e) {
-                make_search();
-            });
-            $(document).on('change', '#account_type_search', function(e) {
-                make_search();
-            });
-            $(document).on('change', '#is_parent_search', function(e) {
-                make_search();
-            });
-            $(document).on('change', '#active_search', function(e) {
-                make_search();
+                $('#review_shift_modal').modal('show');
             });
 
-            $(document).on('click', '#ajax_pagination_search a ', function(e) {
-                e.preventDefault();
-                var search_by_text = $("#search_by_text").val();
-                var account_type = $("#account_type_search").val();
-                var is_parent = $("#is_parent_search").val();
-                var active_search = $("#active_search").val();
-                var url = $(this).attr("href");
-                jQuery.ajax({
-                    url: url,
-                    type: 'post',
-                    dataType: 'html',
-                    cache: false,
-                    data: {
-                        search_by_text: search_by_text,
-                        account_type: account_type,
-                        is_parent: is_parent,
-                        active_search: active_search,
-                        "_token": "{{ csrf_token() }}"
-                    },
-                    success: function(data) {
-                        $("#ajax_search_result").html(data);
-                    },
-                    error: function() {}
-                });
-            });
+            $(document).on('click', '#review_sub', function(e) {
+                if ($("#what_paid").val() == '') {
+                    alert('يجب ادخال المبلغ المستلم');
+                    $("#what_paid").focus();
+                    return false;
+                }
 
-        });
+                if ($("#should_paid").val() == '') {
+                    alert('يجب ادخال المبلغ المتوجب دفعه');
+                    $("#should_paid").focus();
+                    return false;
+                }
+
+                if ($("#do_review_shift_id").val() == '') {
+                    alert('يجب عدم حذف الشفت الذي سوف يقوم بالمراجعة');
+                    return false;
+                }
+                if ($("#was_review_shift_id").val() == '') {
+                    alert('يجب عدم حذف الشفت الذي سوف يراجع');
+                    return false;
+                }
+            })
+        })
     </script>
-
-@endsection --}}
+@endsection

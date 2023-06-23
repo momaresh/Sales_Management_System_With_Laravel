@@ -19,8 +19,8 @@
 @endif
 
 <div>
-    <a href="{{ route('admin.admins.create') }}" style="background-color: #007bff; font-size: 20px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-save"></i> اضافة جديد
+    <a href="{{ route('admin.admins.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+        <i class="fas fa-plus-circle"></i> اضافة جديد
     </a>
 </div>
 
@@ -47,7 +47,8 @@
                             <th>اسم المستخدم</th>
                             <th>الايميل</th>
                             <th>حالة التفعيل</th>
-                            <th>الصلاحيات</th>
+                            <th>نوع المستخدم</th>
+                            <th>صلاحيات خاصة</th>
                             <th>حذف</th>
                         </tr>
 
@@ -62,14 +63,17 @@
                                 <td>{{ $datum->name }}</td>
                                 <td>{{ $datum->user_name }}</td>
                                 <td>{{ $datum->email }}</td>
-                                <td>
-                                    @if ($datum->active == 1)
-                                        مفعل
-                                    @else
-                                        غير مفعل
-                                    @endif
+                                @if ($datum->active == 1)
+                                <td style="background-color: #5ab6a0a1;">
+                                    مفعل
                                 </td>
+                                @elseif ($datum->active == 0)
+                                <td style="background-color: #c15670a1;;">
+                                    غير مفعل
+                                </td>
+                                @endif
 
+                                <td>{{ $datum->roles_name }}</td>
                                 <td>
                                     <a href="{{ route('admin.admins.details', $datum->id) }}" style="color: rgb(37, 149, 82); font-size: 25px;">
                                         <i class="fa-solid fa-circle-info"></i>

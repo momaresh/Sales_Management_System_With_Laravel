@@ -28,15 +28,20 @@ class CollectTransactionController extends Controller
             $d['admin_name'] = Admin::where(['id' => $admin_id, 'com_code' => $com_code])->value('name');
             $d['treasuries_name'] = Treasury::where(['id' => $d['treasuries_id'], 'com_code' => $com_code])->value('name');
 
-            $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
-            $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
-            if (in_array($acc['account_type'], [2, 3, 4, 5])) {
-                $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
-                $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
-                $d['account_name'] = $first_name . ' ' . $last_name;
+            if (!empty($d['account_number'])) {
+                $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
+                $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
+                if (in_array($acc['account_type'], [2, 3, 4, 5])) {
+                    $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
+                    $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
+                    $d['account_name'] = $first_name . ' ' . $last_name;
+                }
+                else {
+                    $d['account_name'] = $acc['notes'];
+                }
             }
             else {
-                $d['account_name'] = $acc['notes'];
+                $d['account_name'] = 'لا يوجد';
             }
         }
 
@@ -287,18 +292,22 @@ class CollectTransactionController extends Controller
                 $d['admin_name'] = Admin::where(['id' => $admin_id, 'com_code' => $com_code])->value('name');
                 $d['treasuries_name'] = Treasury::where(['id' => $d['treasuries_id'], 'com_code' => $com_code])->value('name');
 
-                $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
-                $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
-                if (in_array($acc['account_type'], [2, 3, 4, 5])) {
-                    $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
-                    $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
-                    $d['account_name'] = $first_name . ' ' . $last_name;
+                if (!empty($d['account_number'])) {
+                    $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
+                    $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
+                    if (in_array($acc['account_type'], [2, 3, 4, 5])) {
+                        $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
+                        $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
+                        $d['account_name'] = $first_name . ' ' . $last_name;
+                    }
+                    else {
+                        $d['account_name'] = $acc['notes'];
+                    }
                 }
                 else {
-                    $d['account_name'] = $acc['notes'];
+                    $d['account_name'] = 'لا يوجد';
                 }
             }
-
             return view('admin.treasuries_transactions.ajax_search', ['data' => $data]);
 
         }
