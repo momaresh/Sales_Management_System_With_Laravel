@@ -16,7 +16,7 @@ $(document).ready(function() {
                 $('#create_pill').modal('show');
             },
             error: function() {
-                alert();
+                alert('لا يمكنك الاضافة لانك لا تملك شفت حاليا..!!');
             }
         });
     });
@@ -553,12 +553,6 @@ $(document).ready(function() {
             return false;
         }
 
-        if (delegate_code == '') {
-            alert('من فضلك ادخل اسم المندوب');
-            $("#delegate_code").focus();
-            return false;
-        }
-
         jQuery.ajax({
             url:search_url,
             type:'post',
@@ -611,6 +605,7 @@ $(document).ready(function() {
                 $("#pill_adding_items_modal").modal('show');
             },
             error: function() {
+                alert('لا يمكنك الاضافة لانك لا تملك شفت حاليا..!!');
             }
         });
 
@@ -690,7 +685,8 @@ $(document).ready(function() {
         }
 
         // in case is not return pill
-        if (batch_id != 'new') {
+
+        if (batch_id != 'new' && $('.batch_id_add_return').val() == '') {
             var batch_quantity = $('#batch_id_add').children('option:selected').data('quantity');
             if (parseFloat(quantity) > parseFloat(batch_quantity)) {
                 alert('من فضلك الكمية غير كافية في الباتش الحالي');

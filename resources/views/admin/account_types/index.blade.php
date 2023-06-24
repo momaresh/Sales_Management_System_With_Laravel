@@ -18,7 +18,13 @@
     </div>
 @endif
 
+
 <div class="row">
+    @if (check_control_menu_role('الحسابات', 'انواع الحسابات' , 'اضافة') == true)
+        <a href="{{ route('admin.account_types.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </a>
+    @endif
     <div class="col-12">
       <div class="card">
         <div class="card-header">
@@ -26,7 +32,6 @@
         </div>
         <!-- /.card-header -->
         <div class="card-body">
-
             <div id="ajax_search_result">
                 <table id="example2" class="table table-bordered table-hover">
 

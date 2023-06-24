@@ -30,165 +30,188 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
     public function index()
     {
         //
-        try {
-            $data = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_type' => 1, 'order_type' => 3])->orderBy('id' , 'desc')->paginate(PAGINATION_COUNT);
-            if (!empty($data)) {
-                foreach ($data as $d) {
-                    $d['supplier_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('supplier_code');
-                    $d['purchase_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('purchase_code');
-                    $d['auto_serial'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('auto_serial');
-                    $d['store_id'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('store_id');
-                    $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
-                    if ($d['supplier_code'] != null) {
-                        $person_id = Supplier::where(['supplier_code' => $d['supplier_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
-                        $supplier = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
-                        $d['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
+        if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'عرض') == true) {
+            try {
+                $data = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_type' => 1, 'order_type' => 3])->orderBy('id' , 'desc')->paginate(PAGINATION_COUNT);
+                if (!empty($data)) {
+                    foreach ($data as $d) {
+                        $d['supplier_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('supplier_code');
+                        $d['purchase_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('purchase_code');
+                        $d['auto_serial'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('auto_serial');
+                        $d['store_id'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('store_id');
+                        $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
+                        if ($d['supplier_code'] != null) {
+                            $person_id = Supplier::where(['supplier_code' => $d['supplier_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
+                            $supplier = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
+                            $d['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
+                        }
                     }
                 }
-            }
 
 
-            $com_code = auth()->user()->com_code;
-            $suppliers = Person::where(['person_type' => 2, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
-            foreach ($suppliers as $sup) {
-                $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('supplier_code');
-                $sup['supplier_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
-            }
-
-            $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
-
-            return view('admin.purchase_order_header_general_return.index', ['data' => $data, 'suppliers' => $suppliers, 'stores' => $stores]);
-        }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-    }
-
-    public function create_pill(Request $request)
-    {
-        # code...
-        if ($request->ajax()) {
-            try {
                 $com_code = auth()->user()->com_code;
-
                 $suppliers = Person::where(['person_type' => 2, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
                 foreach ($suppliers as $sup) {
                     $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('supplier_code');
                     $sup['supplier_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
                 }
 
-
                 $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
-                $items_card = InvItemCard::where(['active' => 1, 'com_code' => $com_code])->get(['item_code', 'name', 'item_type', 'has_fixed_price']);
 
-                $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
-                if (empty($check_shift)) {
-                    return Response()->json(['error' => ''], 404);
-                }
-                $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
-
-
-                return view('admin.purchase_order_header_general_return.create_pill', ['items_card' => $items_card, 'suppliers' => $suppliers, 'stores' => $stores, 'check_shift' => $check_shift]);
+                return view('admin.purchase_order_header_general_return.index', ['data' => $data, 'suppliers' => $suppliers, 'stores' => $stores]);
             }
             catch (Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage());
             }
         }
+        else {
+            return redirect()->back();
+        }
+    }
+
+    public function create_pill(Request $request)
+    {
+        # code...
+        if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'اضافة') == true) {
+            if ($request->ajax()) {
+                try {
+                    $com_code = auth()->user()->com_code;
+
+                    $suppliers = Person::where(['person_type' => 2, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
+                    foreach ($suppliers as $sup) {
+                        $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('supplier_code');
+                        $sup['supplier_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
+                    }
+
+
+                    $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
+                    $items_card = InvItemCard::where(['active' => 1, 'com_code' => $com_code])->get(['item_code', 'name', 'item_type', 'has_fixed_price']);
+
+                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+                    if (empty($check_shift)) {
+                        return Response()->json(['error' => 'انت لاتملك شفت حالي لعمل اضافة'], 404);
+                    }
+                    $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
+                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+
+
+                    return view('admin.purchase_order_header_general_return.create_pill', ['items_card' => $items_card, 'suppliers' => $suppliers, 'stores' => $stores, 'check_shift' => $check_shift]);
+                }
+                catch (Exception $e) {
+                    return redirect()->back()->with('error', $e->getMessage());
+                }
+            }
+        }
+        else {
+            return redirect()->back();
+        }
+
+
     }
 
     public function store(Request $request)
     {
-        if ($request->ajax()) {
-            try {
-                //set account number
-                $max_invoice_id = InvoiceOrderHeader::max('id');
+        if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'اضافة') == true) {
+            if ($request->ajax()) {
+                try {
+                    //set account number
+                    $max_invoice_id = InvoiceOrderHeader::max('id');
 
-                if (!empty($max_invoice_id)) {
-                    $inserted_invoice['id'] = $max_invoice_id + 1;
-                } else {
-                    $inserted_invoice['id'] = 1;
+                    if (!empty($max_invoice_id)) {
+                        $inserted_invoice['id'] = $max_invoice_id + 1;
+                    } else {
+                        $inserted_invoice['id'] = 1;
+                    }
+
+                    $max_pill_code = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'order_type' => 3, 'invoice_type' => 1])->max('pill_code');
+                    if (!empty($max_pill_code)) {
+                        $inserted_invoice['pill_code'] = $max_pill_code + 1;
+                    } else {
+                        $inserted_invoice['pill_code'] = 1;
+                    }
+
+                    $inserted_invoice['order_type'] = 3;
+                    $inserted_invoice['invoice_type'] = 1;
+                    $inserted_invoice['order_date'] = $request->pill_date;
+                    $inserted_invoice['pill_type'] = $request->pill_type;
+                    $inserted_invoice['notes'] = $request->notes;
+                    $inserted_invoice['added_by'] = auth()->user()->id;
+                    $inserted_invoice['created_at'] = date("Y-m-d H:i:s");
+                    $inserted_invoice['com_code'] = auth()->user()->com_code;
+
+                    $flag = InvoiceOrderHeader::create($inserted_invoice);
+                    if ($flag) {
+                        $inserted_purchase['invoice_id'] = $inserted_invoice['id'];
+
+                        $max_auto_serial = PurchaseOrderHeader::max('auto_serial');
+                        if (!empty($max_auto_serial)) {
+                            $inserted_purchase['auto_serial'] = $max_auto_serial + 1;
+                        }
+                        else {
+                            $inserted_purchase['auto_serial'] = 1;
+                        }
+
+                        $max_purchase_code = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code])->max('purchase_code');
+                        if (!empty($max_purchase_code)) {
+                            $inserted_purchase['purchase_code'] = $max_purchase_code + 1;
+                        }
+                        else {
+                            $inserted_purchase['purchase_code'] = 1;
+                        }
+                        $inserted_purchase['store_id'] = $request->store_id;
+                        $inserted_purchase['supplier_code'] = $request->supplier_code;
+                        $inserted_purchase['store_id'] = $request->store_id;
+                        $inserted_purchase['added_by'] = auth()->user()->id;
+                        $inserted_purchase['created_at'] = date("Y-m-d H:i:s");
+                        $inserted_purchase['com_code'] = auth()->user()->com_code;
+                        PurchaseOrderHeader::create($inserted_purchase);
+
+                        return $inserted_invoice['id'];
+                    }
+
                 }
-
-                $max_pill_code = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'order_type' => 3, 'invoice_type' => 1])->max('pill_code');
-                if (!empty($max_pill_code)) {
-                    $inserted_invoice['pill_code'] = $max_pill_code + 1;
-                } else {
-                    $inserted_invoice['pill_code'] = 1;
+                catch (Exception $e) {
+                    echo($e->getMessage());
                 }
-
-                $inserted_invoice['order_type'] = 3;
-                $inserted_invoice['invoice_type'] = 1;
-                $inserted_invoice['order_date'] = $request->pill_date;
-                $inserted_invoice['pill_type'] = $request->pill_type;
-                $inserted_invoice['notes'] = $request->notes;
-                $inserted_invoice['added_by'] = auth()->user()->id;
-                $inserted_invoice['created_at'] = date("Y-m-d H:i:s");
-                $inserted_invoice['com_code'] = auth()->user()->com_code;
-
-                $flag = InvoiceOrderHeader::create($inserted_invoice);
-                if ($flag) {
-                    $inserted_purchase['invoice_id'] = $inserted_invoice['id'];
-
-                    $max_auto_serial = PurchaseOrderHeader::max('auto_serial');
-                    if (!empty($max_auto_serial)) {
-                        $inserted_purchase['auto_serial'] = $max_auto_serial + 1;
-                    }
-                    else {
-                        $inserted_purchase['auto_serial'] = 1;
-                    }
-
-                    $max_purchase_code = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code])->max('purchase_code');
-                    if (!empty($max_purchase_code)) {
-                        $inserted_purchase['purchase_code'] = $max_purchase_code + 1;
-                    }
-                    else {
-                        $inserted_purchase['purchase_code'] = 1;
-                    }
-                    $inserted_purchase['store_id'] = $request->store_id;
-                    $inserted_purchase['supplier_code'] = $request->supplier_code;
-                    $inserted_purchase['store_id'] = $request->store_id;
-                    $inserted_purchase['added_by'] = auth()->user()->id;
-                    $inserted_purchase['created_at'] = date("Y-m-d H:i:s");
-                    $inserted_purchase['com_code'] = auth()->user()->com_code;
-                    PurchaseOrderHeader::create($inserted_purchase);
-
-                    return $inserted_invoice['id'];
-                }
-
-            }
-            catch (Exception $e) {
-                echo($e->getMessage());
             }
         }
+        else {
+            return redirect()->back();
+        }
+
     }
 
     public function delete($id)
     {
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->get('is_approved')->first();
+        if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'حذف') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->get('is_approved')->first();
 
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
+                }
+
+                if ($data['is_approved'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن حذف الفاتورة المعتمدة');
+                }
+
+                $count = InvoiceOrderDetail::where(['invoice_order_id' => $id, 'com_code' => $com_code])->count();
+                $flag = 1;
+                if ($count > 0) {
+                    return redirect()->back()->with('error', 'لا يمكن حذف الفاتورة التي تحتوي على اصناف الا عند حذف الاصناف من شاشتهم');
+                }
+
+                PurchaseOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->delete();
+                InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->delete();
+                return redirect()->back()->with('success', 'تم الحذف بنجاح');
             }
-
-            if ($data['is_approved'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن حذف الفاتورة المعتمدة');
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
             }
-
-            $count = InvoiceOrderDetail::where(['invoice_order_id' => $id, 'com_code' => $com_code])->count();
-            $flag = 1;
-            if ($count > 0) {
-                return redirect()->back()->with('error', 'لا يمكن حذف الفاتورة التي تحتوي على اصناف الا عند حذف الاصناف من شاشتهم');
-            }
-
-            PurchaseOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->delete();
-            InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->delete();
-            return redirect()->back()->with('success', 'تم الحذف بنجاح');
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
@@ -231,13 +254,16 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                 }
 
                 $items_card = InvItemCard::where(['active' => 1, 'com_code' => $com_code])->get(['item_code', 'name', 'item_type', 'has_fixed_price']);
-                $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
-                if (empty($check_shift)) {
-                    return Response()->json(['error' => ''], 404);
-                }
-                $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
 
+                $check_shift = array();
+                if ($sales_data['is_approved'] == 0) {
+                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+                    if (empty($check_shift)) {
+                        return Response()->json(['error' => ''], 404);
+                    }
+                    $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
+                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+                }
 
                 return view('admin.purchase_order_header_general_return.pill_adding_items', ['items_card' => $items_card, 'check_shift' => $check_shift, 'sales_data' => $sales_data, 'items' => $items]);
             }
@@ -693,190 +719,204 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
 
     public function approve_pill(Request $request, $auto_serial)
     {
-        try {
+        if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'اعتماد') == true) {
+            try {
+                # code...
+                $com_code = auth()->user()->com_code;
+                $data = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 1])->get()->first();
+                $data['supplier_code'] = PurchaseOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('supplier_code');
 
-            # code...
-            $com_code = auth()->user()->com_code;
-            $data = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 1])->get()->first();
-            $data['supplier_code'] = PurchaseOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('supplier_code');
-
-            $items = InvoiceOrderDetail::where(['invoice_order_id' => $auto_serial, 'com_code' => $com_code])->first();
-            if (empty($items)) {
-                return redirect()->back()->with('error', 'الفاتورة لا تحتوي على اصناف لاعتمادها');
-            }
-
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
-            }
-            if ($data['is_approved'] == 1) {
-                return redirect()->back()->with('error', 'الفاتورة معتمدة من قبل');
-            }
-
-            $updateInvoice['tax_percent'] = $request->tax_percent;
-            $updateInvoice['total_cost'] = $request->total_cost;
-            $updateInvoice['money_for_account'] = $request->total_cost * (1);
-            $updateInvoice['discount_type'] = $request->discount_type;
-            $updateInvoice['pill_type'] = $request->pill_type;
-
-            if ($request->discount_type == 1) {
-                $updateInvoice['discount_percent'] = $request->discount_percent;
-                $updateInvoice['discount_value'] = $request->discount_val;
-            }
-            else if ($request->discount_type == 2) {
-                $updateInvoice['discount_value'] = $request->discount_value;
-            }
-
-            if ($request->pill_type == 1) {
-                if ($request->what_paid != $request->total_cost) {
-                    return redirect()->back()->with('error', 'لا بد ان يكون المبلغ المدفوع مساويا للمبلغ الكلي في حال كان نوع الفاتورة كاش');
-                }
-                if ($request->what_remain != 0) {
-                    return redirect()->back()->with('error', 'لا بد ان يكون المبلغ المتبقي مساويا للصفر في حال كان نوع الفاتورة كاش');
-                }
-            }
-            if ($request->pill_type == 2) {
-                if ($request->what_paid == $request->total_cost) {
-                    return redirect()->back()->with('error', 'لا بد ان يكون المبلغ المدفوع اقل من للمبلغ الكلي في حال كان نوع الفاتورة اجل');
-                }
-            }
-
-            $updateInvoice['what_paid'] = $request->what_paid;
-            $updateInvoice['what_remain'] = $request->what_remain;
-            $updateInvoice['is_approved'] = 1;
-            $updateInvoice['approved_by'] = auth()->user()->id;
-            $updateInvoice['approved_at'] = date('Y-m-d H:i:s');
-
-            $flag = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 1])->update($updateInvoice);
-
-
-            if ($flag) {
-                // get the account number and name from the supplier_code
-                // 1- get the person id from the supplier model
-
-                if ($data['supplier_code'] != '' && $data['supplier_code'] != null) {
-
-                    $person_id = Supplier::where(['supplier_code' => $data['supplier_code'], 'com_code' => $com_code])->value('person_id');
-                    $data['account_number'] = Person::where(['id' => $person_id,'com_code' => $com_code])->value('account_number');
-                    $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
-                    $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
-                    $data['supplier_name'] = $first_name . ' ' . $last_name;
-
-
-                    // change the supplier current balance in accounts
-                    $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
-                    $update_account['current_balance'] = $get_current + $data['total_cost'];
-                    Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
+                $items = InvoiceOrderDetail::where(['invoice_order_id' => $auto_serial, 'com_code' => $com_code])->first();
+                if (empty($items)) {
+                    return redirect()->back()->with('error', 'الفاتورة لا تحتوي على اصناف لاعتمادها');
                 }
 
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
+                }
+                if ($data['is_approved'] == 1) {
+                    return redirect()->back()->with('error', 'الفاتورة معتمدة من قبل');
+                }
 
+                $updateInvoice['tax_percent'] = $request->tax_percent;
+                $updateInvoice['total_cost'] = $request->total_cost;
+                $updateInvoice['money_for_account'] = $request->total_cost * (1);
+                $updateInvoice['discount_type'] = $request->discount_type;
+                $updateInvoice['pill_type'] = $request->pill_type;
 
+                if ($request->discount_type == 1) {
+                    $updateInvoice['discount_percent'] = $request->discount_percent;
+                    $updateInvoice['discount_value'] = $request->discount_val;
+                }
+                else if ($request->discount_type == 2) {
+                    $updateInvoice['discount_value'] = $request->discount_value;
+                }
 
-                // there is many action to take
-                // first if the what_paid > 0, we will make transaction action and will be in minus,
-                // because we make exchange
-                if ($request->what_paid > 0) {
-                    $max_transaction_code = TreasuryTransaction::where('com_code', $com_code)->max('transaction_code');
-                    if (empty($max_transaction_code)) {
-                        $insertTransaction['transaction_code'] = 1;
+                if ($request->pill_type == 1) {
+                    if ($request->what_paid != $request->total_cost) {
+                        return redirect()->back()->with('error', 'لا بد ان يكون المبلغ المدفوع مساويا للمبلغ الكلي في حال كان نوع الفاتورة كاش');
                     }
-                    else {
-                        $insertTransaction['transaction_code'] = $max_transaction_code + 1;
+                    if ($request->what_remain != 0) {
+                        return redirect()->back()->with('error', 'لا بد ان يكون المبلغ المتبقي مساويا للصفر في حال كان نوع الفاتورة كاش');
                     }
-
-
-                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'treasuries_id' => $request->treasuries_id, 'com_code' => $com_code, 'is_finished' => 0])->first();
-                    if (empty($check_shift)) {
-                        return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
+                }
+                if ($request->pill_type == 2) {
+                    if ($request->what_paid == $request->total_cost) {
+                        return redirect()->back()->with('error', 'لا بد ان يكون المبلغ المدفوع اقل من للمبلغ الكلي في حال كان نوع الفاتورة اجل');
                     }
-                    else {
-                        $insertTransaction['shift_code'] = $request->shift_code;
-                    }
+                }
 
-                    $last_collection_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_collection_arrive');
+                $updateInvoice['what_paid'] = $request->what_paid;
+                $updateInvoice['what_remain'] = $request->what_remain;
+                $updateInvoice['is_approved'] = 1;
+                $updateInvoice['approved_by'] = auth()->user()->id;
+                $updateInvoice['approved_at'] = date('Y-m-d H:i:s');
 
-
-                    if (empty($last_collection_arrive)) {
-                        return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
-                    }
-                    else {
-                        $insertTransaction['last_arrive'] = $last_collection_arrive + 1;
-                    }
-
-                    //تحصيل نظير مرتجع مشتريات من مورد
-                    $insertTransaction['move_type'] = 10;
-                    // Account number will be like the account number for the supplier in the purchaseHeader
-                    $insertTransaction['account_number'] = $data['account_number'];
-                    $insertTransaction['transaction_type'] = 2;
-                    $insertTransaction['money'] = $updateInvoice['what_paid'] * (1);
-                    $insertTransaction['is_approved'] = 1;
-                    $insertTransaction['invoice_id'] = $auto_serial;
-                    $insertTransaction['treasuries_id'] = $request->treasuries_id;
-                    $insertTransaction['move_date'] = date('Y-m-d');
+                $flag = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 1])->update($updateInvoice);
 
 
-                    $insertTransaction['byan'] = ' تحصيل نظير مرتجع مشتريات من مورد' . ' ' . $data['supplier_name'];
-                    $insertTransaction['is_account'] = 1;
-                    $insertTransaction['money_for_account'] = $updateInvoice['what_paid'] * (-1);
+                if ($flag) {
+                    // get the account number and name from the supplier_code
+                    // 1- get the person id from the supplier model
 
-                    $insertTransaction['added_by'] = auth()->user()->id;
-                    $insertTransaction['com_code'] = $com_code;
-                    $insertTransaction['created_at'] = date('Y-m-d H:i:s');
+                    if ($data['supplier_code'] != '' && $data['supplier_code'] != null) {
 
-                    $flag = TreasuryTransaction::create($insertTransaction);
+                        $person_id = Supplier::where(['supplier_code' => $data['supplier_code'], 'com_code' => $com_code])->value('person_id');
+                        $data['account_number'] = Person::where(['id' => $person_id,'com_code' => $com_code])->value('account_number');
+                        $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                        $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                        $data['supplier_name'] = $first_name . ' ' . $last_name;
 
-                    if($flag) {
-                        $update_treasuries['last_collection_arrive'] = $last_collection_arrive + 1;
-                        Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
 
                         // change the supplier current balance in accounts
                         $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
-                        $update_account['current_balance'] = $get_current - $data['what_paid'];
+                        $update_account['current_balance'] = $get_current + $data['total_cost'];
                         Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
                     }
+
+
+
+
+                    // there is many action to take
+                    // first if the what_paid > 0, we will make transaction action and will be in minus,
+                    // because we make exchange
+                    if ($request->what_paid > 0) {
+                        $max_transaction_code = TreasuryTransaction::where('com_code', $com_code)->max('transaction_code');
+                        if (empty($max_transaction_code)) {
+                            $insertTransaction['transaction_code'] = 1;
+                        }
+                        else {
+                            $insertTransaction['transaction_code'] = $max_transaction_code + 1;
+                        }
+
+
+                        $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'treasuries_id' => $request->treasuries_id, 'com_code' => $com_code, 'is_finished' => 0])->first();
+                        if (empty($check_shift)) {
+                            return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
+                        }
+                        else {
+                            $insertTransaction['shift_code'] = $request->shift_code;
+                        }
+
+                        $last_collection_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_collection_arrive');
+
+
+                        if (empty($last_collection_arrive)) {
+                            return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                        }
+                        else {
+                            $insertTransaction['last_arrive'] = $last_collection_arrive + 1;
+                        }
+
+                        //تحصيل نظير مرتجع مشتريات من مورد
+                        $insertTransaction['move_type'] = 10;
+                        // Account number will be like the account number for the supplier in the purchaseHeader
+                        $insertTransaction['account_number'] = $data['account_number'];
+                        $insertTransaction['transaction_type'] = 2;
+                        $insertTransaction['money'] = $updateInvoice['what_paid'] * (1);
+                        $insertTransaction['is_approved'] = 1;
+                        $insertTransaction['invoice_id'] = $auto_serial;
+                        $insertTransaction['treasuries_id'] = $request->treasuries_id;
+                        $insertTransaction['move_date'] = date('Y-m-d');
+
+
+                        $insertTransaction['byan'] = ' تحصيل نظير مرتجع مشتريات من مورد' . ' ' . $data['supplier_name'];
+                        $insertTransaction['is_account'] = 1;
+                        $insertTransaction['money_for_account'] = $updateInvoice['what_paid'] * (-1);
+
+                        $insertTransaction['added_by'] = auth()->user()->id;
+                        $insertTransaction['com_code'] = $com_code;
+                        $insertTransaction['created_at'] = date('Y-m-d H:i:s');
+
+                        $flag = TreasuryTransaction::create($insertTransaction);
+
+                        if($flag) {
+                            $update_treasuries['last_collection_arrive'] = $last_collection_arrive + 1;
+                            Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
+
+                            // change the supplier current balance in accounts
+                            $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
+                            $update_account['current_balance'] = $get_current - $data['what_paid'];
+                            Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
+                        }
+                    }
+                    return redirect()->back()->with('success', 'تم اعتماد واضافة الفاتورة بنجاح');
+
                 }
-                return redirect()->back()->with('success', 'تم اعتماد واضافة الفاتورة بنجاح');
 
             }
-
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
+            }
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
     }
 
     public function printA4($id, $type) {
-        $com_code = auth()->user()->com_code;
-        $data = InvoiceOrderHeader::where('id', $id)->get()->first();
-        if (!empty($data)) {
-            $data['tax_value'] = $data['total_before_discount'] * $data['tax_percent'] / 100;
-            $data['store_id'] = PurchaseOrderHeader::where('invoice_id', $id)->value('store_id');
-            $data['store_name'] = Store::where('id', $data['store_id'])->value('name');
-            $data['supplier_code'] = PurchaseOrderHeader::where('invoice_id', $id)->value('supplier_code');
-            if (!empty($data['supplier_code'])) {
-                $person_id = Supplier::where(['supplier_code' => $data['supplier_code'], 'com_code' => $com_code])->value('person_id');
-                $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
-                $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
-                $data['supplier_phone'] = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('phone');
-                $data['supplier_name'] = $first_name . ' ' . $last_name;
-            }
-            else {
-                $data['supplier_name'] = 'لا يوجد';
-            }
-            $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
-            $sales_invoices_details = InvoiceOrderDetail::where('invoice_order_id', $id)->get();
-            if (!empty($sales_invoices_details)) {
-                foreach($sales_invoices_details as $s) {
-                    $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
-                    $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+        if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'طباعة') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvoiceOrderHeader::where('id', $id)->get()->first();
+                if (!empty($data)) {
+                    $data['tax_value'] = $data['total_before_discount'] * $data['tax_percent'] / 100;
+                    $data['store_id'] = PurchaseOrderHeader::where('invoice_id', $id)->value('store_id');
+                    $data['store_name'] = Store::where('id', $data['store_id'])->value('name');
+                    $data['supplier_code'] = PurchaseOrderHeader::where('invoice_id', $id)->value('supplier_code');
+                    if (!empty($data['supplier_code'])) {
+                        $person_id = Supplier::where(['supplier_code' => $data['supplier_code'], 'com_code' => $com_code])->value('person_id');
+                        $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
+                        $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
+                        $data['supplier_phone'] = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('phone');
+                        $data['supplier_name'] = $first_name . ' ' . $last_name;
+                    }
+                    else {
+                        $data['supplier_name'] = 'لا يوجد';
+                    }
+                    $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
+                    $sales_invoices_details = InvoiceOrderDetail::where('invoice_order_id', $id)->get();
+                    if (!empty($sales_invoices_details)) {
+                        foreach($sales_invoices_details as $s) {
+                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                        }
+                    }
+                }
+
+                if ($type == 'A4') {
+                    return view('admin.purchase_order_header_general_return.printA4', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
+                }
+                else if ($type == 'A6') {
+                    return view('admin.purchase_order_header_general_return.printA6', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
                 }
             }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-
-        if ($type == 'A4') {
-            return view('admin.purchase_order_header_general_return.printA4', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
-        }
-        else if ($type == 'A6') {
-            return view('admin.purchase_order_header_general_return.printA6', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
+        else {
+            return redirect()->back();
         }
     }
 }

@@ -24,9 +24,9 @@
                 <td>{{ $datum->name }}</td>
                 <td>
                     @if ($datum->master == 1)
-                        جملة
+                        وحدة اب
                     @else
-                        تجزئة
+                        وحدة جزئية
                     @endif
                 </td>
                 @if ($datum->active == 1)

@@ -1,6 +1,6 @@
 <div class="form-group">
     <label>بيانات الباتشات في المخزن</label>
-    <select  id="batch_id_add" class="form-control select2" style="width: 100%;">
+    <select  id="batch_id_add" class="form-control select2 batch_id_add_return" style="width: 100%;">
         <option value="new">اضافة في باتش جديدة</option>
         @if (@isset($item_card_batches) && !@empty($item_card_batches))
             @foreach ($item_card_batches as $info)

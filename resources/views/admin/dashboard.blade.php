@@ -2,12 +2,12 @@
 
 
 @section('title')
-    Dashboard
+    الرئيسية
 @endsection
 
 @section('content')
     <div style="width:100%; height:74vh;">
-        <img src="{{ asset('assets\admin\images\bg.png') }}" alt="">
+        <img style="width:85%; height: 90%;" src="{{ asset('assets\admin\images\bg.png') }}" alt="">
     </div>
 @endsection
 

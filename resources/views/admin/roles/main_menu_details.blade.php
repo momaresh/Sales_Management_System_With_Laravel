@@ -232,7 +232,7 @@
 @endsection
 
 @section('contentheaderlink')
-    <a href="{{ route('admin.roles.index') }}">الصلاحيات</a>
+    <a href="{{ route('admin.roles.details', $data->roles_id) }}">السابق</a> / <a href="{{ route('admin.roles.index') }}">الصلاحيات</a>
 @endsection
 
 @section('contentheaderactive')

@@ -24,7 +24,7 @@ class RoleMainMenuController extends Controller
     {
         //
         try {
-            $data = RoleMainMenu::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'desc')->paginate(PAGINATION_COUNT);
+            $data = RoleMainMenu::select('*')->orderby('id', 'desc')->paginate(PAGINATION_COUNT);
 
             if (!empty($data)) {
                 foreach ($data as $d) {

@@ -124,11 +124,6 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::get('account_types/index', [AccountTypeController::class, 'index'])->name('admin.account_types.index');
     Route::get('account_types/create', [AccountTypeController::class, 'create'])->name('admin.account_types.create');
     Route::post('account_types/store', [AccountTypeController::class, 'store'])->name('admin.account_types.store');
-    // Route::get('account_types/edit/{id}', [AccountTypeController::class, 'edit'])->name('admin.account_types.edit');
-    // Route::post('account_types/update/{id}', [AccountTypeController::class, 'update'])->name('admin.account_types.update');
-    // Route::get('account_types/delete/{id}', [AccountTypeController::class, 'delete'])->name('admin.account_types.delete');
-    // Route::post('account_types/ajax_search', [AccountTypeController::class, 'ajax_search'])->name('admin.account_types.ajax_search');
-    // Route::get('account_types/details/{id}', [AccountTypeController::class, 'details'])->name('admin.account_types.details');
     /* end AccountTypeController */
 
 

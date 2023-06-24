@@ -21,30 +21,36 @@ class InvUnitController extends Controller
     public function index()
     {
         //
-        try {
-            $data = InvUnit::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'desc')->paginate(PAGINATION_COUNT);
+        if (check_control_menu_role('المخازن', 'الوحدات' , 'عرض') == true) {
+            try {
+                $data = InvUnit::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'desc')->paginate(PAGINATION_COUNT);
 
-            if (!empty($data)) {
-                foreach ($data as $d) {
-                    if ($d['added_by'] != null) {
-                        $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                if (!empty($data)) {
+                    foreach ($data as $d) {
+                        if ($d['added_by'] != null) {
+                            $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                        }
+
+                        if ($d['updated_by'] != null) {
+                            $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
+                        }
+
+                        // if ($d['com_code'] != null) {
+                        //     $d['com_code_name'] = AdminPanelSetting::where('id', $d['com_code'])->value('system_name');
+                        // }
                     }
-
-                    if ($d['updated_by'] != null) {
-                        $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
-                    }
-
-                    // if ($d['com_code'] != null) {
-                    //     $d['com_code_name'] = AdminPanelSetting::where('id', $d['com_code'])->value('system_name');
-                    // }
                 }
-            }
 
-            return view('admin.inv_units.index', ['data' => $data]);
+                return view('admin.inv_units.index', ['data' => $data]);
+            }
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
+            }
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -55,7 +61,12 @@ class InvUnitController extends Controller
     public function create()
     {
         //
-        return view('admin.inv_units.create');
+        if (check_control_menu_role('المخازن', 'الوحدات' , 'اضافة') == true) {
+            return view('admin.inv_units.create');
+        }
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -67,21 +78,27 @@ class InvUnitController extends Controller
     public function store(CreateUnitRequest $request)
     {
         //
-        try {
-            $inserted['name'] = $request->name;
-            $inserted['active'] = $request->active;
-            $inserted['master'] = $request->master;
-            $inserted['added_by'] = auth()->user()->id;
-            $inserted['created_at'] = date('Y-m-d H:i:s');
-            $inserted['com_code'] = auth()->user()->com_code;
+        if (check_control_menu_role('المخازن', 'الوحدات' , 'اضافة') == true) {
+            try {
+                $inserted['name'] = $request->name;
+                $inserted['active'] = $request->active;
+                $inserted['master'] = $request->master;
+                $inserted['added_by'] = auth()->user()->id;
+                $inserted['created_at'] = date('Y-m-d H:i:s');
+                $inserted['com_code'] = auth()->user()->com_code;
 
-            InvUnit::create($inserted);
+                InvUnit::create($inserted);
 
-            return redirect()->route('admin.inv_units.index')->with('success', 'تم اضافة الوحدة بنجاح');
+                return redirect()->route('admin.inv_units.index')->with('success', 'تم اضافة الوحدة بنجاح');
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -104,20 +121,26 @@ class InvUnitController extends Controller
     public function edit($id)
     {
         //
-        $data = InvUnit::find($id);
-        if (empty($data)) {
-            return redirect()->route('admin.inv_units.index')->with('error', 'لا يوجد بيانات كهذه');
-        }
+        if (check_control_menu_role('المخازن', 'الوحدات' , 'تعديل') == true) {
+            $data = InvUnit::find($id);
+            if (empty($data)) {
+                return redirect()->route('admin.inv_units.index')->with('error', 'لا يوجد بيانات كهذه');
+            }
 
-        $used1 = InvItemCard::where(['unit_id' => $id])->orWhere(['retail_unit_id' => $id])->value('name');
-        $used2 = InvoiceOrderDetail::where(['unit_id' => $id, 'com_code' => auth()->user()->com_code])->value('unit_id');
-        if (!empty($used1) || !empty($used2)) {
-            $data['unit_used'] = true;
+            $used1 = InvItemCard::where(['unit_id' => $id])->orWhere(['retail_unit_id' => $id])->value('name');
+            $used2 = InvoiceOrderDetail::where(['unit_id' => $id, 'com_code' => auth()->user()->com_code])->value('unit_id');
+            if (!empty($used1) || !empty($used2)) {
+                $data['unit_used'] = true;
+            }
+            else {
+                $data['unit_used'] = false;
+            }
+            return view('admin.inv_units.edit', ['data' => $data]);
         }
         else {
-            $data['unit_used'] = false;
+            return redirect()->back();
         }
-        return view('admin.inv_units.edit', ['data' => $data]);
+
     }
 
     /**
@@ -136,23 +159,29 @@ class InvUnitController extends Controller
             'active' =>'required',
         ]);
 
-        try {
+        if (check_control_menu_role('المخازن', 'الوحدات' , 'تعديل') == true) {
+            try {
 
-            $updated['name'] = $request->name;
-            $updated['master'] = $request->master;
-            $updated['active'] = $request->active;
-            $updated['updated_by'] = auth()->user()->id;
-            $updated['updated_at'] = date('Y-m-d H:i:s');
-            $updated['com_code'] = auth()->user()->com_code;
+                $updated['name'] = $request->name;
+                $updated['master'] = $request->master;
+                $updated['active'] = $request->active;
+                $updated['updated_by'] = auth()->user()->id;
+                $updated['updated_at'] = date('Y-m-d H:i:s');
+                $updated['com_code'] = auth()->user()->com_code;
 
-            InvUnit::where('id', $id)->update($updated);
+                InvUnit::where('id', $id)->update($updated);
 
-            return redirect()->route('admin.inv_units.index')->with('success', 'تم تعديل الوحدة بنجاح');
+                return redirect()->route('admin.inv_units.index')->with('success', 'تم تعديل الوحدة بنجاح');
 
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -164,29 +193,35 @@ class InvUnitController extends Controller
     public function destroy($id)
     {
         //
-        try {
+        if (check_control_menu_role('المخازن', 'الوحدات' , 'حذف') == true) {
+            try {
 
-            $data_check = InvUnit::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
+                $data_check = InvUnit::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
 
 
-            if (empty($data_check)) {
-                return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                if (empty($data_check)) {
+                    return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                }
+
+
+                $flag = InvUnit::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
+
+                if ($flag) {
+                    return redirect()->back()->with('success', 'تم الحذف بنجاح');
+                }
+                else {
+                    return redirect()->back()->with('error', 'غير قادر على الحذف ');
+                }
+
             }
-
-
-            $flag = InvUnit::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
-
-            if ($flag) {
-                return redirect()->back()->with('success', 'تم الحذف بنجاح');
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
             }
-            else {
-                return redirect()->back()->with('error', 'غير قادر على الحذف ');
-            }
-
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
 
@@ -222,6 +257,18 @@ class InvUnitController extends Controller
             }
 
             $data = InvUnit::where("$filed1", "$operator1", "%$value1%")->where("$filed2", "$operator2", "$value2")->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
+            if (!empty($data)) {
+                foreach ($data as $d) {
+                    if ($d['added_by'] != null) {
+                        $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                    }
+
+                    if ($d['updated_by'] != null) {
+                        $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
+                    }
+                }
+            }
+
             return view('admin.inv_units.ajax_search', ['data' => $data]);
 
         }

@@ -19,9 +19,11 @@
 @endif
 
 <div>
-    <a href="{{ route('admin.inv_stores_inventory.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-plus-circle"></i> اضافة جديد
-    </a>
+    @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اضافة') == true)
+        <a href="{{ route('admin.inv_stores_inventory.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </a>
+    @endif
 </div>
 
 <div class="row">
@@ -82,21 +84,27 @@
 
                     @if (!@empty($data[0]))
                         <tr style="background-color: #007bff; color:white;">
-                            <th>تعديل</th>
+                            @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل') == true)
+                                <th>تعديل</th>
+                            @endif
                             <th>تاريخ الجرد</th>
                             <th>نوع الجرد</th>
                             <th>مخزن الجرد</th>
                             <th>الحالة</th>
-                            <th>التحكم</th>
+                            @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'طباعة') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'حذف') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'التفاصيل') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق') == true)
+                                <th>التحكم</th>
+                            @endif
                         </tr>
 
                         @foreach ($data as $datum)
                             <tr>
-                                <td>
-                                    <a href="{{ route('admin.inv_stores_inventory.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل') == true)
+                                    <td>
+                                        <a href="{{ route('admin.inv_stores_inventory.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                @endif
                                 <td>{{ $datum->inventory_date }}</td>
                                 <td>
                                     @if ($datum->inventory_type == 1)
@@ -121,21 +129,34 @@
                                     </td>
                                 @endif
 
-                                <td>
-                                    <a href="{{ route('admin.inv_stores_inventory.printA4', $datum->id) }}" class="btn btn-success">
-                                        A4 <i class="fa-solid fa-print"></i>
-                                    </a>
-                                    <a href="{{ route('admin.inv_stores_inventory.details', $datum->id) }}" class="btn btn-info">
-                                        <i class="fa-solid fa-circle-info"></i>
-                                    </a>
+                                @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'طباعة') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'حذف') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'التفاصيل') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق') == true)
+                                    <td>
+                                        @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'طباعة') == true)
+                                            <a href="{{ route('admin.inv_stores_inventory.printA4', $datum->id) }}" class="btn btn-success">
+                                                A4 <i class="fa-solid fa-print"></i>
+                                            </a>
+                                        @endif
 
-                                    <a href="{{ route('admin.inv_stores_inventory.close_header', $datum->id) }}" @if ($datum->is_closed == 1) @endif class="btn btn-warning">
-                                        ترحيل
-                                    </a>
-                                    <a href="{{ route('admin.inv_stores_inventory.delete', $datum->id) }}" class="are_you_sure btn btn-danger">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </a>
-                                </td>
+                                        @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'التفاصيل') == true)
+                                            <a href="{{ route('admin.inv_stores_inventory.details', $datum->id) }}" class="btn btn-info">
+                                                <i class="fa-solid fa-circle-info"></i>
+                                            </a>
+                                        @endif
+
+
+                                        @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق') == true)
+                                            <a href="{{ route('admin.inv_stores_inventory.close_header', $datum->id) }}" @if ($datum->is_closed == 1) @endif class="btn btn-warning">
+                                                ترحيل
+                                            </a>
+                                        @endif
+
+                                        @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'حذف') == true)
+                                            <a href="{{ route('admin.inv_stores_inventory.delete', $datum->id) }}" class="are_you_sure btn btn-danger">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </a>
+                                        @endif
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
 

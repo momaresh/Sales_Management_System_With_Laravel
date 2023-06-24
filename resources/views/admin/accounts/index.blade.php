@@ -19,9 +19,11 @@
 @endif
 
 <div>
-    <a href="{{ route('admin.accounts.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-plus-circle"></i> اضافة جديد
-    </a>
+    @if (check_control_menu_role('الحسابات', 'الحسابات' , 'اضافة') == true)
+        <a href="{{ route('admin.accounts.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </a>
+    @endif
 </div>
 
 <div class="row">
@@ -41,7 +43,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                     <label>بحث بنوع الحساب</label>
-                    <select name="account_type_search" id="account_type_search" class="form-control ">
+                    <select name="account_type_search" id="account_type_search" class="form-control select2">
                         <option value="all"> بحث بالكل</option>
 
                         @if (@isset($account_types) && !@empty($account_types))
@@ -59,7 +61,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                     <label>هل الحساب أب</label>
-                    <select name="is_parent_search" id="is_parent_search" class="form-control">
+                    <select name="is_parent_search" id="is_parent_search" class="form-control select2">
                         <option value="all"> بحث بالكل</option>
                         <option value="1"> نعم</option>
                         <option value="0"> لا</option>
@@ -70,7 +72,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                     <label>   حالة التفعيل  </label>
-                        <select name="active_search" id="active_search" class="form-control">
+                        <select name="active_search" id="active_search" class="form-control select2">
                             <option value="all"> بحث بالكل</option>
                             <option     value="1"> مفعل  </option>
                             <option  value="0"> معطل</option>
@@ -85,7 +87,9 @@
                     @if (!@empty($data[0]))
 
                         <tr style="background-color: #007bff; color:white;">
-                            <th>تعديل</th>
+                            @if (check_control_menu_role('الحسابات', 'الحسابات' , 'تعديل') == true)
+                                <th>تعديل</th>
+                            @endif
                             <th>كود الحساب</th>
                             <th>رقم الحساب</th>
                             <th>اسم صاحب الحساب</th>
@@ -93,16 +97,20 @@
                             <th>حساب الأب</th>
                             <th>الرصيد</th>
                             <th>حالة التفعيل</th>
-                            <th>حذف</th>
+                            @if (check_control_menu_role('الحسابات', 'الحسابات' , 'حذف') == true)
+                                <th>حذف</th>
+                            @endif
                         </tr>
 
                         @foreach ($data as $datum)
                             <tr>
-                                <td>
-                                    <a href="{{ route('admin.accounts.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('الحسابات', 'الحسابات' , 'تعديل') == true)
+                                    <td>
+                                        <a href="{{ route('admin.accounts.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                @endif
                                 <td>{{ $datum->id }}</td>
                                 <td>{{ $datum->account_number }}</td>
                                 <td>
@@ -127,11 +135,13 @@
                                 </td>
                                 @endif
 
-                                <td>
-                                    <a href="{{ route('admin.accounts.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('الحسابات', 'الحسابات' , 'حذف') == true)
+                                    <td>
+                                        <a href="{{ route('admin.accounts.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
 
@@ -214,7 +224,7 @@
                 make_search();
             });
 
-            $(document).on('click', '#ajax_pagination_search a ', function(e) {
+            $(document).on('click', '#ajax_pagination_search a', function(e) {
                 e.preventDefault();
                 var search_by_text = $("#search_by_text").val();
                 var account_type = $("#account_type_search").val();

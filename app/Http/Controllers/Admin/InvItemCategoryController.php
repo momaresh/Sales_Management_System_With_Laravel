@@ -19,26 +19,32 @@ class InvItemCategoryController extends Controller
     public function index()
     {
         //
-        try {
-            $data = InvItemCategory::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
+        if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'عرض') == true) {
+            try {
+                $data = InvItemCategory::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
 
-            if (!empty($data)) {
-                foreach ($data as $d) {
-                    if ($d['added_by'] != null) {
-                        $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
-                    }
+                if (!empty($data)) {
+                    foreach ($data as $d) {
+                        if ($d['added_by'] != null) {
+                            $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                        }
 
-                    if ($d['updated_by'] != null) {
-                        $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
+                        if ($d['updated_by'] != null) {
+                            $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
+                        }
                     }
                 }
-            }
 
-            return view('admin.inv_item_categories.index', ['data' => $data]);
+                return view('admin.inv_item_categories.index', ['data' => $data]);
+            }
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
+            }
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -49,7 +55,12 @@ class InvItemCategoryController extends Controller
     public function create()
     {
         //
-        return view('admin.inv_item_categories.create');
+        if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'اضافة') == true) {
+            return view('admin.inv_item_categories.create');
+        }
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -61,20 +72,26 @@ class InvItemCategoryController extends Controller
     public function store(InvItemCategoryRequest $request)
     {
         //
-        try {
-            $inserted['name'] = $request->name;
-            $inserted['active'] = $request->active;
-            $inserted['added_by'] = auth()->user()->id;
-            $inserted['created_at'] = date('Y-m-d H:i:s');
-            $inserted['com_code'] = auth()->user()->com_code;
+        if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'اضافة') == true) {
+            try {
+                $inserted['name'] = $request->name;
+                $inserted['active'] = $request->active;
+                $inserted['added_by'] = auth()->user()->id;
+                $inserted['created_at'] = date('Y-m-d H:i:s');
+                $inserted['com_code'] = auth()->user()->com_code;
 
-            InvItemCategory::create($inserted);
+                InvItemCategory::create($inserted);
 
-            return redirect()->route('inv_item_categories.index')->with('success', 'تم اضافة الصنف بنجاح');
+                return redirect()->route('inv_item_categories.index')->with('success', 'تم اضافة الصنف بنجاح');
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -97,11 +114,17 @@ class InvItemCategoryController extends Controller
     public function edit($id)
     {
         //
-        $data = InvItemCategory::find($id);
-        if (empty($data)) {
-            return redirect()->route('inv_item_categories.index')->with('error', 'لا يوجد بيانات كهذه');
+        if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'تعديل') == true) {
+            $data = InvItemCategory::find($id);
+            if (empty($data)) {
+                return redirect()->route('inv_item_categories.index')->with('error', 'لا يوجد بيانات كهذه');
+            }
+            return view('admin.inv_item_categories.edit', ['data' => $data]);
         }
-        return view('admin.inv_item_categories.edit', ['data' => $data]);
+        else {
+            return redirect()->back();
+        }
+
     }
 
     /**
@@ -119,21 +142,27 @@ class InvItemCategoryController extends Controller
             'active' =>'required'
         ]);
 
-        try {
-            $updated['name'] = $request->name;
-            $updated['active'] = $request->active;
-            $updated['updated_by'] = auth()->user()->id;
-            $updated['updated_at'] = date('Y-m-d H:i:s');
-            $updated['com_code'] = auth()->user()->com_code;
+        if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'تعديل') == true) {
+            try {
+                $updated['name'] = $request->name;
+                $updated['active'] = $request->active;
+                $updated['updated_by'] = auth()->user()->id;
+                $updated['updated_at'] = date('Y-m-d H:i:s');
+                $updated['com_code'] = auth()->user()->com_code;
 
-            InvItemCategory::where('id', $id)->update($updated);
+                InvItemCategory::where('id', $id)->update($updated);
 
-            return redirect()->route('inv_item_categories.index')->with('success', 'تم تعديل الصنف بنجاح');
+                return redirect()->route('inv_item_categories.index')->with('success', 'تم تعديل الصنف بنجاح');
 
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -148,29 +177,35 @@ class InvItemCategoryController extends Controller
     public function delete($id)
     {
         # code...
-        try {
+        if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'حذف') == true) {
+            try {
 
-            $data_check = InvItemCategory::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
+                $data_check = InvItemCategory::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
 
 
-            if (empty($data_check)) {
-                return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                if (empty($data_check)) {
+                    return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                }
+
+
+                $flag = InvItemCategory::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
+
+                if ($flag) {
+                    return redirect()->back()->with('success', 'تم الحذف بنجاح');
+                }
+                else {
+                    return redirect()->back()->with('error', 'غير قادر على الحذف ');
+                }
+
             }
-
-
-            $flag = InvItemCategory::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
-
-            if ($flag) {
-                return redirect()->back()->with('success', 'تم الحذف بنجاح');
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
             }
-            else {
-                return redirect()->back()->with('error', 'غير قادر على الحذف ');
-            }
-
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
 

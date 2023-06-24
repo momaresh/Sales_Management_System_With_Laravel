@@ -15,8 +15,8 @@ $(document).ready(function() {
                 $('#create_pill_result').html(data);
                 $('#create_pill').modal('show');
             },
-            error: function() {
-                alert();
+            error: function(data) {
+                alert('انت لا تملك شفت لعمل اضافة');
             }
         });
     });
@@ -446,6 +446,7 @@ $(document).ready(function() {
                 $("#pill_adding_items_modal").modal('show');
             },
             error: function() {
+                alert('انت لا تملك شفت لعمل اضافة');
             }
         });
 

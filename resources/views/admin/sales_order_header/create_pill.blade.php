@@ -41,7 +41,9 @@
             <div class="col-md-3" id="customer_code_div">
                 <div class="form-group">
                     <label>اسم العميل</label>
-                    <a id="add_new_customer_btn" href="">(جديد <i class="fa-solid fa-circle-plus"></i>)</a>
+                    @if (check_control_menu_role('الحسابات', 'العملاء' , 'اضافة') == true)
+                        <a id="add_new_customer_btn" href="">(جديد <i class="fa-solid fa-circle-plus"></i>)</a>
+                    @endif
                     <select name="customer_code" id="customer_code" class="form-control select2">
                         <option value="">اختر العميل</option>
                         @if (@isset($customers) && !@empty($customers))

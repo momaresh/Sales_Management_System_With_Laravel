@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('title')
-    الاصناف
+    تفاصيل الاصناف
 @endsection
 
 @section('content')
@@ -219,11 +219,13 @@
             @endif
 
         </table>
-        <div>
-            <a href="{{ route('admin.inv_item_card.edit', $data->id) }}" class="btn btn-primary mt-2">
-                 تعديل
-            </a>
-        </div>
+        @if (check_control_menu_role('المخازن', 'الاصناف' , 'تعديل') == true)
+            <div>
+                <a href="{{ route('admin.inv_item_card.edit', $data->id) }}" class="btn btn-primary mt-2">
+                    تعديل
+                </a>
+            </div>
+        @endif
         </div>
         <!-- /.card-body -->
     </div>
@@ -234,140 +236,142 @@
 
 <input type="hidden" id="item_code_search" value="{{ $data['item_code'] }}">
 
-<div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات الحركات على الصنف</h3>
-        </div>
-        <!-- /.card-header -->
-        <div class="card-body">
-
-            <div class="mb-3 row">
-                <div class="col-md-4">
-                    <label class="control-label">بحث بالمخازن</label>
-                    <select class="form-control select2" name="store_search" id="store_search">
-                        <option value="all">بحث بالكل</option>
-                        @if (@isset($stores) && !@empty($stores))
-                            @foreach ($stores as $info )
-                                <option value="{{ $info->id }}">{{ $info->name }}</option>
-                            @endforeach
-                        @endif
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>بحث بقسم الحركة</label>
-                        <select name="category_search" id="category_search" class="form-control select2">
-                            <option value="all">بحث بالكل</option>
-                            @if (@isset($categories) && !@empty($categories))
-                            @foreach ($categories as $info )
-                                <option value="{{ $info->id }}"> {{ $info->name }} </option>
-                            @endforeach
-                            @endif
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>بحث بنوع الحركة</label>
-                        <select name="type_search" id="type_search" class="form-control select2">
-                            <option value="all">بحث بالكل</option>
-                            @if (@isset($types) && !@empty($types))
-                            @foreach ($types as $info )
-                                <option value="{{ $info->id }}"> {{ $info->type }} </option>
-                            @endforeach
-                            @endif
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="control-label" for="from_date_search">من تاريخ</label>
-                    <input class="form-control" type="date" id="from_date_search" name="from_date_search" >
-                </div>
-
-                <div class="col-md-4">
-                    <label class="control-label" for="to_date_search">الى تاريخ</label>
-                    <input class="form-control" type="date" id="to_date_search" name="to_date_search" >
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>بحث بالترتيب</label>
-                        <select name="order_search" id="order_search" class="form-control select2">
-                            <option value="all">بحث بالكل</option>
-                            <option value="asc">ترتيب تصاعدي</option>
-                            <option value="desc">ترتيب تنازلي</option>
-                        </select>
-                    </div>
-                </div>
-
-
+@if (check_control_menu_role('المخازن', 'الاصناف' , 'عرض الحركات') == true)
+    <div class="row">
+        <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+            <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات الحركات على الصنف</h3>
             </div>
+            <!-- /.card-header -->
+            <div class="card-body">
 
-            <div id="ajax_search_result">
-                <table id="example1" class="table table-bordered table-hover">
+                <div class="mb-3 row">
+                    <div class="col-md-4">
+                        <label class="control-label">بحث بالمخازن</label>
+                        <select class="form-control select2" name="store_search" id="store_search">
+                            <option value="all">بحث بالكل</option>
+                            @if (@isset($stores) && !@empty($stores))
+                                @foreach ($stores as $info )
+                                    <option value="{{ $info->id }}">{{ $info->name }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
 
-                    @if (!@empty($moves[0]))
-
-                        <tr style="background-color: #007bff; color:white;">
-                            <th>المخزن</th>
-                            <th>القسم</th>
-                            <th>الحركة</th>
-                            <th>البيان</th>
-                            <th>الكمية قبل الحركة</th>
-                            <th>الكمية بعد الحركة</th>
-                            <th>تم الاضافة</th>
-                        </tr>
-
-                        @foreach ($moves as $move)
-                            <tr>
-                                <td>{{ $move->store_name }}</td>
-                                <td>{{ $move->category_name }}</td>
-                                <td>{{ $move->type_name }}</td>
-                                <td>{{ $move->byan }}</td>
-                                <td><span style="color: #06a782">الكمية في المخزن الحالي {{ $move->quantity_before_movement_in_current_store }}</span> <span style="color: #ad002ba1">الكمية في كل المخارن {{ $move->quantity_before_movement }}</span></td>
-                                <td><span style="color: #06a782">الكمية في المخزن الحالي {{ $move->quantity_after_movement_in_current_store }}</span> <span style="color: #ad002ba1">الكمية في كل المخارن {{ $move->quantity_after_movement }}</span></td>
-                                <td>
-                                    @if ($move['added_by'] != null)
-                                        @php
-                                            $d = new DateTime($move['created_at']);
-                                            $date = $d->format('d/m/Y الساعة h:i:sA');
-                                        @endphp
-
-                                        {{ $date }}
-                                        بواسطة
-                                        {{ $move['added_by_name'] }}
-                                    @else
-                                        لا يوجد اي بيانات
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-
-                    @else
-                        <div class="alert alert-danger">
-                            لا يوجد بيانات لعرضها
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>بحث بقسم الحركة</label>
+                            <select name="category_search" id="category_search" class="form-control select2">
+                                <option value="all">بحث بالكل</option>
+                                @if (@isset($categories) && !@empty($categories))
+                                @foreach ($categories as $info )
+                                    <option value="{{ $info->id }}"> {{ $info->name }} </option>
+                                @endforeach
+                                @endif
+                            </select>
                         </div>
-                    @endif
+                    </div>
 
-                </table>
-                <br>
-                <div style="width: fit-content; margin:auto;">
-                    {{ $moves->links() }}
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>بحث بنوع الحركة</label>
+                            <select name="type_search" id="type_search" class="form-control select2">
+                                <option value="all">بحث بالكل</option>
+                                @if (@isset($types) && !@empty($types))
+                                @foreach ($types as $info )
+                                    <option value="{{ $info->id }}"> {{ $info->type }} </option>
+                                @endforeach
+                                @endif
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="control-label" for="from_date_search">من تاريخ</label>
+                        <input class="form-control" type="date" id="from_date_search" name="from_date_search" >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="control-label" for="to_date_search">الى تاريخ</label>
+                        <input class="form-control" type="date" id="to_date_search" name="to_date_search" >
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>بحث بالترتيب</label>
+                            <select name="order_search" id="order_search" class="form-control select2">
+                                <option value="all">بحث بالكل</option>
+                                <option value="asc">ترتيب تصاعدي</option>
+                                <option value="desc">ترتيب تنازلي</option>
+                            </select>
+                        </div>
+                    </div>
+
+
                 </div>
-            </div>
 
+                <div id="ajax_search_result">
+                    <table id="example1" class="table table-bordered table-hover">
+
+                        @if (!@empty($moves[0]))
+
+                            <tr style="background-color: #007bff; color:white;">
+                                <th>المخزن</th>
+                                <th>القسم</th>
+                                <th>الحركة</th>
+                                <th>البيان</th>
+                                <th>الكمية قبل الحركة</th>
+                                <th>الكمية بعد الحركة</th>
+                                <th>تم الاضافة</th>
+                            </tr>
+
+                            @foreach ($moves as $move)
+                                <tr>
+                                    <td>{{ $move->store_name }}</td>
+                                    <td>{{ $move->category_name }}</td>
+                                    <td>{{ $move->type_name }}</td>
+                                    <td>{{ $move->byan }}</td>
+                                    <td><span style="color: #06a782">الكمية في المخزن الحالي {{ $move->quantity_before_movement_in_current_store }}</span> <span style="color: #ad002ba1">الكمية في كل المخارن {{ $move->quantity_before_movement }}</span></td>
+                                    <td><span style="color: #06a782">الكمية في المخزن الحالي {{ $move->quantity_after_movement_in_current_store }}</span> <span style="color: #ad002ba1">الكمية في كل المخارن {{ $move->quantity_after_movement }}</span></td>
+                                    <td>
+                                        @if ($move['added_by'] != null)
+                                            @php
+                                                $d = new DateTime($move['created_at']);
+                                                $date = $d->format('d/m/Y الساعة h:i:sA');
+                                            @endphp
+
+                                            {{ $date }}
+                                            بواسطة
+                                            {{ $move['added_by_name'] }}
+                                        @else
+                                            لا يوجد اي بيانات
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+
+                        @else
+                            <div class="alert alert-danger">
+                                لا يوجد بيانات لعرضها
+                            </div>
+                        @endif
+
+                    </table>
+                    <br>
+                    <div style="width: fit-content; margin:auto;">
+                        {{ $moves->links() }}
+                    </div>
+                </div>
+
+            </div>
+            <!-- /.card-body -->
         </div>
-        <!-- /.card-body -->
-      </div>
-      <!-- /.card -->
+        <!-- /.card -->
+        </div>
+        <!-- /.col -->
     </div>
-    <!-- /.col -->
-</div>
+@endif
 
 
 @endsection

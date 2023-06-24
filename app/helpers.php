@@ -16,7 +16,7 @@ function check_main_menu_role($main_menu_name = '') {
     else {
         $main_menu_code = RoleMainMenu::where('name', $main_menu_name)->value('id');
         $admin_role_id = Admin::where('id', auth()->user()->id)->value('roles_id');
-
+        
         $check = PermissionRoleWithMainMenu::where(['roles_id' => $admin_role_id, 'roles_main_menu_id' => $main_menu_code, 'com_code' => $com_code])->count();
 
         if ($check > 0) {

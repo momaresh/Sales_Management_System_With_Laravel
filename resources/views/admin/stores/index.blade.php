@@ -19,9 +19,11 @@
 @endif
 
 <div>
-    <a href="{{ route('admin.stores.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-plus-circle"></i> اضافة جديد
-    </a>
+    @if (check_control_menu_role('المخازن', 'المخازن' , 'اضافة') == true)
+        <a href="{{ route('admin.stores.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </a>
+    @endif
 </div>
 
 <div class="row">
@@ -41,7 +43,9 @@
                     @if (!@empty($data[0]))
 
                         <tr style="background-color: #007bff; color:white;">
-                            <th>تعديل</th>
+                            @if (check_control_menu_role('المخازن', 'المخازن' , 'تعديل') == true)
+                                <th>تعديل</th>
+                            @endif
                             <th>كود المخزن</th>
                             <th>اسم المخزن</th>
                             <th>الهاتف</th>
@@ -49,16 +53,22 @@
                             <th>حالة التفعيل</th>
                             <th>تاريخ الاضافة</th>
                             <th>تاريخ التحديث</th>
-                            <th>حذف</th>
+                            @if (check_control_menu_role('المخازن', 'المخازن' , 'حذف') == true)
+                                <th>حذف</th>
+                            @endif
                         </tr>
 
                         @foreach ($data as $datum)
                             <tr>
-                                <td>
-                                    <a href="{{ route('admin.stores.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </td>
+
+                                @if (check_control_menu_role('المخازن', 'المخازن' , 'تعديل') == true)
+                                    <td>
+                                        <a href="{{ route('admin.stores.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                @endif
+
                                 <td>{{ $datum->id }}</td>
                                 <td>{{ $datum->name }}</td>
                                 <td>{{ $datum->phone }}</td>
@@ -100,11 +110,13 @@
                                         لا يوجد اي تحديث
                                     @endif
                                 </td>
-                                <td>
-                                    <a href="{{ route('admin.stores.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('المخازن', 'المخازن' , 'حذف') == true)
+                                    <td>
+                                        <a href="{{ route('admin.stores.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
 

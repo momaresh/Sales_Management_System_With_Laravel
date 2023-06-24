@@ -19,9 +19,11 @@
 @endif
 
 <div>
-    <a href="{{ route('inv_item_categories.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-plus-circle"></i> اضافة جديد
-    </a>
+    @if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'اضافة') == true)
+        <a href="{{ route('inv_item_categories.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </a>
+    @endif
 </div>
 
 <div class="row">
@@ -41,22 +43,29 @@
                     @if (!@empty($data[0]))
 
                         <tr style="background-color: #007bff; color:white;">
-                            <th>تعديل</th>
+                            @if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'تعديل') == true)
+                                <th>تعديل</th>
+                            @endif
                             <th>كود فئة الصنف</th>
                             <th>اسم فئة الصنف</th>
                             <th>حالة التفعيل</th>
                             <th>تاريخ الاضافة</th>
                             <th>تاريخ التحديث</th>
-                            <th>حذف</th>
+                            @if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'حذف') == true)
+                                <th>حذف</th>
+                            @endif
                         </tr>
 
                         @foreach ($data as $datum)
                             <tr>
-                                <td>
-                                    <a href="{{ route('inv_item_categories.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'تعديل') == true)
+                                    <td>
+                                        <a href="{{ route('inv_item_categories.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                @endif
+
                                 <td>{{ $datum->id }}</td>
                                 <td>{{ $datum->name }}</td>
                                 @if ($datum->active == 1)
@@ -96,11 +105,14 @@
                                         لا يوجد اي تحديث
                                     @endif
                                 </td>
-                                <td>
-                                    <a href="{{ route('inv_item_categories.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'حذف') == true)
+                                    <td>
+                                        <a href="{{ route('inv_item_categories.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    </td>
+                                @endif
+
                             </tr>
                         @endforeach
 

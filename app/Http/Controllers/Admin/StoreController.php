@@ -19,29 +19,34 @@ class StoreController extends Controller
     public function index()
     {
         //
-        try {
-            $data = Store::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
+        if (check_control_menu_role('المخازن', 'المخازن' , 'عرض') == true) {
+            try {
+                $data = Store::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
 
-            if (!empty($data)) {
-                foreach ($data as $d) {
-                    if ($d['added_by'] != null) {
-                        $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                if (!empty($data)) {
+                    foreach ($data as $d) {
+                        if ($d['added_by'] != null) {
+                            $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                        }
+
+                        if ($d['updated_by'] != null) {
+                            $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
+                        }
+
+                        // if ($d['com_code'] != null) {
+                        //     $d['com_code_name'] = AdminPanelSetting::where('id', $d['com_code'])->value('system_name');
+                        // }
                     }
-
-                    if ($d['updated_by'] != null) {
-                        $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
-                    }
-
-                    // if ($d['com_code'] != null) {
-                    //     $d['com_code_name'] = AdminPanelSetting::where('id', $d['com_code'])->value('system_name');
-                    // }
                 }
-            }
 
-            return view('admin.stores.index', ['data' => $data]);
+                return view('admin.stores.index', ['data' => $data]);
+            }
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
+            }
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
     }
 
@@ -53,7 +58,12 @@ class StoreController extends Controller
     public function create()
     {
         //
-        return view('admin.stores.create');
+        if (check_control_menu_role('المخازن', 'المخازن' , 'اضافة') == true) {
+            return view('admin.stores.create');
+        }
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -65,21 +75,26 @@ class StoreController extends Controller
     public function store(CreateStoreRequest $request)
     {
         //
-        try {
-            $inserted['name'] = $request->name;
-            $inserted['active'] = $request->active;
-            $inserted['phone'] = $request->phone;
-            $inserted['address'] = $request->address;
-            $inserted['added_by'] = auth()->user()->id;
-            $inserted['created_at'] = date('Y-m-d H:i:s');
-            $inserted['com_code'] = auth()->user()->com_code;
+        if (check_control_menu_role('المخازن', 'المخازن' , 'اضافة') == true) {
+            try {
+                $inserted['name'] = $request->name;
+                $inserted['active'] = $request->active;
+                $inserted['phone'] = $request->phone;
+                $inserted['address'] = $request->address;
+                $inserted['added_by'] = auth()->user()->id;
+                $inserted['created_at'] = date('Y-m-d H:i:s');
+                $inserted['com_code'] = auth()->user()->com_code;
 
-            Store::create($inserted);
+                Store::create($inserted);
 
-            return redirect()->route('admin.stores.index')->with('success', 'تم اضافة المخزن بنجاح');
+                return redirect()->route('admin.stores.index')->with('success', 'تم اضافة المخزن بنجاح');
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
@@ -103,11 +118,17 @@ class StoreController extends Controller
     public function edit($id)
     {
         //
-        $data = Store::find($id);
-        if (empty($data)) {
-            return redirect()->route('admin.stores.index')->with('error', 'لا يوجد بيانات كهذه');
+        if (check_control_menu_role('المخازن', 'المخازن' , 'تعديل') == true) {
+            $data = Store::find($id);
+            if (empty($data)) {
+                return redirect()->route('admin.stores.index')->with('error', 'لا يوجد بيانات كهذه');
+            }
+            return view('admin.stores.edit', ['data' => $data]);
         }
-        return view('admin.stores.edit', ['data' => $data]);
+        else {
+            return redirect()->back();
+        }
+
     }
 
     /**
@@ -127,22 +148,27 @@ class StoreController extends Controller
             'address' =>'required'
         ]);
 
-        try {
-            $updated['name'] = $request->name;
-            $updated['phone'] = $request->phone;
-            $updated['address'] = $request->address;
-            $updated['active'] = $request->active;
-            $updated['updated_by'] = auth()->user()->id;
-            $updated['updated_at'] = date('Y-m-d H:i:s');
-            $updated['com_code'] = auth()->user()->com_code;
+        if (check_control_menu_role('المخازن', 'المخازن' , 'تعديل') == true) {
+            try {
+                $updated['name'] = $request->name;
+                $updated['phone'] = $request->phone;
+                $updated['address'] = $request->address;
+                $updated['active'] = $request->active;
+                $updated['updated_by'] = auth()->user()->id;
+                $updated['updated_at'] = date('Y-m-d H:i:s');
+                $updated['com_code'] = auth()->user()->com_code;
 
-            Store::where('id', $id)->update($updated);
+                Store::where('id', $id)->update($updated);
 
-            return redirect()->route('admin.stores.index')->with('success', 'تم تعديل المخزن بنجاح');
+                return redirect()->route('admin.stores.index')->with('success', 'تم تعديل المخزن بنجاح');
 
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
@@ -155,28 +181,33 @@ class StoreController extends Controller
     public function destroy($id)
     {
         //
-        try {
+        if (check_control_menu_role('المخازن', 'المخازن' , 'حذف') == true) {
+            try {
 
-            $data_check = Store::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
+                $data_check = Store::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
 
 
-            if (empty($data_check)) {
-                return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                if (empty($data_check)) {
+                    return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                }
+
+
+                $flag = Store::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
+
+                if ($flag) {
+                    return redirect()->back()->with('success', 'تم الحذف بنجاح');
+                }
+                else {
+                    return redirect()->back()->with('error', 'غير قادر على الحذف ');
+                }
+
             }
-
-
-            $flag = Store::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
-
-            if ($flag) {
-                return redirect()->back()->with('success', 'تم الحذف بنجاح');
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
             }
-            else {
-                return redirect()->back()->with('error', 'غير قادر على الحذف ');
-            }
-
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 

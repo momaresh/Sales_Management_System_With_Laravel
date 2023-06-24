@@ -26,22 +26,28 @@ class InvStoreInventoryController extends Controller
     public function index()
     {
         //
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvStoreInventoryHeader::where('com_code', $com_code)->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
-            if (!empty($data)) {
-                foreach ($data as $d) {
-                    $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'عرض') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvStoreInventoryHeader::where('com_code', $com_code)->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
+                if (!empty($data)) {
+                    foreach ($data as $d) {
+                        $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
+                    }
                 }
+
+                $stores = Store::where('com_code', $com_code)->get(['id', 'name']);
+
+                return view('admin.inv_stores_inventory.index', ['data' => $data, 'stores' => $stores]);
             }
-
-            $stores = Store::where('com_code', $com_code)->get(['id', 'name']);
-
-            return view('admin.inv_stores_inventory.index', ['data' => $data, 'stores' => $stores]);
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -52,9 +58,15 @@ class InvStoreInventoryController extends Controller
     public function create()
     {
         //
-        $stores = Store::where('com_code', auth()->user()->com_code)->get(['id', 'name']);
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اضافة') == true) {
+            $stores = Store::where('com_code', auth()->user()->com_code)->get(['id', 'name']);
 
-        return view('admin.inv_stores_inventory.create', ['stores' => $stores]);
+            return view('admin.inv_stores_inventory.create', ['stores' => $stores]);
+
+        }
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -79,27 +91,32 @@ class InvStoreInventoryController extends Controller
             ]
         );
 
-        try {
-            $check = InvStoreInventoryHeader::where(['is_closed' => 0, 'store_id' => $request->store_id, 'com_code' => auth()->user()->com_code])->value('id');
-            if (!empty($check)) {
-                return redirect()->route('admin.inv_stores_inventory.index')->with('error', 'يوجد جرد لا يزال مفتوحاً');
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اضافة') == true) {
+            try {
+                $check = InvStoreInventoryHeader::where(['is_closed' => 0, 'store_id' => $request->store_id, 'com_code' => auth()->user()->com_code])->value('id');
+                if (!empty($check)) {
+                    return redirect()->route('admin.inv_stores_inventory.index')->with('error', 'يوجد جرد لا يزال مفتوحاً');
+                }
+
+                $inserted['store_id'] = $request->store_id;
+                $inserted['inventory_date'] = $request->inventory_date;
+                $inserted['inventory_type'] = $request->inventory_type;
+                $inserted['notes'] = $request->notes;
+                $inserted['created_at'] = date('Y-m-d H:i:s');
+                $inserted['date'] = date('Y-m-d');
+                $inserted['added_by'] = auth()->user()->id;
+                $inserted['com_code'] = auth()->user()->com_code;
+
+                InvStoreInventoryHeader::create($inserted);
+
+                return redirect()->route('admin.inv_stores_inventory.index')->with('success', 'تم الاضافة بنجاح');
             }
-
-            $inserted['store_id'] = $request->store_id;
-            $inserted['inventory_date'] = $request->inventory_date;
-            $inserted['inventory_type'] = $request->inventory_type;
-            $inserted['notes'] = $request->notes;
-            $inserted['created_at'] = date('Y-m-d H:i:s');
-            $inserted['date'] = date('Y-m-d');
-            $inserted['added_by'] = auth()->user()->id;
-            $inserted['com_code'] = auth()->user()->com_code;
-
-            InvStoreInventoryHeader::create($inserted);
-
-            return redirect()->route('admin.inv_stores_inventory.index')->with('success', 'تم الاضافة بنجاح');
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
     }
 
@@ -112,40 +129,45 @@ class InvStoreInventoryController extends Controller
     public function details($id)
     {
         //
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
-            if (!empty($data)) {
-                $data['store_name'] = Store::where('id', $data['store_id'])->value('name');
-                $data['added_by_name'] = Admin::where('id', $data['added_by'])->value('name');
-                $data['updated_by_name'] = Admin::where('id', $data['updated_by'])->value('name');
-            }
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'التفاصيل') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
+                if (!empty($data)) {
+                    $data['store_name'] = Store::where('id', $data['store_id'])->value('name');
+                    $data['added_by_name'] = Admin::where('id', $data['added_by'])->value('name');
+                    $data['updated_by_name'] = Admin::where('id', $data['updated_by'])->value('name');
+                }
 
-            $items_card = array();
-            if ($data['is_closed'] == 0) {
-                $items_card = InvItemCardBatch::where(['store_id' => $data['store_id'], 'com_code' => $com_code])->distinct()->get('item_code');
-                if (!empty($items_card)) {
-                    foreach ($items_card as $item) {
-                        $item['name'] = InvItemCard::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->value('name');
+                $items_card = array();
+                if ($data['is_closed'] == 0) {
+                    $items_card = InvItemCardBatch::where(['store_id' => $data['store_id'], 'com_code' => $com_code])->distinct()->get('item_code');
+                    if (!empty($items_card)) {
+                        foreach ($items_card as $item) {
+                            $item['name'] = InvItemCard::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->value('name');
+                        }
                     }
                 }
-            }
 
-            $details = InvStoreInventoryDetail::where('inv_stores_inventory_header_id', $id)->get();
-            if (!empty($details)) {
-                foreach ($details as $detail) {
-                    $batch = InvItemCardBatch::where(['id' => $detail['batch_id'], 'com_code' => $com_code])->get()->first();
-                    $detail['item_name'] = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->value('name');
-                    $detail['unit_cost'] = $batch['unit_cost_price'];
-                    $detail['production_date'] = $batch['production_date'];
-                    $detail['expire_date'] = $batch['expire_date'];
+                $details = InvStoreInventoryDetail::where('inv_stores_inventory_header_id', $id)->get();
+                if (!empty($details)) {
+                    foreach ($details as $detail) {
+                        $batch = InvItemCardBatch::where(['id' => $detail['batch_id'], 'com_code' => $com_code])->get()->first();
+                        $detail['item_name'] = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->value('name');
+                        $detail['unit_cost'] = $batch['unit_cost_price'];
+                        $detail['production_date'] = $batch['production_date'];
+                        $detail['expire_date'] = $batch['expire_date'];
+                    }
                 }
-            }
 
-            return view('admin.inv_stores_inventory.details', ['data' => $data, 'details' => $details, 'items_card' => $items_card]);
+                return view('admin.inv_stores_inventory.details', ['data' => $data, 'details' => $details, 'items_card' => $items_card]);
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
@@ -158,15 +180,22 @@ class InvStoreInventoryController extends Controller
     public function edit($id)
     {
         //
-        $check_items = InvStoreInventoryDetail::where('inv_stores_inventory_header_id', $id)->count();
-        if ($check_items > 0) {
-            return redirect()->back()->with('error', 'لا يمكن تعديل الجرد لاحتوائه على بتشات جرد');
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل') == true) {
+            $check_items = InvStoreInventoryDetail::where('inv_stores_inventory_header_id', $id)->count();
+            if ($check_items > 0) {
+                return redirect()->back()->with('error', 'لا يمكن تعديل الجرد لاحتوائه على بتشات جرد');
+            }
+
+            $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
+            $stores = Store::where('com_code', auth()->user()->com_code)->get(['id', 'name']);
+
+            return view('admin.inv_stores_inventory.edit', ['data' => $data, 'stores' => $stores]);
+        }
+        else {
+            return redirect()->back();
         }
 
-        $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
-        $stores = Store::where('com_code', auth()->user()->com_code)->get(['id', 'name']);
 
-        return view('admin.inv_stores_inventory.edit', ['data' => $data, 'stores' => $stores]);
     }
 
     /**
@@ -192,27 +221,32 @@ class InvStoreInventoryController extends Controller
             ]
         );
 
-        try {
-            $check = InvStoreInventoryHeader::where(['is_closed' => 0, 'store_id' => $request->store_id, 'com_code' => auth()->user()->com_code])->where('store_id', '!=', $request->old_store_id)->value('id');
-            if (!empty($check)) {
-                return redirect()->route('admin.inv_stores_inventory.index')->with('error', 'يوجد جرد لا يزال مفتوحاً');
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل') == true) {
+            try {
+                $check = InvStoreInventoryHeader::where(['is_closed' => 0, 'store_id' => $request->store_id, 'com_code' => auth()->user()->com_code])->where('store_id', '!=', $request->old_store_id)->value('id');
+                if (!empty($check)) {
+                    return redirect()->route('admin.inv_stores_inventory.index')->with('error', 'يوجد جرد لا يزال مفتوحاً');
+                }
+
+                $updated['store_id'] = $request->store_id;
+                $updated['inventory_date'] = $request->inventory_date;
+                $updated['inventory_type'] = $request->inventory_type;
+                $updated['notes'] = $request->notes;
+                $updated['updated_at'] = date('Y-m-d H:i:s');
+                $updated['date'] = date('Y-m-d');
+                $updated['updated_by'] = auth()->user()->id;
+                $updated['com_code'] = auth()->user()->com_code;
+
+                InvStoreInventoryHeader::where('id', $id)->update($updated);
+
+                return redirect()->route('admin.inv_stores_inventory.index')->with('success', 'تم الاضافة بنجاح');
             }
-
-            $updated['store_id'] = $request->store_id;
-            $updated['inventory_date'] = $request->inventory_date;
-            $updated['inventory_type'] = $request->inventory_type;
-            $updated['notes'] = $request->notes;
-            $updated['updated_at'] = date('Y-m-d H:i:s');
-            $updated['date'] = date('Y-m-d');
-            $updated['updated_by'] = auth()->user()->id;
-            $updated['com_code'] = auth()->user()->com_code;
-
-            InvStoreInventoryHeader::where('id', $id)->update($updated);
-
-            return redirect()->route('admin.inv_stores_inventory.index')->with('success', 'تم الاضافة بنجاح');
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
     }
 
@@ -225,339 +259,389 @@ class InvStoreInventoryController extends Controller
     public function delete($id)
     {
         //
-        $check_items = InvStoreInventoryDetail::where('inv_stores_inventory_header_id', $id)->count();
-        if ($check_items > 0) {
-            return redirect()->back()->with('error', 'لا يمكن حذف الجرد لاحتوائه على بتشات جرد');
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'حذف') == true) {
+            $check_items = InvStoreInventoryDetail::where('inv_stores_inventory_header_id', $id)->count();
+            if ($check_items > 0) {
+                return redirect()->back()->with('error', 'لا يمكن حذف الجرد لاحتوائه على بتشات جرد');
+            }
+
+            InvStoreInventoryHeader::where('id', $id)->delete();
+
+            return redirect()->route('admin.inv_stores_inventory.index')->with('success', 'تم الحذف بنجاح');
+        }
+        else {
+            return redirect()->back();
         }
 
-        InvStoreInventoryHeader::where('id', $id)->delete();
-
-        return redirect()->route('admin.inv_stores_inventory.index')->with('success', 'تم الحذف بنجاح');
     }
 
-    public function create_detail(Request $request, $id) {
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
-            }
-            if ($data['is_closed'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
-            }
+    public function create_detail(Request $request, $id)
+    {
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اضافة باتش') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
+                }
+                if ($data['is_closed'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
+                }
 
-            if ($request->all_items == 0) {
-                $items_card = InvItemCardBatch::where(['item_code' => $request->item_code, 'store_id' => $data['store_id'], 'com_code' => $com_code])->distinct()->get('item_code');
-            }
-            else {
-                $items_card = InvItemCardBatch::where(['store_id' => $data['store_id'], 'com_code' => $com_code])->distinct()->get('item_code');
-            }
+                if ($request->all_items == 0) {
+                    $items_card = InvItemCardBatch::where(['item_code' => $request->item_code, 'store_id' => $data['store_id'], 'com_code' => $com_code])->distinct()->get(['item_code', 'com_code']);
+                }
+                else {
+                    $items_card = InvItemCardBatch::where(['store_id' => $data['store_id'], 'com_code' => $com_code])->distinct()->get(['item_code', 'com_code']);
+                }
 
-            if (!empty($items_card)) {
-                foreach ($items_card as $item) {
-                    if ($request->empty_batches == 0) {
-                        $batches = InvItemCardBatch::where(['item_code' => $item['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->where('quantity', '>', 0)->get();
-                    }
-                    else {
-                        $batches = InvItemCardBatch::where(['item_code' => $item['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->get();
-                    }
-
-                    foreach ($batches as $batch) {
-                        $check_batch = InvStoreInventoryDetail::where(['inv_stores_inventory_header_id' => $data['id'], 'batch_id' => $batch['id']])->get('id')->first();
-                        if (empty($check_batch)) {
-                            $inserted['inv_stores_inventory_header_id'] = $data['id'];
-                            $inserted['item_code'] = $item['item_code'];
-                            $inserted['batch_id'] = $batch['id'];
-                            $inserted['old_quantity'] = $batch['quantity'];
-                            $inserted['new_quantity'] = $batch['quantity'];
-                            $inserted['created_at'] = date('Y-m-d H:i:s');
-                            $inserted['added_by'] = auth()->user()->id;
-                            $inserted['com_code'] = auth()->user()->com_code;
-
-                            InvStoreInventoryDetail::create($inserted);
+                if (!empty($items_card)) {
+                    foreach ($items_card as $item) {
+                        if ($request->empty_batches == 0) {
+                            $batches = InvItemCardBatch::where(['item_code' => $item['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->where('quantity', '>', 0)->get();
                         }
+                        else {
+                            $batches = InvItemCardBatch::where(['item_code' => $item['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->get();
+                        }
+
+                        foreach ($batches as $batch) {
+                            $check_batch = InvStoreInventoryDetail::where(['inv_stores_inventory_header_id' => $data['id'], 'batch_id' => $batch['id']])->get('id')->first();
+                            if (empty($check_batch)) {
+                                $inserted['inv_stores_inventory_header_id'] = $data['id'];
+                                $inserted['item_code'] = $item['item_code'];
+                                $inserted['batch_id'] = $batch['id'];
+                                $inserted['old_quantity'] = $batch['quantity'];
+                                $inserted['new_quantity'] = $batch['quantity'];
+                                $inserted['created_at'] = date('Y-m-d H:i:s');
+                                $inserted['added_by'] = auth()->user()->id;
+                                $inserted['com_code'] = auth()->user()->com_code;
+
+                                InvStoreInventoryDetail::create($inserted);
+                            }
+                        }
+
+                        $update_item_to_non_active['active'] = 0;
+                        InvItemCard::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->update($update_item_to_non_active);
                     }
                 }
-            }
 
-            return redirect()->route('admin.inv_stores_inventory.details', $data['id'])->with('success', 'تم الاضافة بنجاح');
+                return redirect()->route('admin.inv_stores_inventory.details', $data['id'])->with('success', 'تم الاضافة بنجاح');
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
     public function load_modal_update_batch(Request $request) {
-        try {
-            if($request->ajax()) {
-                $detail = InvStoreInventoryDetail::where('id', $request->id)->get()->first();
-                return view('admin.inv_stores_inventory.load_modal_update_batch', ['detail' => $detail]);
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل باتش') == true) {
+            try {
+                if($request->ajax()) {
+                    $detail = InvStoreInventoryDetail::where('id', $request->id)->get()->first();
+                    return view('admin.inv_stores_inventory.load_modal_update_batch', ['detail' => $detail]);
+                }
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
             }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
     public function edit_detail(Request $request) {
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvStoreInventoryHeader::where('id', $request->inventory_id)->get('id', 'is_closed')->first();
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل باتش') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvStoreInventoryHeader::where('id', $request->inventory_id)->get('id', 'is_closed')->first();
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
+                }
+                if ($data['is_closed'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
+                }
+
+                $detail = InvStoreInventoryDetail::where('id', $request->detail_id)->get('is_closed')->first();
+                if ($detail['is_closed'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن تحديث الباتش الذي قد تم اغلاقه وترحيله');
+                }
+
+
+                $updated['new_quantity'] = $request->new_quantity;
+                $updated['different_quantity'] = $request->new_quantity - $request->old_quantity;
+                $updated['notes'] = $request->notes;
+                $updated['updated_at'] = date('Y-m-d H:i:s');
+                $updated['updated_by'] = auth()->user()->id;
+
+                InvStoreInventoryDetail::where(['id' => $request->detail_id, 'inv_stores_inventory_header_id' => $request->inventory_id])->update($updated);
+
+                return redirect()->route('admin.inv_stores_inventory.details', $data['id'])->with('success', 'تم التعديل بنجاح');
             }
-            if ($data['is_closed'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
             }
-
-            $detail = InvStoreInventoryDetail::where('id', $request->detail_id)->get('is_closed')->first();
-            if ($detail['is_closed'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن تحديث الباتش الذي قد تم اغلاقه وترحيله');
-            }
-
-
-            $updated['new_quantity'] = $request->new_quantity;
-            $updated['different_quantity'] = $request->new_quantity - $request->old_quantity;
-            $updated['notes'] = $request->notes;
-            $updated['updated_at'] = date('Y-m-d H:i:s');
-            $updated['updated_by'] = auth()->user()->id;
-
-            InvStoreInventoryDetail::where(['id' => $request->detail_id, 'inv_stores_inventory_header_id' => $request->inventory_id])->update($updated);
-
-            return redirect()->route('admin.inv_stores_inventory.details', $data['id'])->with('success', 'تم التعديل بنجاح');
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
     public function delete_detail($detail_id, $header_id) {
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvStoreInventoryHeader::where('id', $header_id)->get('id', 'is_closed')->first();
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
-            }
-            if ($data['is_closed'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
-            }
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'حذف باتش') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvStoreInventoryHeader::where('id', $header_id)->get('id', 'is_closed')->first();
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
+                }
+                if ($data['is_closed'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
+                }
 
-            $detail = InvStoreInventoryDetail::where('id', $detail_id)->get('is_closed')->first();
-            if ($detail['is_closed'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن تحديث الباتش الذي قد تم اغلاقه وترحيله');
+                $detail = InvStoreInventoryDetail::where('id', $detail_id)->get(['is_closed', 'item_code'])->first();
+                if ($detail['is_closed'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن حذف الباتش الذي قد تم اغلاقه وترحيله');
+                }
+
+                InvStoreInventoryDetail::where(['id' => $detail_id, 'inv_stores_inventory_header_id' => $header_id])->delete();
+                $update_item_card_active['active'] = 1;
+                InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->update($update_item_card_active);
+
+                return redirect()->route('admin.inv_stores_inventory.details', $data['id'])->with('success', 'تم الحذف بنجاح');
             }
-
-            InvStoreInventoryDetail::where(['id' => $detail_id, 'inv_stores_inventory_header_id' => $header_id])->delete();
-
-            return redirect()->route('admin.inv_stores_inventory.details', $data['id'])->with('success', 'تم الحذف بنجاح');
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
     public function close_detail($detail_id, $header_id) {
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvStoreInventoryHeader::where('id', $header_id)->get(['id', 'is_closed', 'store_id'])->first();
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
-            }
-            if ($data['is_closed'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
-            }
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق باتش') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvStoreInventoryHeader::where('id', $header_id)->get(['id', 'is_closed', 'store_id'])->first();
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
+                }
+                if ($data['is_closed'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
+                }
 
-            $detail = InvStoreInventoryDetail::where(['inv_stores_inventory_header_id' => $header_id, 'id' => $detail_id])->get(['id', 'is_closed', 'batch_id', 'item_code', 'new_quantity'])->first();
-            if ($detail['is_closed'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن تحديث الباتش الذي قد تم اغلاقه وترحيله');
-            }
+                $detail = InvStoreInventoryDetail::where(['inv_stores_inventory_header_id' => $header_id, 'id' => $detail_id])->get(['id', 'is_closed', 'batch_id', 'item_code', 'new_quantity'])->first();
+                if ($detail['is_closed'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن تحديث الباتش الذي قد تم اغلاقه وترحيله');
+                }
 
-            // before i make insert or update i should get the quantity in all store and current store from the batch
-            $quantity_in_batch_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
-            $quantity_in_batch_current_store_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
+                // before i make insert or update i should get the quantity in all store and current store from the batch
+                $quantity_in_batch_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
+                $quantity_in_batch_current_store_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
 
 
-            $batch = InvItemCardBatch::where('id', $detail['batch_id'])->get(['unit_cost_price', 'inv_unit_id'])->first();
-            $update_batch['quantity'] = $detail->new_quantity;
-            $update_batch['total_cost_price'] = $detail->new_quantity * $batch->unit_cost_price;
-            $flag = InvItemCardBatch::where('id', $detail['batch_id'])->update($update_batch);
-
-            if ($flag) {
-                $update_detail['is_closed'] = 1;
-                $update_detail['closed_at'] = date('Y-m-d H:i:s');
-                $update_detail['closed_by'] = auth()->user()->id;
-                $flag = InvStoreInventoryDetail::where(['id' => $detail_id, 'inv_stores_inventory_header_id' => $header_id])->update($update_detail);
+                $batch = InvItemCardBatch::where('id', $detail['batch_id'])->get(['unit_cost_price', 'inv_unit_id'])->first();
+                $update_batch['quantity'] = $detail->new_quantity;
+                $update_batch['total_cost_price'] = $detail->new_quantity * $batch->unit_cost_price;
+                $flag = InvItemCardBatch::where('id', $detail['batch_id'])->update($update_batch);
 
                 if ($flag) {
+                    $update_detail['is_closed'] = 1;
+                    $update_detail['closed_at'] = date('Y-m-d H:i:s');
+                    $update_detail['closed_by'] = auth()->user()->id;
+                    $flag = InvStoreInventoryDetail::where(['id' => $detail_id, 'inv_stores_inventory_header_id' => $header_id])->update($update_detail);
 
-                    // get the quantity in all store and current store from the batch and we will get the name of the master unit
-                    $quantity_in_batch_after = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
-                    $quantity_in_batch_current_store_after = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
-                    $parent_unit_name = InvUnit::where('id', $batch['unit_id'])->value('name');
+                    if ($flag) {
 
-
-                    // Then we will save this change with item card in the item card movements table
-                    $insertItemMovement['inv_item_card_movements_categories_id'] = 3;
-                    $insertItemMovement['item_code'] = $detail['item_code'];
-                    $insertItemMovement['inv_item_card_movements_types_id'] = 15;
-                    $insertItemMovement['store_id'] = $data['store_id'];
-                    $insertItemMovement['batch_id'] = $detail['batch_id'];
-                    $insertItemMovement['quantity_before_movement'] = $quantity_in_batch_before . ' ' . $parent_unit_name;
-                    $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
-                    $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
-                    $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                    $insertItemMovement['byan'] = 'جرد مخازن رقم الجرد ' . $data['id'] . '  رقم الباتش في اصناف الجرد ' . $detail['id'];
-                    $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
-                    $insertItemMovement['date'] = date('Y-m-d');
-                    $insertItemMovement['added_by'] = auth()->user()->id;
-                    $insertItemMovement['com_code'] = $com_code;
-
-                    InvItemCardMovement::create($insertItemMovement);
+                        // get the quantity in all store and current store from the batch and we will get the name of the master unit
+                        $quantity_in_batch_after = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
+                        $quantity_in_batch_current_store_after = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
+                        $parent_unit_name = InvUnit::where('id', $batch['unit_id'])->value('name');
 
 
-                    // update the quantity in item_card
-                    $all_quantity = InvItemCardBatch::where(['id' => $detail['batch_id']])->sum('quantity');
-                    $item_card_data = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->get(['does_has_retailunit', 'retail_uom_quntToParent'])->first();
-                    if ($item_card_data['does_has_retailunit'] == 1) {
-                        $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
-                        $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);
-                        $remain_retail = fmod($all_retail, $item_card_data['retail_uom_quntToParent']);
+                        // Then we will save this change with item card in the item card movements table
+                        $insertItemMovement['inv_item_card_movements_categories_id'] = 3;
+                        $insertItemMovement['item_code'] = $detail['item_code'];
+                        $insertItemMovement['inv_item_card_movements_types_id'] = 15;
+                        $insertItemMovement['store_id'] = $data['store_id'];
+                        $insertItemMovement['batch_id'] = $detail['batch_id'];
+                        $insertItemMovement['quantity_before_movement'] = $quantity_in_batch_before . ' ' . $parent_unit_name;
+                        $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
+                        $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
+                        $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
+                        $insertItemMovement['byan'] = 'جرد مخازن رقم الجرد ' . $data['id'] . '  رقم الباتش في اصناف الجرد ' . $detail['id'];
+                        $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
+                        $insertItemMovement['date'] = date('Y-m-d');
+                        $insertItemMovement['added_by'] = auth()->user()->id;
+                        $insertItemMovement['com_code'] = $com_code;
 
-                        $update_item_card_quantity['all_quantity_with_master_unit'] = $all_master;
-                        $update_item_card_quantity['all_quantity_with_retail_unit'] = round($all_retail, 0);
-                        $update_item_card_quantity['remain_quantity_in_retail'] = round($remain_retail, 0);
+                        InvItemCardMovement::create($insertItemMovement);
 
+
+                        // update the quantity in item_card
+                        $all_quantity = InvItemCardBatch::where(['id' => $detail['batch_id']])->sum('quantity');
+                        $item_card_data = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->get(['does_has_retailunit', 'retail_uom_quntToParent'])->first();
+                        if ($item_card_data['does_has_retailunit'] == 1) {
+                            $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
+                            $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);
+                            $remain_retail = fmod($all_retail, $item_card_data['retail_uom_quntToParent']);
+
+                            $update_item_card_quantity['all_quantity_with_master_unit'] = $all_master;
+                            $update_item_card_quantity['all_quantity_with_retail_unit'] = round($all_retail, 0);
+                            $update_item_card_quantity['remain_quantity_in_retail'] = round($remain_retail, 0);
+
+                        }
+                        else {
+                            $update_item_card_quantity['all_quantity_with_master_unit'] = intval($all_quantity);
+                        }
+                        $update_item_card_quantity['active'] = 1;
+                        InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->update($update_item_card_quantity);
                     }
-                    else {
-                        $update_item_card_quantity['all_quantity_with_master_unit'] = intval($all_quantity);
-                    }
-                    InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->update($update_item_card_quantity);
                 }
-            }
 
-            return redirect()->route('admin.inv_stores_inventory.details', $data['id'])->with('success', 'تم الترحيل بنجاح');
+                return redirect()->route('admin.inv_stores_inventory.details', $data['id'])->with('success', 'تم الترحيل بنجاح');
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
     public function close_header($header_id) {
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvStoreInventoryHeader::where('id', $header_id)->get(['id', 'is_closed', 'store_id'])->first();
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
-            }
-            if ($data['is_closed'] == 1) {
-                return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
-            }
-
-            $details = InvStoreInventoryDetail::where(['inv_stores_inventory_header_id' => $header_id, 'is_closed' => 0])->get(['id', 'batch_id', 'item_code', 'new_quantity']);
-
-            if (!empty($details)) {
-                foreach ($details as $detail) {
-                    // before i make insert or update i should get the quantity in all store and current store from the batch
-                    $quantity_in_batch_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
-                    $quantity_in_batch_current_store_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
-
-                    $batch = InvItemCardBatch::where('id', $detail['batch_id'])->get(['unit_cost_price', 'inv_unit_id'])->first();
-                    $update_batch['quantity'] = $detail->new_quantity;
-                    $update_batch['total_cost_price'] = $detail->new_quantity * $batch->unit_cost_price;
-                    $flag = InvItemCardBatch::where('id', $detail['batch_id'])->update($update_batch);
-
-                    if ($flag) {
-                        $update_detail['is_closed'] = 1;
-                        $update_detail['closed_at'] = date('Y-m-d H:i:s');
-                        $update_detail['closed_by'] = auth()->user()->id;
-                        $flag = InvStoreInventoryDetail::where(['id' => $detail['id'], 'inv_stores_inventory_header_id' => $header_id])->update($update_detail);
-
-                        if ($flag) {
-
-                            // get the quantity in all store and current store from the batch and we will get the name of the master unit
-                            $quantity_in_batch_after = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
-                            $quantity_in_batch_current_store_after = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
-                            $parent_unit_name = InvUnit::where('id', $batch['unit_id'])->value('name');
-
-
-                            // Then we will save this change with item card in the item card movements table
-                            $insertItemMovement['inv_item_card_movements_categories_id'] = 3;
-                            $insertItemMovement['item_code'] = $detail['item_code'];
-                            $insertItemMovement['inv_item_card_movements_types_id'] = 15;
-                            $insertItemMovement['store_id'] = $data['store_id'];
-                            $insertItemMovement['batch_id'] = $detail['batch_id'];
-                            $insertItemMovement['quantity_before_movement'] = $quantity_in_batch_before . ' ' . $parent_unit_name;
-                            $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
-                            $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
-                            $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                            $insertItemMovement['byan'] = 'جرد مخازن رقم الجرد ' . $data['id'] . '  رقم الباتش في اصناف الجرد ' . $detail['id'];
-                            $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
-                            $insertItemMovement['date'] = date('Y-m-d');
-                            $insertItemMovement['added_by'] = auth()->user()->id;
-                            $insertItemMovement['com_code'] = $com_code;
-
-                            InvItemCardMovement::create($insertItemMovement);
-
-
-                            // update the quantity in item_card
-                            $all_quantity = InvItemCardBatch::where(['id' => $detail['batch_id']])->sum('quantity');
-                            $item_card_data = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->get(['does_has_retailunit', 'retail_uom_quntToParent'])->first();
-                            if ($item_card_data['does_has_retailunit'] == 1) {
-                                $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
-                                $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);
-                                $remain_retail = fmod($all_retail, $item_card_data['retail_uom_quntToParent']);
-
-                                $update_item_card_quantity['all_quantity_with_master_unit'] = $all_master;
-                                $update_item_card_quantity['all_quantity_with_retail_unit'] = round($all_retail, 0);
-                                $update_item_card_quantity['remain_quantity_in_retail'] = round($remain_retail, 0);
-
-                            }
-                            else {
-                                $update_item_card_quantity['all_quantity_with_master_unit'] = intval($all_quantity);
-                            }
-                            InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->update($update_item_card_quantity);
-                        }
-                    }
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvStoreInventoryHeader::where('id', $header_id)->get(['id', 'is_closed', 'store_id'])->first();
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
+                }
+                if ($data['is_closed'] == 1) {
+                    return redirect()->back()->with('error', 'لا يمكن الوصول الى الجرد الذي قد تم اغلاقه وترحيله');
                 }
 
-                $update_header['is_closed'] = 1;
-                $update_header['closed_at'] = date('Y-m-d H:i:s');
-                $update_header['closed_by'] = auth()->user()->id;
-                InvStoreInventoryHeader::where(['id' => $header_id])->update($update_header);
-            }
+                $details = InvStoreInventoryDetail::where(['inv_stores_inventory_header_id' => $header_id, 'is_closed' => 0])->get(['id', 'batch_id', 'item_code', 'new_quantity']);
 
-            return redirect()->route('admin.inv_stores_inventory.index')->with('success', 'تم الترحيل بنجاح');
+                if (!empty($details)) {
+                    foreach ($details as $detail) {
+                        // before i make insert or update i should get the quantity in all store and current store from the batch
+                        $quantity_in_batch_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
+                        $quantity_in_batch_current_store_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
+
+                        $batch = InvItemCardBatch::where('id', $detail['batch_id'])->get(['unit_cost_price', 'inv_unit_id'])->first();
+                        $update_batch['quantity'] = $detail->new_quantity;
+                        $update_batch['total_cost_price'] = $detail->new_quantity * $batch->unit_cost_price;
+                        $flag = InvItemCardBatch::where('id', $detail['batch_id'])->update($update_batch);
+
+                        if ($flag) {
+                            $update_detail['is_closed'] = 1;
+                            $update_detail['closed_at'] = date('Y-m-d H:i:s');
+                            $update_detail['closed_by'] = auth()->user()->id;
+                            $flag = InvStoreInventoryDetail::where(['id' => $detail['id'], 'inv_stores_inventory_header_id' => $header_id])->update($update_detail);
+
+                            if ($flag) {
+
+                                // get the quantity in all store and current store from the batch and we will get the name of the master unit
+                                $quantity_in_batch_after = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
+                                $quantity_in_batch_current_store_after = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
+                                $parent_unit_name = InvUnit::where('id', $batch['unit_id'])->value('name');
+
+
+                                // Then we will save this change with item card in the item card movements table
+                                $insertItemMovement['inv_item_card_movements_categories_id'] = 3;
+                                $insertItemMovement['item_code'] = $detail['item_code'];
+                                $insertItemMovement['inv_item_card_movements_types_id'] = 15;
+                                $insertItemMovement['store_id'] = $data['store_id'];
+                                $insertItemMovement['batch_id'] = $detail['batch_id'];
+                                $insertItemMovement['quantity_before_movement'] = $quantity_in_batch_before . ' ' . $parent_unit_name;
+                                $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
+                                $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
+                                $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
+                                $insertItemMovement['byan'] = 'جرد مخازن رقم الجرد ' . $data['id'] . '  رقم الباتش في اصناف الجرد ' . $detail['id'];
+                                $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
+                                $insertItemMovement['date'] = date('Y-m-d');
+                                $insertItemMovement['added_by'] = auth()->user()->id;
+                                $insertItemMovement['com_code'] = $com_code;
+
+                                InvItemCardMovement::create($insertItemMovement);
+
+
+                                // update the quantity in item_card
+                                $all_quantity = InvItemCardBatch::where(['id' => $detail['batch_id']])->sum('quantity');
+                                $item_card_data = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->get(['does_has_retailunit', 'retail_uom_quntToParent'])->first();
+                                if ($item_card_data['does_has_retailunit'] == 1) {
+                                    $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
+                                    $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);
+                                    $remain_retail = fmod($all_retail, $item_card_data['retail_uom_quntToParent']);
+
+                                    $update_item_card_quantity['all_quantity_with_master_unit'] = $all_master;
+                                    $update_item_card_quantity['all_quantity_with_retail_unit'] = round($all_retail, 0);
+                                    $update_item_card_quantity['remain_quantity_in_retail'] = round($remain_retail, 0);
+
+                                }
+                                else {
+                                    $update_item_card_quantity['all_quantity_with_master_unit'] = intval($all_quantity);
+                                }
+
+                                $update_item_card_quantity['active'] = 1;
+                                InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->update($update_item_card_quantity);
+                            }
+                        }
+                    }
+
+                    $update_header['is_closed'] = 1;
+                    $update_header['closed_at'] = date('Y-m-d H:i:s');
+                    $update_header['closed_by'] = auth()->user()->id;
+                    InvStoreInventoryHeader::where(['id' => $header_id])->update($update_header);
+                }
+
+                return redirect()->route('admin.inv_stores_inventory.index')->with('success', 'تم الترحيل بنجاح');
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 
     public function printA4($id)
     {
         //
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
-            if (!empty($data)) {
-                $data['store_name'] = Store::where('id', $data['store_id'])->value('name');
-            }
-
-            $details = InvStoreInventoryDetail::where('inv_stores_inventory_header_id', $id)->get();
-            if (!empty($details)) {
-                foreach ($details as $detail) {
-                    $batch = InvItemCardBatch::where(['id' => $detail['batch_id'], 'com_code' => $com_code])->get()->first();
-                    $detail['item_name'] = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->value('name');
-                    $detail['unit_price'] = $batch['unit_cost_price'];
+        if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'طباعة') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
+                if (!empty($data)) {
+                    $data['store_name'] = Store::where('id', $data['store_id'])->value('name');
                 }
+
+                $details = InvStoreInventoryDetail::where('inv_stores_inventory_header_id', $id)->get();
+                if (!empty($details)) {
+                    foreach ($details as $detail) {
+                        $batch = InvItemCardBatch::where(['id' => $detail['batch_id'], 'com_code' => $com_code])->get()->first();
+                        $detail['item_name'] = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->value('name');
+                        $detail['unit_price'] = $batch['unit_cost_price'];
+                    }
+                }
+
+                $systemData = AdminPanelSetting::where('com_code', $com_code)->get()->first();
+
+                return view('admin.inv_stores_inventory.printA4', ['data' => $data, 'details' => $details, 'systemData' => $systemData]);
             }
-
-            $systemData = AdminPanelSetting::where('com_code', $com_code)->get()->first();
-
-            return view('admin.inv_stores_inventory.printA4', ['data' => $data, 'details' => $details, 'systemData' => $systemData]);
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 

@@ -170,19 +170,23 @@
 <div>
     @if ($data->is_approved == 0)
         <div style="display: flex; justify-content:space-around;" class="mb-3">
-            <button type="button" class="btn btn-info" style="background-color:#007bff" id="create_item_button">
-                اضافة صنف
-            </button>
+            @if (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'اضافة صنف') == true)
+                <button type="button" class="btn btn-info" style="background-color:#007bff" id="create_item_button">
+                    اضافة صنف
+                </button>
+            @endif
 
-            @if (!@empty($details[0]))
+            @if (!@empty($details[0]) && check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'اعتماد') == true)
                 <button type="button" class="btn btn-info" style="background-color:#4a9b88" id="approve_pill_button">
                     اعتماد
                 </button>
             @endif
 
-            <a href="{{ route('admin.purchase_header.edit', $data->id) }}" class="btn btn-info">
-                تعديل
-            </a>
+            @if (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'تعديل') == true)
+                <a href="{{ route('admin.purchase_header.edit', $data->id) }}" class="btn btn-info">
+                    تعديل
+                </a>
+            @endif
         </div>
     @endif
 
@@ -215,10 +219,13 @@
                             <tr style="background-color: #007bff; color:white;">
                                 <th>اسم الصنف</th>
                                 <th>الكمية</th>
+                                <th>الوحدة</th>
                                 <th>سعر الوحدة</th>
                                 <th>الاجمالي</th>
                                 <th>تاريخ الاضافة</th>
-                                <th>التحكم</th>
+                                @if ($data->is_approved == 0 && (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'تعديل صنف') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'حذف صنف') == true))
+                                    <th>التحكم</th>
+                                @endif
                             </tr>
 
                             @foreach ($details as $detail)
@@ -228,6 +235,7 @@
                                         <span style="color: red">{{ $detail['expire_date'] }}</span>
                                     </td>
                                     <td>{{ $detail->quantity }}</td>
+                                    <td>{{ $detail->unit_name }}</td>
                                     <td>{{ $detail->unit_price }}</td>
                                     <td>{{ $detail->total_price }}</td>
 
@@ -245,17 +253,20 @@
                                             لم يتم تسجيل بيانات المضاف
                                         @endif
                                     </td>
-
-                                    <td>
-                                        @if ($data->is_approved == 0)
-                                            <button data-purchase_order_detail_id="{{ $detail->id }}" class="btn btn-info edit_item_button">
-                                                تعديل
-                                            </button>
-                                            <a href="{{ route('admin.purchase_header.delete_item', [$detail->id, $data->id]) }}" class="btn btn-danger are_you_sure">
-                                                حذف
-                                            </a>
-                                        @endif
-                                    </td>
+                                    @if ($data->is_approved == 0 && (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'تعديل صنف') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'حذف صنف') == true))
+                                        <td>
+                                            @if (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'تعديل صنف') == true)
+                                                <button data-purchase_order_detail_id="{{ $detail->id }}" class="btn btn-info edit_item_button">
+                                                    تعديل
+                                                </button>
+                                            @endif
+                                            @if (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'حذف صنف') == true)
+                                                <a href="{{ route('admin.purchase_header.delete_item', [$detail->id, $data->id]) }}" class="btn btn-danger are_you_sure">
+                                                    حذف
+                                                </a>
+                                            @endif
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
 
@@ -348,9 +359,6 @@
     <!-- /.modal-dialog -->
 </div>
 
-
-
-
 @endsection
 
 @section('contentheader')
@@ -367,6 +375,4 @@
 
 @section('script')
     <script  src="{{ asset('assets/admin/js/purchase_header.js') }}"> </script>
-
-
 @endsection

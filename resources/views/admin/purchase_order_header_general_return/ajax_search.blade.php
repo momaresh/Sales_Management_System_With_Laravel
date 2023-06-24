@@ -3,7 +3,9 @@
     @if (!@empty($data[0]))
 
         <tr style="background-color: #007bff; color:white;">
-            <th>تعديل</th>
+            @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'اضافة') == true)
+                <th>تعديل</th>
+            @endif
             <th>كود الفاتورة</th>
             <th>اسم المورد</th>
             <th>اسم المخزن</th>
@@ -11,13 +13,15 @@
             <th>تاريخ الفاتورة</th>
             <th>حالة الفاتورة</th>
             <th>اجمالي الفاتورة</th>
-            <th>التحكم</th>
+            @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'اضافة') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'طباعة') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'حذف') == true)
+                <th>التحكم</th>
+            @endif
         </tr>
 
         @foreach ($data as $datum)
             <tr>
                 <td>
-                    <button data-id={{ $datum->id }} id="update_pill" class="btn" style="color: rgb(149, 35, 35);; font-size: 27px;">
+                    <button data-id={{ $datum->id }} id="update_pill" class="btn btn-danger">
                         <i class="fa fa-edit"></i>
                     </button>
                 </td>
@@ -45,20 +49,30 @@
                 @endif
 
                 <td>{{ $datum->total_cost }}</td>
-                <td>
-                    <a href="{{ route('admin.purchase_order_header_general_return.printA4', [$datum->id, 'A4']) }}" class="btn btn-success">
-                        A4 <i class="fa-solid fa-print"></i>
-                    </a>
-                    <a href="{{ route('admin.purchase_order_header_general_return.printA4', [$datum->id, 'A6']) }}" class="btn btn-success">
-                        A6 <i class="fa-solid fa-print"></i>
-                    </a>
-                    <button data-id={{ $datum->id }} id="update_pill" class="btn" style="color: rgb(38, 123, 29); font-size: 25px;">
-                        <i class="fa-solid fa-circle-info"></i>
-                    </button>
-                    <a href="{{ route('admin.purchase_order_header_general_return.delete', $datum->id) }}" class="are_you_sure btn btn-danger mt-1">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </a>
-                </td>
+                @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'اضافة') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'طباعة') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'حذف') == true)
+                    <td>
+                        @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'طباعة') == true)
+                            <a href="{{ route('admin.purchase_order_header_general_return.printA4', [$datum->id, 'A4']) }}" class="btn btn-success">
+                                A4 <i class="fa-solid fa-print"></i>
+                            </a>
+                            <a href="{{ route('admin.purchase_order_header_general_return.printA4', [$datum->id, 'A6']) }}" class="btn btn-success">
+                                A6 <i class="fa-solid fa-print"></i>
+                            </a>
+                        @endif
+
+                        @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'اضافة') == true)
+                            <button data-id={{ $datum->id }} id="update_pill" class="btn btn-info">
+                                <i class="fa-solid fa-circle-info"></i>
+                            </button>
+                        @endif
+
+                        @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'حذف') == true)
+                            <a href="{{ route('admin.purchase_order_header_general_return.delete', $datum->id) }}" class="are_you_sure btn btn-danger mt-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        @endif
+                    </td>
+                @endif
             </tr>
         @endforeach
 
@@ -69,6 +83,7 @@
     @endif
 
 </table>
+
 <br>
 <div style="width: fit-content; margin:auto;" id="ajax_search_pagination">
     {{ $data->links() }}

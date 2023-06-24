@@ -134,9 +134,99 @@
 
 
 <div>
-    <button data-toggle="modal" data-target="#adding_item_inventory" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-plus-circle"></i> اضافة جديد
-    </button>
+    @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اضافة') == true)
+        <button data-toggle="modal" data-target="#adding_item_inventory" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </button>
+    @endif
+</div>
+
+<div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات الباتشات في مخزن الجرد</h3>
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body">
+            <div>
+                <table id="example2" class="table table-bordered table-hover">
+
+                    @if (!@empty($details[0]))
+
+                        <tr style="background-color: #007bff; color:white;">
+                            <th>كود الباتش</th>
+                            <th>اسم الصنف</th>
+                            <th>الكمية بالباتش</th>
+                            <th>الكمية الدفترية</th>
+                            <th>الفرق</th>
+                            <th>سعر الوحدة</th>
+                            <th>سبب الزيادة/النقص</th>
+                            @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل باتش') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'حذف باتش') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق باتش') == true)
+                                <th>التحكم</th>
+                            @endif
+                        </tr>
+
+                        @foreach ($details as $detail)
+                            <tr>
+                                <td>{{ $detail->batch_id }}</td>
+                                <td>
+                                    {{ $detail->item_name }} <br>
+                                    <span style="color: green">{{ $detail['production_date'] }}</span> <br/>
+                                    <span style="color: red">{{ $detail['expire_date'] }}</span>
+                                </td>
+                                <td>{{ $detail->old_quantity }}</td>
+                                <td>{{ $detail->new_quantity }}</td>
+                                <td>{{ $detail->different_quantity }}</td>
+                                <td>{{ $detail->unit_cost * 1 }}</td>
+                                <td>{{ $detail->notes }}</td>
+                                @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل باتش') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'حذف باتش') == true || check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق باتش') == true)
+                                    @if ($detail->is_closed == 0)
+                                        <td>
+                                            @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل باتش') == true)
+                                                <button data-id={{ $detail->id }} id="update_batch_btn" class="btn btn-info">
+                                                    <i class="fa-solid fa-edit"></i>
+                                                </button>
+                                            @endif
+
+                                            @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق باتش') == true)
+                                                <a href="{{ route('admin.inv_stores_inventory.close_detail', [$detail->id, $data->id]) }}" class="btn btn-warning are_you_sure">
+                                                    ترحيل
+                                                </a>
+                                            @endif
+
+                                            @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'حذف باتش') == true)
+                                                <a href="{{ route('admin.inv_stores_inventory.delete_detail', [$detail->id, $data->id]) }}" class="btn btn-danger are_you_sure">
+                                                    حذف
+                                                </a>
+                                            @endif
+                                        </td>
+                                    @elseif ($detail->is_closed == 1)
+                                        <td style="background-color: #c15670a1;;">
+                                            مغلق ومرحل
+                                        </td>
+                                    @endif
+                                @endif
+                            </tr>
+                        @endforeach
+
+                    @else
+                        <div class="alert alert-danger">
+                            لا يوجد بيانات لعرضها
+                        </div>
+                    @endif
+
+                </table>
+
+                <br>
+            </div>
+
+        </div>
+        <!-- /.card-body -->
+      </div>
+      <!-- /.card -->
+    </div>
+    <!-- /.col -->
 </div>
 
 <div class="modal fade" id="adding_item_inventory">
@@ -216,83 +306,6 @@
         </div>
     </div>
 </div>
-
-<div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات الباتشات في مخزن الجرد</h3>
-        </div>
-        <!-- /.card-header -->
-        <div class="card-body">
-            <div>
-                <table id="example2" class="table table-bordered table-hover">
-
-                    @if (!@empty($details[0]))
-
-                        <tr style="background-color: #007bff; color:white;">
-                            <th>كود الباتش</th>
-                            <th>اسم الصنف</th>
-                            <th>الكمية بالباتش</th>
-                            <th>الكمية الدفترية</th>
-                            <th>الفرق</th>
-                            <th>سعر الوحدة</th>
-                            <th>سبب الزيادة/النقص</th>
-                            <th>التحكم</th>
-                        </tr>
-
-                        @foreach ($details as $detail)
-                            <tr>
-                                <td>{{ $detail->batch_id }}</td>
-                                <td>
-                                    {{ $detail->item_name }} <br>
-                                    <span style="color: green">{{ $detail['production_date'] }}</span> <br/>
-                                    <span style="color: red">{{ $detail['expire_date'] }}</span>
-                                </td>
-                                <td>{{ $detail->old_quantity }}</td>
-                                <td>{{ $detail->new_quantity }}</td>
-                                <td>{{ $detail->different_quantity }}</td>
-                                <td>{{ $detail->unit_cost * 1 }}</td>
-                                <td>{{ $detail->notes }}</td>
-                                @if ($detail->is_closed == 0)
-                                    <td>
-                                        <button data-id={{ $detail->id }} id="update_batch_btn" class="btn btn-info">
-                                            <i class="fa-solid fa-edit"></i>
-                                        </button>
-                                        <a href="{{ route('admin.inv_stores_inventory.close_detail', [$detail->id, $data->id]) }}" class="btn btn-warning are_you_sure">
-                                            ترحيل
-                                        </a>
-                                        <a href="{{ route('admin.inv_stores_inventory.delete_detail', [$detail->id, $data->id]) }}" class="btn btn-danger are_you_sure">
-                                            حذف
-                                        </a>
-                                    </td>
-                                @elseif ($detail->is_closed == 1)
-                                    <td style="background-color: #c15670a1;;">
-                                        مغلق ومرحل
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
-
-                    @else
-                        <div class="alert alert-danger">
-                            لا يوجد بيانات لعرضها
-                        </div>
-                    @endif
-
-                </table>
-
-                <br>
-            </div>
-
-        </div>
-        <!-- /.card-body -->
-      </div>
-      <!-- /.card -->
-    </div>
-    <!-- /.col -->
-</div>
-
 @endsection
 
 @section('contentheader')

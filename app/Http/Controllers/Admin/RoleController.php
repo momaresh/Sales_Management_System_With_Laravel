@@ -256,7 +256,7 @@ class RoleController extends Controller
                 }
             }
 
-            $main_menus = RoleMainMenu::where('com_code', $com_code)->get();
+            $main_menus = RoleMainMenu::get();
 
             return view('admin.roles.details', ['data' => $data, 'permission_main_menus' => $permission_main_menus, 'main_menus' => $main_menus]);
         } catch (Exception $e) {
@@ -346,7 +346,7 @@ class RoleController extends Controller
             }
 
 
-            $sub_menus = RoleSubMenu::where([ 'roles_main_menu_id' => $main_id,'com_code' => $com_code])->get();
+            $sub_menus = RoleSubMenu::where([ 'roles_main_menu_id' => $main_id])->get();
 
             return view('admin.roles.main_menu_details', ['data' => $data, 'permission_sub_menus' => $permission_sub_menus, 'sub_menus' => $sub_menus]);
         } catch (Exception $e) {
@@ -413,7 +413,7 @@ class RoleController extends Controller
             $sub_id = $request->sub_id;
             $main_id = $request->main_id;
 
-            $control_menus = RoleSubMenuControl::where(['roles_sub_menu_id' => $sub_id, 'com_code' => $com_code])->get();
+            $control_menus = RoleSubMenuControl::where(['roles_sub_menu_id' => $sub_id])->get();
 
             return view('admin.roles.load_control_modal', ['control_menus' => $control_menus, 'roles_id' => $roles_id, 'roles_main_menu_id' => $main_id, 'roles_sub_menu_id' => $sub_id]);
         } catch (Exception $e) {

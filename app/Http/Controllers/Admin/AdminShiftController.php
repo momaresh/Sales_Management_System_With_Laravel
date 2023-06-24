@@ -194,7 +194,7 @@ class AdminShiftController extends Controller
          }
          else {
              return redirect()->back();
-         }
+        }
     }
 
     public function printA4($id)

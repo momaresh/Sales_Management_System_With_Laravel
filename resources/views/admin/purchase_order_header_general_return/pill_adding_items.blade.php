@@ -261,7 +261,10 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary m-3" id="approve_pill">اعتماد وترحيل</button>
+                @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات العام' , 'اعتماد'))
+                    <button type="submit" class="btn btn-primary m-3" id="approve_pill">اعتماد وترحيل</button>
+                @endif
+
             @else
                 <div class="row">
                     <div class="col-md-3">
@@ -353,26 +356,6 @@
                         <div class="form-group">
                             <label>المبلغ المتبقي</label>
                             <input type="text" readonly class="form-control" name="what_remain" value="{{ $sales_data->what_remain }}">
-                        </div>
-                    </div>
-
-                    <div  class="col-md-6" id="check_shift_and_reload_money_result" style="display: flex; padding: 0">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>اسم الخزينة</label>
-                                <input type="text" readonly class="form-control" id="treasuries-id" name="treasuries_name" value="{{ $check_shift['treasuries_name'] }}">
-                            </div>
-
-                        </div>
-
-                        <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['shift_code'] }}">
-                        <input type="hidden" class="form-control" name="treasuries_id" value="{{ $check_shift['treasuries_id'] }}">
-
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>اجمالي الخزينة</label>
-                                <input type="text" readonly class="form-control" id="treasury-money" name="treasuries_money" value="{{ $check_shift['treasuries_money'] }}">
-                            </div>
                         </div>
                     </div>
                 </div>

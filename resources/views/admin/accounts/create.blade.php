@@ -153,7 +153,7 @@
 
                     <div class="col-md-12">
                         <div class="form-group text-center">
-                            <button id="do_add_item_card" type="submit" class="btn btn-primary btn-sm">اضافة</button>
+                            <button type="submit" class="btn btn-primary btn-sm">اضافة</button>
                             <a href="{{ route('admin.accounts.index') }}" class="btn btn-sm btn-danger">الغاء</a>
                         </div>
                     </div>

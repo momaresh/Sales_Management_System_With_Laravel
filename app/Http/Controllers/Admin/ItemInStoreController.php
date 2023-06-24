@@ -17,24 +17,29 @@ class ItemInStoreController extends Controller
     public function index()
     {
         //
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvItemCardBatch::where(['com_code' => $com_code])->paginate(PAGINATION_COUNT);
-            if (!empty($data)) {
-                foreach ($data as $d) {
-                    $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
-                    $d['item_name'] = InvItemCard::where(['item_code' => $d['item_code'], 'com_code' => $com_code])->value('name');
-                    $d['unit_name'] = InvUnit::where(['id' => $d['inv_unit_id'], 'com_code' => $com_code])->value('name');
+        if (check_control_menu_role('الحركات المخزنية', 'الاصناف في المخازن' , 'عرض') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvItemCardBatch::where(['com_code' => $com_code])->paginate(PAGINATION_COUNT);
+                if (!empty($data)) {
+                    foreach ($data as $d) {
+                        $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
+                        $d['item_name'] = InvItemCard::where(['item_code' => $d['item_code'], 'com_code' => $com_code])->value('name');
+                        $d['unit_name'] = InvUnit::where(['id' => $d['inv_unit_id'], 'com_code' => $com_code])->value('name');
+                    }
                 }
-            }
 
-            $items = InvItemCard::where(['com_code' => $com_code])->get(['item_code', 'name']);
-            $units = InvUnit::where(['com_code' => $com_code, 'master' => 1])->get(['id', 'name']);
-            $stores = Store::where(['com_code' => $com_code])->get(['id', 'name']);
-            return view('admin.items_in_stores.index', ['data' => $data, 'items' => $items, 'units' => $units, 'stores' => $stores]);
+                $items = InvItemCard::where(['com_code' => $com_code])->get(['item_code', 'name']);
+                $units = InvUnit::where(['com_code' => $com_code, 'master' => 1])->get(['id', 'name']);
+                $stores = Store::where(['com_code' => $com_code])->get(['id', 'name']);
+                return view('admin.items_in_stores.index', ['data' => $data, 'items' => $items, 'units' => $units, 'stores' => $stores]);
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
     }
 

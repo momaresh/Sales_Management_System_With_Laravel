@@ -140,7 +140,7 @@
                     </div>
                 </div>
 
-                <input type="hidden" name="do_review_shift_id" value="{{ $check_shift['id'] }}">
+                <input type="hidden" name="do_review_shift_id" value="@if (!@empty($check_shift->id)) $check_shift['id'] @endif">
                 <input type="hidden" name="was_review_shift_id" id="was_review_shift_id" value="">
 
                 <div class="col-md-12 text-center mt-3">

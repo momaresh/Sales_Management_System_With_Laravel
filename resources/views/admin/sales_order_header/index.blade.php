@@ -19,13 +19,17 @@
 @endif
 
 <div class="mb-3">
-    <button id="create_pill_button"  style="background-color: #007bff; width: fit-content; color: white" class="btn">
-         اضافة فاتورة
-    </button>
+    @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اضافة') == true)
+        <button id="create_pill_button"  style="background-color: #007bff; width: fit-content; color: white" class="btn">
+            اضافة فاتورة
+        </button>
+    @endif
 
-    <button id="pill_mirror_button"  style="background-color: #007bff; width: fit-content; color: white" class="btn">
-       عرض مرآة الاسعار
-    </button>
+    @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'عرض المرآة') == true)
+        <button id="pill_mirror_button"  style="background-color: #007bff; width: fit-content; color: white" class="btn">
+        عرض مرآة الاسعار
+        </button>
+    @endif
 </div>
 
 <div class="row">
@@ -84,7 +88,9 @@
                     @if (!@empty($data[0]))
 
                         <tr style="background-color: #007bff; color:white;">
-                            <th>تعديل</th>
+                            @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اضافة') == true)
+                                <th>تعديل</th>
+                            @endif
                             <th>كود الفاتورة</th>
                             <th>اسم العميل</th>
                             <th>اسم المندوب</th>
@@ -92,16 +98,20 @@
                             <th>تاريخ الفاتورة</th>
                             <th>حالة الفاتورة</th>
                             <th>اجمالي الفاتورة</th>
-                            <th>التحكم</th>
+                            @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اضافة') == true || check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'طباعة') == true || check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'حذف') == true)
+                                <th>التحكم</th>
+                            @endif
                         </tr>
 
                         @foreach ($data as $datum)
                             <tr>
-                                <td>
-                                    <button data-id={{ $datum->id }} id="update_pill" class="btn" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </td>
+                                @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اضافة') == true)
+                                    <td>
+                                        <button data-id={{ $datum->id }} id="update_pill" class="btn" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                @endif
                                 <td>{{ $datum->pill_code }}</td>
                                 <td>{{ $datum['customer_name'] }}</td>
                                 <td>{{ $datum['delegate_name'] }}</td>
@@ -125,23 +135,32 @@
                                     </td>
                                 @endif
                                 <td>{{ $datum->total_cost }}</td>
-                                <td>
-                                    <a href="{{ route('admin.sales_header.printA4', [$datum->id, 'A4']) }}" class="btn btn-success">
-                                        A4 <i class="fa-solid fa-print"></i>
-                                    </a>
-                                    <a href="{{ route('admin.sales_header.printA4', [$datum->id, 'A6']) }}" class="btn btn-success">
-                                        A6 <i class="fa-solid fa-print"></i>
-                                    </a>
-                                    <button data-id={{ $datum->id }} id="update_pill" class="btn btn-info">
-                                        <i class="fa-solid fa-circle-info"></i>
-                                    </button>
-                                    <a href="{{ route('admin.sales_header.delete', $datum->id) }}" class="are_you_sure btn btn-danger">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اضافة') == true || check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'طباعة') == true || check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'حذف') == true)
+                                    <td>
+                                        @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'طباعة') == true)
+                                            <a href="{{ route('admin.sales_header.printA4', [$datum->id, 'A4']) }}" class="btn btn-success">
+                                                A4 <i class="fa-solid fa-print"></i>
+                                            </a>
+                                            <a href="{{ route('admin.sales_header.printA4', [$datum->id, 'A6']) }}" class="btn btn-success">
+                                                A6 <i class="fa-solid fa-print"></i>
+                                            </a>
+                                        @endif
+
+                                        @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اضافة') == true)
+                                            <button data-id={{ $datum->id }} id="update_pill" class="btn btn-info">
+                                                <i class="fa-solid fa-circle-info"></i>
+                                            </button>
+                                        @endif
+
+                                        @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'حذف') == true)
+                                            <a href="{{ route('admin.sales_header.delete', $datum->id) }}" class="are_you_sure btn btn-danger">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </a>
+                                        @endif
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
-
                     @else
                         <div class="alert alert-danger">
                             لا يوجد بيانات لعرضها
@@ -185,7 +204,7 @@
     <div class="modal-dialog modal-xl" style="width: 95%;">
         <div class="modal-content">
         <div class="modal-header" style="background-color: #0d7383; color: white">
-            <h4 class="modal-title">اضافة اصناف للفاتورة</h4>
+            <h4 class="modal-title">اضافة فاتورة مبيعات</h4>
             <button style="color: rgb(223, 0, 0);" type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
             </button>

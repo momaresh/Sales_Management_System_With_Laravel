@@ -19,9 +19,11 @@
 @endif
 
 <div>
-    <a href="{{ route('admin.inv_units.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
-        <i class="fas fa-plus-circle"></i> اضافة جديد
-    </a>
+    @if (check_control_menu_role('المخازن', 'الوحدات' , 'عرض') == true)
+        <a href="{{ route('admin.inv_units.create') }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
+            <i class="fas fa-plus-circle"></i> اضافة جديد
+        </a>
+    @endif
 </div>
 
 <div class="row">
@@ -43,8 +45,8 @@
                     <label class="control-label">نوع الوحدة</label>
                     <select class="form-control" id="master_search">
                         <option value="all">بحث بالكل</option>
-                        <option value="0">تجزئة</option>
-                        <option value="1">جملة</option>
+                        <option value="0">وحدة جزئية</option>
+                        <option value="1">وحدة اب</option>
                     </select>
                 </div>
             </div>
@@ -55,30 +57,37 @@
                     @if (!@empty($data[0]))
 
                         <tr style="background-color: #007bff; color:white;">
-                            <th>تعديل</th>
+
+                            @if (check_control_menu_role('المخازن', 'الوحدات' , 'تعديل') == true)
+                                <th>تعديل</th>
+                            @endif
                             <th>كود الوحدة</th>
                             <th>اسم الوحدة</th>
                             <th>نوع الوحدة</th>
                             <th>حالة التفعيل</th>
                             <th>تاريخ الاضافة</th>
                             <th>تاريخ التحديث</th>
-                            <th>حذف</th>
+                            @if (check_control_menu_role('المخازن', 'الوحدات' , 'حذف') == true)
+                                <th>حذف</th>
+                            @endif
                         </tr>
 
                         @foreach ($data as $datum)
                             <tr>
-                                <td>
-                                    <a href="{{ route('admin.inv_units.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('المخازن', 'الوحدات' , 'تعديل') == true)
+                                    <td>
+                                        <a href="{{ route('admin.inv_units.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                @endif
                                 <td>{{ $datum->id }}</td>
                                 <td>{{ $datum->name }}</td>
                                 <td>
                                     @if ($datum->master == 1)
-                                        جملة
+                                        وحدة اب
                                     @else
-                                        تجزئة
+                                        وحدة جزئية
                                     @endif
                                 </td>
                                 @if ($datum->active == 1)
@@ -118,11 +127,13 @@
                                         لا يوجد اي تحديث
                                     @endif
                                 </td>
-                                <td>
-                                    <a href="{{ route('admin.inv_units.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </a>
-                                </td>
+                                @if (check_control_menu_role('المخازن', 'الوحدات' , 'حذف') == true)
+                                    <td>
+                                        <a href="{{ route('admin.inv_units.delete', $datum->id) }}" class="are_you_sure" style="color: rgb(149, 35, 35); font-size: 25px;">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
 

@@ -46,7 +46,7 @@
                     <select name="active" class="form-control">
                         <option value="">اختر الحالة</option>
                         <option @if (old('active') == 0 && old('active') != '') selected @endif value="0">No</option>
-                        <option @if (old('active') == 1) selected @endif value="1">Yes</option>
+                        <option @if (old('active') == 1) selected @endif selected value="1">Yes</option>
                     </select>
 
                     @error('active')
@@ -73,7 +73,7 @@
 @endsection
 
 @section('contentheaderlink')
-    <a href="{{ route('admin.roles_sub_menu.index') }}">القوائم الفرعية للصلاحيات</a>
+    <a href="{{ route('admin.roles_sub_menu.details', $id) }}">السابق / <a href="{{ route('admin.roles_sub_menu.index') }}">القوائم الفرعية للصلاحيات</a></a>
 @endsection
 
 @section('contentheaderactive')

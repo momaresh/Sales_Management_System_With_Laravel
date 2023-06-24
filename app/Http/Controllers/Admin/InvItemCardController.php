@@ -26,36 +26,42 @@ class InvItemCardController extends Controller
     public function index()
     {
         //
-        try {
-            $inv_itemCard_categories = InvItemCategory::where('com_code', auth()->user()->com_code)->get(['id', 'name']);
+        if (check_control_menu_role('المخازن', 'الاصناف' , 'عرض') == true) {
+            try {
+                $inv_itemCard_categories = InvItemCategory::where('com_code', auth()->user()->com_code)->get(['id', 'name']);
 
-            $data = InvItemCard::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'desc')->paginate(PAGINATION_COUNT);
+                $data = InvItemCard::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'desc')->paginate(PAGINATION_COUNT);
 
-            if (!empty($data)) {
-                foreach ($data as $d) {
-                    if ($d['inv_itemcard_categories_id'] != null) {
-                        $d['inv_itemcard_categories_name'] = InvItemCategory::where('id', $d['inv_itemcard_categories_id'])->value('name');
-                    }
+                if (!empty($data)) {
+                    foreach ($data as $d) {
+                        if ($d['inv_itemcard_categories_id'] != null) {
+                            $d['inv_itemcard_categories_name'] = InvItemCategory::where('id', $d['inv_itemcard_categories_id'])->value('name');
+                        }
 
-                    if ($d['parent_inv_itemcard_id'] != null) {
-                        $d['parent_inv_itemcard_name'] = InvItemCard::where('id', $d['parent_inv_itemcard_id'])->value('name');
-                    }
+                        if ($d['parent_inv_itemcard_id'] != null) {
+                            $d['parent_inv_itemcard_name'] = InvItemCard::where('id', $d['parent_inv_itemcard_id'])->value('name');
+                        }
 
-                    if ($d['retail_unit_id'] != null) {
-                        $d['retail_unit_name'] = InvUnit::where('id', $d['retail_unit_id'])->value('name');
-                    }
+                        if ($d['retail_unit_id'] != null) {
+                            $d['retail_unit_name'] = InvUnit::where('id', $d['retail_unit_id'])->value('name');
+                        }
 
-                    if ($d['unit_id'] != null) {
-                        $d['unit_name'] = InvUnit::where('id', $d['unit_id'])->value('name');
+                        if ($d['unit_id'] != null) {
+                            $d['unit_name'] = InvUnit::where('id', $d['unit_id'])->value('name');
+                        }
                     }
                 }
-            }
 
-            return view('admin.inv_item_card.index', ['data' => $data, 'inv_itemCard_categories' => $inv_itemCard_categories]);
+                return view('admin.inv_item_card.index', ['data' => $data, 'inv_itemCard_categories' => $inv_itemCard_categories]);
+            }
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
+            }
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -66,15 +72,20 @@ class InvItemCardController extends Controller
     public function create()
     {
         //
-        $inv_itemCard_categories = InvItemCategory::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1])->get();
-        $item_card_data = InvItemCard::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1])->get();
-        $inv_unit_parent = InvUnit::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1, 'master' => 1])->get();
-        $inv_unit_child = InvUnit::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1, 'master' => 0])->get();
+        if (check_control_menu_role('المخازن', 'الاصناف' , 'اضافة') == true) {
+            $inv_itemCard_categories = InvItemCategory::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1])->get();
+            $item_card_data = InvItemCard::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1])->get();
+            $inv_unit_parent = InvUnit::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1, 'master' => 1])->get();
+            $inv_unit_child = InvUnit::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1, 'master' => 0])->get();
 
-        return view('admin.inv_item_card.create', ['inv_itemCard_categories' => $inv_itemCard_categories,
-                                                 'item_card_data' => $item_card_data,
-                                                  'inv_unit_parent' => $inv_unit_parent,
-                                                'inv_unit_child' => $inv_unit_child]);
+            return view('admin.inv_item_card.create', ['inv_itemCard_categories' => $inv_itemCard_categories,
+                                                    'item_card_data' => $item_card_data,
+                                                    'inv_unit_parent' => $inv_unit_parent,
+                                                    'inv_unit_child' => $inv_unit_child]);
+        }
+        else {
+            return redirect()->back();
+        }
     }
 
     /**
@@ -85,81 +96,86 @@ class InvItemCardController extends Controller
      */
     public function store(Request $request)
     {
-
-        try {
-
-            $max_id = InvItemCard::where('com_code', auth()->user()->com_code)->max('item_code');
-            if (!empty($max_id)) {
-                $inserted['item_code'] = $max_id + 1;
-            }
-            else {
-                $inserted['item_code'] = 1;
-            }
-
-            // If the barcode already exists with the same company
-            if ($request->barcode != '') {
-                $check_barcode = InvItemCard::where(['barcode' => $request->barcode, 'com_code' => auth()->user()->com_code])->first();
-                if (!empty($check_barcode)) {
-                    return redirect()->back()->with(['error' => 'اسم الباركود موجود مسبقا'])->withInput();
+        if (check_control_menu_role('المخازن', 'الاصناف' , 'اضافة') == true) {
+            try {
+                $max_id = InvItemCard::where('com_code', auth()->user()->com_code)->max('item_code');
+                if (!empty($max_id)) {
+                    $inserted['item_code'] = $max_id + 1;
                 }
                 else {
-                    $inserted['barcode'] = $request->barcode;
+                    $inserted['item_code'] = 1;
                 }
-            }
-            else {
-                $inserted['barcode'] = 'item' . $inserted['item_code'];
-            }
 
-            // If the name already exists with the same company
-            if ($request->name != '') {
-                $check_name = InvItemCard::where(['name' => $request->name, 'com_code' => auth()->user()->com_code])->first();
-                if (!empty($check_name)) {
-                    return redirect()->back()->with(['error' => 'اسم الباركود موجود مسبقا'])->withInput();
+                // If the barcode already exists with the same company
+                if ($request->barcode != '') {
+                    $check_barcode = InvItemCard::where(['barcode' => $request->barcode, 'com_code' => auth()->user()->com_code])->first();
+                    if (!empty($check_barcode)) {
+                        return redirect()->back()->with(['error' => 'اسم الباركود موجود مسبقا'])->withInput();
+                    }
+                    else {
+                        $inserted['barcode'] = $request->barcode;
+                    }
                 }
                 else {
-                    $inserted['name'] = $request->name;
+                    $inserted['barcode'] = 'item' . $inserted['item_code'];
                 }
+
+                // If the name already exists with the same company
+                if ($request->name != '') {
+                    $check_name = InvItemCard::where(['name' => $request->name, 'com_code' => auth()->user()->com_code])->first();
+                    if (!empty($check_name)) {
+                        return redirect()->back()->with(['error' => 'اسم الباركود موجود مسبقا'])->withInput();
+                    }
+                    else {
+                        $inserted['name'] = $request->name;
+                    }
+                }
+
+                $inserted['item_type'] = $request->item_type;
+                $inserted['inv_itemcard_categories_id'] = $request->inv_itemcard_categories_id;
+                if (!empty($request->parent_inv_itemcard_id)) {
+                    $inserted['parent_inv_itemcard_id'] = $request->parent_inv_itemcard_id;
+                }
+                $inserted['does_has_retailunit'] = $request->does_has_retailunit;
+                $inserted['unit_id'] = $request->unit_id;
+                $inserted['retail_unit_id'] = $request->retail_unit_id;
+                $inserted['retail_uom_quntToParent'] = $request->retail_uom_quntToParent;
+                $inserted['price_per_one_in_master_unit'] = $request->price_per_one_in_master_unit;
+                $inserted['price_per_half_group_in_master_unit'] = $request->price_per_half_group_in_master_unit;
+                $inserted['price_per_group_in_master_unit'] = $request->price_per_group_in_master_unit;
+                $inserted['price_per_one_in_retail_unit'] = $request->price_per_one_in_retail_unit;
+                $inserted['price_per_half_group_in_retail_unit'] = $request->price_per_half_group_in_retail_unit;
+                $inserted['price_per_group_in_retail_unit'] = $request->price_per_group_in_retail_unit;
+                $inserted['cost_price_in_master'] = $request->cost_price_in_master;
+                $inserted['cost_price_in_retail'] = $request->cost_price_in_retail;
+                $inserted['has_fixed_price'] = $request->has_fixed_price;
+                $inserted['active'] = $request->active;
+                $inserted['added_by'] = auth()->user()->id;
+                $inserted['created_at'] = date('Y-m-d H:i:s');
+                $inserted['date'] = date('Y-m-d');
+                $inserted['com_code'] = auth()->user()->com_code;
+
+                if (!empty($request->item_img)) {
+                    $image = $request->item_img;
+                    $extension = strtolower($image->extension());
+                    $file_name = time() . rand(1, 1000) . '.' . $extension;
+                    $image->move('assets\admin\uploads\item_card_images\\', $file_name);
+                    $updated['item_img'] = $file_name;
+                }
+
+                InvItemCard::create($inserted);
+
+                return redirect()->route('admin.inv_item_card.index')->with('success', 'تم اضافة الصنف بنجاح');
             }
-
-            $inserted['item_type'] = $request->item_type;
-            $inserted['inv_itemcard_categories_id'] = $request->inv_itemcard_categories_id;
-            if (!empty($request->parent_inv_itemcard_id)) {
-                $inserted['parent_inv_itemcard_id'] = $request->parent_inv_itemcard_id;
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
             }
-            $inserted['does_has_retailunit'] = $request->does_has_retailunit;
-            $inserted['unit_id'] = $request->unit_id;
-            $inserted['retail_unit_id'] = $request->retail_unit_id;
-            $inserted['retail_uom_quntToParent'] = $request->retail_uom_quntToParent;
-            $inserted['price_per_one_in_master_unit'] = $request->price_per_one_in_master_unit;
-            $inserted['price_per_half_group_in_master_unit'] = $request->price_per_half_group_in_master_unit;
-            $inserted['price_per_group_in_master_unit'] = $request->price_per_group_in_master_unit;
-            $inserted['price_per_one_in_retail_unit'] = $request->price_per_one_in_retail_unit;
-            $inserted['price_per_half_group_in_retail_unit'] = $request->price_per_half_group_in_retail_unit;
-            $inserted['price_per_group_in_retail_unit'] = $request->price_per_group_in_retail_unit;
-            $inserted['cost_price_in_master'] = $request->cost_price_in_master;
-            $inserted['cost_price_in_retail'] = $request->cost_price_in_retail;
-            $inserted['has_fixed_price'] = $request->has_fixed_price;
-            $inserted['active'] = $request->active;
-            $inserted['added_by'] = auth()->user()->id;
-            $inserted['created_at'] = date('Y-m-d H:i:s');
-            $inserted['date'] = date('Y-m-d');
-            $inserted['com_code'] = auth()->user()->com_code;
-
-            if (!empty($request->item_img)) {
-                $image = $request->item_img;
-                $extension = strtolower($image->extension());
-                $file_name = time() . rand(1, 1000) . '.' . $extension;
-                $image->move('assets\admin\uploads\item_card_images\\', $file_name);
-                $updated['item_img'] = $file_name;
-            }
-
-            InvItemCard::create($inserted);
-
-            return redirect()->route('admin.inv_item_card.index')->with('success', 'تم اضافة الصنف بنجاح');
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
+
+
     }
 
     /**
@@ -182,20 +198,26 @@ class InvItemCardController extends Controller
     public function edit($id)
     {
         //
-        $data = InvItemCard::find($id);
-        $data['is_used'] = InvoiceOrderDetail::where(['item_code' => $data['item_code'],'com_code' => auth()->user()->com_code])->value('id');
-        $inv_itemCard_categories = InvItemCategory::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1])->get();
-        $item_card_data = InvItemCard::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1])->get();
-        $inv_unit_parent = InvUnit::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1, 'master' => 1])->get();
-        $inv_unit_child = InvUnit::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1, 'master' => 0])->get();
+        if (check_control_menu_role('المخازن', 'الاصناف' , 'تعديل') == true) {
+            $data = InvItemCard::find($id);
+            $data['is_used'] = InvoiceOrderDetail::where(['item_code' => $data['item_code'],'com_code' => auth()->user()->com_code])->value('id');
+            $inv_itemCard_categories = InvItemCategory::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1])->get();
+            $item_card_data = InvItemCard::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1])->get();
+            $inv_unit_parent = InvUnit::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1, 'master' => 1])->get();
+            $inv_unit_child = InvUnit::select(['id', 'name'])->where(['com_code' => auth()->user()->com_code, 'active' => 1, 'master' => 0])->get();
 
-        return view('admin.inv_item_card.edit', [
-                                                'data' => $data,
-                                                'inv_itemCard_categories' => $inv_itemCard_categories,
-                                                'item_card_data' => $item_card_data,
-                                                'inv_unit_parent' => $inv_unit_parent,
-                                                'inv_unit_child' => $inv_unit_child
-                                                ]);
+            return view('admin.inv_item_card.edit', [
+                                                    'data' => $data,
+                                                    'inv_itemCard_categories' => $inv_itemCard_categories,
+                                                    'item_card_data' => $item_card_data,
+                                                    'inv_unit_parent' => $inv_unit_parent,
+                                                    'inv_unit_child' => $inv_unit_child
+                                                    ]);
+        }
+        else {
+            return redirect()->back();
+        }
+
     }
 
     /**
@@ -207,69 +229,74 @@ class InvItemCardController extends Controller
      */
     public function update(CreateItemCardRequest $request, $id)
     {
-        try {
+        if (check_control_menu_role('المخازن', 'الاصناف' , 'تعديل') == true) {
+            try {
+                // If the name already exists with the same company
+                if ($request->name != '') {
 
-            // If the name already exists with the same company
-            if ($request->name != '') {
-
-                $check_name = InvItemCard::where(['name' => $request->name, 'com_code' => auth()->user()->com_code])->where('id', '!=', $id)->first();
-                if (!empty($check_name)) {
-                    return redirect()->back()->with(['error' => 'اسم الصنف موجود مسبقا'])->withInput();
+                    $check_name = InvItemCard::where(['name' => $request->name, 'com_code' => auth()->user()->com_code])->where('id', '!=', $id)->first();
+                    if (!empty($check_name)) {
+                        return redirect()->back()->with(['error' => 'اسم الصنف موجود مسبقا'])->withInput();
+                    }
+                    else {
+                        $updated['name'] = $request->name;
+                    }
                 }
-                else {
-                    $updated['name'] = $request->name;
+
+                $updated['item_type'] = $request->item_type;
+                $updated['inv_itemcard_categories_id'] = $request->inv_itemcard_categories_id;
+                if (!empty($request->parent_inv_itemcard_id)) {
+                    $updated['parent_inv_itemcard_id'] = $request->parent_inv_itemcard_id;
                 }
-            }
+                $updated['unit_id'] = $request->unit_id;
+                $updated['price_per_one_in_master_unit'] = $request->price_per_one_in_master_unit;
+                $updated['price_per_half_group_in_master_unit'] = $request->price_per_half_group_in_master_unit;
+                $updated['price_per_group_in_master_unit'] = $request->price_per_group_in_master_unit;
+                $updated['cost_price_in_master'] = $request->cost_price_in_master;
+                $updated['has_fixed_price'] = $request->has_fixed_price;
+                $updated['active'] = $request->active;
+                $updated['updated_by'] = auth()->user()->id;
+                $updated['updated_at'] = date('Y-m-d H:i:s');
+                $updated['date'] = date('Y-m-d');
+                $updated['com_code'] = auth()->user()->com_code;
 
-            $updated['item_type'] = $request->item_type;
-            $updated['inv_itemcard_categories_id'] = $request->inv_itemcard_categories_id;
-            if (!empty($request->parent_inv_itemcard_id)) {
-                $updated['parent_inv_itemcard_id'] = $request->parent_inv_itemcard_id;
-            }
-            $updated['unit_id'] = $request->unit_id;
-            $updated['price_per_one_in_master_unit'] = $request->price_per_one_in_master_unit;
-            $updated['price_per_half_group_in_master_unit'] = $request->price_per_half_group_in_master_unit;
-            $updated['price_per_group_in_master_unit'] = $request->price_per_group_in_master_unit;
-            $updated['cost_price_in_master'] = $request->cost_price_in_master;
-            $updated['has_fixed_price'] = $request->has_fixed_price;
-            $updated['active'] = $request->active;
-            $updated['updated_by'] = auth()->user()->id;
-            $updated['updated_at'] = date('Y-m-d H:i:s');
-            $updated['date'] = date('Y-m-d');
-            $updated['com_code'] = auth()->user()->com_code;
+                $updated['does_has_retailunit'] = $request->does_has_retailunit;
 
-            $updated['does_has_retailunit'] = $request->does_has_retailunit;
-
-            if ($request->does_has_retailunit != 0 || $request->does_has_retailunit != '') {
-                $updated['retail_unit_id'] = $request->retail_unit_id;
-                $updated['retail_uom_quntToParent'] = $request->retail_uom_quntToParent;
-                $updated['price_per_one_in_retail_unit'] = $request->price_per_one_in_retail_unit;
-                $updated['price_per_half_group_in_retail_unit'] = $request->price_per_half_group_in_retail_unit;
-                $updated['price_per_group_in_retail_unit'] = $request->price_per_group_in_retail_unit;
-                $updated['cost_price_in_retail'] = $request->cost_price_in_retail;
-            }
-
-            if (!empty($request->item_img)) {
-                $old_image = InvItemCard::where('id', $id)->value('item_img');
-                $image = $request->item_img;
-                $extension = strtolower($image->extension());
-                $file_name = time() . rand(1, 1000) . '.' . $extension;
-                $image->move('assets\admin\uploads\item_card_images\\', $file_name);
-                $updated['item_img'] = $file_name;
-
-                // deleting the old image from the folder
-                if(file_exists("assets/admin/uploads/item_card_images/".$old_image)) {
-                    unlink("assets/admin/uploads/item_card_images/".$old_image);
+                if ($request->does_has_retailunit != 0 || $request->does_has_retailunit != '') {
+                    $updated['retail_unit_id'] = $request->retail_unit_id;
+                    $updated['retail_uom_quntToParent'] = $request->retail_uom_quntToParent;
+                    $updated['price_per_one_in_retail_unit'] = $request->price_per_one_in_retail_unit;
+                    $updated['price_per_half_group_in_retail_unit'] = $request->price_per_half_group_in_retail_unit;
+                    $updated['price_per_group_in_retail_unit'] = $request->price_per_group_in_retail_unit;
+                    $updated['cost_price_in_retail'] = $request->cost_price_in_retail;
                 }
+
+                if (!empty($request->item_img)) {
+                    $old_image = InvItemCard::where('id', $id)->value('item_img');
+                    $image = $request->item_img;
+                    $extension = strtolower($image->extension());
+                    $file_name = time() . rand(1, 1000) . '.' . $extension;
+                    $image->move('assets\admin\uploads\item_card_images\\', $file_name);
+                    $updated['item_img'] = $file_name;
+
+                    // deleting the old image from the folder
+                    if(file_exists("assets/admin/uploads/item_card_images/".$old_image)) {
+                        unlink("assets/admin/uploads/item_card_images/".$old_image);
+                    }
+                }
+
+                InvItemCard::where('id', $id)->update($updated);
+
+                return redirect()->route('admin.inv_item_card.index')->with('success', 'تم تعديل الصنف بنجاح');
             }
-
-            InvItemCard::where('id', $id)->update($updated);
-
-            return redirect()->route('admin.inv_item_card.index')->with('success', 'تم تعديل الصنف بنجاح');
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage())->withInput();
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        else {
+            return redirect()->back();
         }
+
     }
 
     /**
@@ -284,69 +311,76 @@ class InvItemCardController extends Controller
     public function delete($id)
     {
         # code...
-        try {
+        if (check_control_menu_role('المخازن', 'الاصناف' , 'حذف') == true) {
+            try {
+                $data_check = InvItemCard::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
 
-            $data_check = InvItemCard::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
+                if (empty($data_check)) {
+                    return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                }
 
+                $flag = InvItemCard::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
 
-            if (empty($data_check)) {
-                return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                if ($flag) {
+                    return redirect()->back()->with('success', 'تم الحذف بنجاح');
+                }
+                else {
+                    return redirect()->back()->with('error', 'غير قادر على الحذف ');
+                }
+
             }
-
-
-            $flag = InvItemCard::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
-
-            if ($flag) {
-                return redirect()->back()->with('success', 'تم الحذف بنجاح');
+            catch(Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
             }
-            else {
-                return redirect()->back()->with('error', 'غير قادر على الحذف ');
-            }
-
         }
-        catch(Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
+
     }
 
 
     public function details($id)
     {
         //
-        try {
-            $com_code = auth()->user()->com_code;
-            $data = InvItemCard::where('id', $id)->first();
+        if (check_control_menu_role('المخازن', 'الاصناف' , 'التفاصيل') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                $data = InvItemCard::where('id', $id)->first();
 
-            if (empty($data)) {
-                return redirect()->back()->with('error', 'لا يوجد صنف كهذا');
-            }
-
-            $data['inv_itemcard_categories_name'] = InvItemCategory::where('id', $data['inv_itemcard_categories_id'])->value('name');
-            $data['parent_inv_itemcard_name'] = InvItemCard::where('id', $data['parent_inv_itemcard_id'])->value('name');
-            $data['unit_name'] = InvUnit::where('id', $data['unit_id'])->value('name');
-            $data['retail_unit_name'] = InvUnit::where('id', $data['retail_unit_id'])->value('name');
-            $data['added_by_name'] = Admin::where('id', $data['added_by'])->value('name');
-            $data['updated_by_name'] = Admin::where('id', $data['updated_by'])->value('name');
-
-
-            $categories = InvItemCardMovementCategory::get();
-            $types = InvItemCardMovementType::get();
-            $stores = Store::where('com_code', $com_code)->get();
-            $moves = InvItemCardMovement::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
-            if (!empty($moves)) {
-                foreach ($moves as $move) {
-                    $move['store_name'] = Store::where(['id' => $move['store_id'], 'com_code' => $com_code])->value('name');
-                    $move['category_name'] = InvItemCardMovementCategory::where(['id' => $move['inv_item_card_movements_categories_id']])->value('name');
-                    $move['type_name'] = InvItemCardMovementType::where(['id' => $move['inv_item_card_movements_types_id']])->value('type');
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا يوجد صنف كهذا');
                 }
+
+                $data['inv_itemcard_categories_name'] = InvItemCategory::where('id', $data['inv_itemcard_categories_id'])->value('name');
+                $data['parent_inv_itemcard_name'] = InvItemCard::where('id', $data['parent_inv_itemcard_id'])->value('name');
+                $data['unit_name'] = InvUnit::where('id', $data['unit_id'])->value('name');
+                $data['retail_unit_name'] = InvUnit::where('id', $data['retail_unit_id'])->value('name');
+                $data['added_by_name'] = Admin::where('id', $data['added_by'])->value('name');
+                $data['updated_by_name'] = Admin::where('id', $data['updated_by'])->value('name');
+
+
+                $categories = InvItemCardMovementCategory::get();
+                $types = InvItemCardMovementType::get();
+                $stores = Store::where('com_code', $com_code)->get();
+                $moves = InvItemCardMovement::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
+                if (!empty($moves)) {
+                    foreach ($moves as $move) {
+                        $move['store_name'] = Store::where(['id' => $move['store_id'], 'com_code' => $com_code])->value('name');
+                        $move['category_name'] = InvItemCardMovementCategory::where(['id' => $move['inv_item_card_movements_categories_id']])->value('name');
+                        $move['type_name'] = InvItemCardMovementType::where(['id' => $move['inv_item_card_movements_types_id']])->value('type');
+                    }
+                }
+
+                return view('admin.inv_item_card.details', ['data' => $data, 'moves' => $moves, 'categories' => $categories, 'types' => $types, 'stores' => $stores]);
             }
-
-            return view('admin.inv_item_card.details', ['data' => $data, 'moves' => $moves, 'categories' => $categories, 'types' => $types, 'stores' => $stores]);
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        else {
+            return redirect()->back();
         }
-
     }
 
 
@@ -455,8 +489,6 @@ class InvItemCardController extends Controller
             $to_date_search = $request->to_date_search;
             $order_search = $request->order_search;
             $item_code_search = $request->item_code_search;
-
-
 
             if ($store_search == 'all') {
                 $filed1 = 'id';

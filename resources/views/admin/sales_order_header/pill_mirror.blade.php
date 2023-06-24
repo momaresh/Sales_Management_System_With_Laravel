@@ -200,26 +200,6 @@
                     <input type="text" readonly id="what-remain" class="form-control" name="what_remain" value="0">
                 </div>
             </div>
-
-            <div  class="col-md-6" id="check_shift_and_reload_money_result" style="display: flex; padding: 0">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>اسم الخزينة</label>
-                        <input type="text" readonly class="form-control" id="treasuries-id" name="treasuries_name" value="{{ $check_shift['treasuries_name'] }}">
-                    </div>
-
-                </div>
-
-                <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['shift_code'] }}">
-                <input type="hidden" class="form-control" name="treasuries_id" value="{{ $check_shift['treasuries_id'] }}">
-
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>اجمالي الخزينة</label>
-                        <input type="text" readonly class="form-control" id="treasury-money" name="treasuries_money" value="{{ $check_shift['treasuries_money'] }}">
-                    </div>
-                </div>
-            </div>
         </div>
 
         <script src="{{ asset('assets/admin/plugins/select2/js/select2.full.min.js') }}"></script>

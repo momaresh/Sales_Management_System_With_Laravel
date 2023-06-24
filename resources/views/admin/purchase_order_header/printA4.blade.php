@@ -136,7 +136,7 @@
             </tr>
 
             <tr>
-                <td>{{ $data["total_befor_discount"] * (1) }}</td>
+                <td>{{ $data["total_before_discount"] * (1) }}</td>
                 <td>{{ $data['tax_percent'] * (1) }}</td>
                 <td>{{ $data['tax_value'] * (1) }}</td>
                 <td>{{ $data['discount_value'] * (1) }}</td>

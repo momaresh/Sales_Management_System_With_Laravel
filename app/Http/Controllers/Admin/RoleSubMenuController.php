@@ -25,7 +25,7 @@ class RoleSubMenuController extends Controller
     {
         //
         try {
-            $data = RoleSubMenu::where('com_code', auth()->user()->com_code)->select('*')->orderby('id', 'desc')->paginate(PAGINATION_COUNT);
+            $data = RoleSubMenu::select('*')->orderby('id', 'desc')->paginate(PAGINATION_COUNT);
 
             if (!empty($data)) {
                 foreach ($data as $d) {
@@ -288,7 +288,7 @@ class RoleSubMenuController extends Controller
 
             RoleSubMenuControl::create($inserted);
 
-            return redirect()->route('admin.roles_sub_menu.details', $id)->with('success', 'تم اضافة التحكم بنجاح');
+            return redirect()->back()->with('success', 'تم اضافة التحكم بنجاح');
         } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage())->withInput();
         }

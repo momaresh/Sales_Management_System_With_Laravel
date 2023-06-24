@@ -62,9 +62,11 @@
                         <input class="form-control" type="date" id="to_date" name="to_date">
                         <input type="hidden" id="current_date" value="{{ date('Y-m-d') }}">
                     </div>
-                    <div class="col-md-12">
-                        <button type="submit" id="report_btn" class="btn btn-primary mt-3">عرض التقرير</button>
-                    </div>
+                    @if (check_control_menu_role('التقارير', 'كشف حساب عميل' , 'طباعة') == true)
+                        <div class="col-md-12">
+                            <button type="submit" id="report_btn" class="btn btn-primary mt-3">عرض التقرير</button>
+                        </div>
+                    @endif
                 </div>
             </form>
         </div>
