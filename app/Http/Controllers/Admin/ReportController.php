@@ -382,4 +382,89 @@ class ReportController extends Controller
         }
     }
 
+    public function daily_report(Request $request)
+    {
+        if (check_control_menu_role('التقارير', 'كشف حساب عميل' , 'عرض') == true || check_control_menu_role('التقارير', 'كشف حساب عميل' , 'طباعة') == true) {
+            try {
+                $com_code = auth()->user()->com_code;
+                if ($_POST) {
+                    if (check_control_menu_role('التقارير', 'كشف حساب عميل' , 'طباعة') == true) {
+                        $report_type = $request->report_type;
+                        $from_date = $request->from_date;
+                        $to_date = $request->to_date;
+
+                        $all_exchange_movements = TreasuryTransaction::where(['transaction_type' => 1, 'com_code' => $com_code])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('move_type');
+                        $all_collection_movements = TreasuryTransaction::where(['transaction_type' => 2, 'com_code' => $com_code])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('move_type');
+
+                        if (!empty($all_exchange_movements)) {
+                            foreach ($all_exchange_movements as $move) {
+                                $move['total_money'] = TreasuryTransaction::where(['transaction_type' => 1, 'com_code' => $com_code, 'move_type' => $move->move_type])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money');
+                                $move['name'] = MoveType::where(['id' => $move->move_type])->value('name');
+
+                                if ($report_type == 2) {
+                                    $move['accounts'] = TreasuryTransaction::where(['transaction_type' => 1, 'com_code' => $com_code, 'move_type' => $move->move_type])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('account_number');
+                                    foreach ($move['accounts'] as $acc) {
+                                        $account_type = Account::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('account_type');
+                                        if ($account_type == 2 || $account_type == 3 || $account_type == 4 || $account_type == 5) {
+                                            $name = Person::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->get(['first_name', 'last_name'])->first();
+                                            $acc->account_name = $name->first_name . ' ' . $name->last_name;
+                                        }
+                                        else {
+                                            $acc->account_name = Account::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('notes');
+                                        }
+                                        $acc->account_money = TreasuryTransaction::where(['transaction_type' => 1, 'com_code' => $com_code, 'move_type' => $move->move_type, 'account_number' => $acc->account_number])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money');
+                                    }
+                                    $move['total_money_with_no_account'] = TreasuryTransaction::where(['transaction_type' => 1, 'com_code' => $com_code, 'move_type' => $move->move_type, 'is_account' => 0])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money');
+                                }
+                            }
+                        }
+
+                        if (!empty($all_collection_movements)) {
+                            foreach ($all_collection_movements as $move) {
+                                $move['total_money'] = TreasuryTransaction::where(['transaction_type' => 2, 'com_code' => $com_code, 'move_type' => $move->move_type])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money');
+                                $move['name'] = MoveType::where(['id' => $move->move_type])->value('name');
+
+                                if ($report_type == 2) {
+                                    $move['accounts'] = TreasuryTransaction::where(['transaction_type' => 2, 'com_code' => $com_code, 'move_type' => $move->move_type])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('account_number');
+                                    foreach ($move['accounts'] as $acc) {
+                                        $account_type = Account::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('account_type');
+                                        if ($account_type == 2 || $account_type == 3 || $account_type == 4 || $account_type == 5) {
+                                            $name = Person::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->get(['first_name', 'last_name'])->first();
+                                            $acc->account_name = $name->first_name . ' ' . $name->last_name;
+                                        }
+                                        else {
+                                            $acc->account_name = Account::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('notes');
+                                        }
+                                        $acc->account_money = TreasuryTransaction::where(['transaction_type' => 2, 'com_code' => $com_code, 'move_type' => $move->move_type, 'account_number' => $acc->account_number])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money');
+                                    }
+                                    $move['total_money_with_no_account'] = TreasuryTransaction::where(['transaction_type' => 2, 'com_code' => $com_code, 'move_type' => $move->move_type, 'is_account' => 0])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money');
+                                }
+                            }
+                        }
+
+                        $systemData = AdminPanelSetting::where('com_code', $com_code)->get()->first();
+
+                        return view('admin.reports.print_daily_report_A4', ['all_exchange_movements' => $all_exchange_movements, 'all_collection_movements' => $all_collection_movements, 'from_date' => $from_date, 'to_date' => $to_date, 'systemData' => $systemData, 'report_type' => $report_type]);
+                    }
+                    else {
+                        return redirect()->back();
+                    }
+                }
+                else {
+                    if (check_control_menu_role('التقارير', 'كشف حساب مورد' , 'عرض') == true) {
+                        return view('admin.reports.daily_report');
+                    }
+                    else {
+                        return redirect()->back();
+                    }
+                }
+            }
+            catch (Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+        }
+        else {
+            return redirect()->back();
+        }
+    }
 }

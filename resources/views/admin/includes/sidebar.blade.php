@@ -260,13 +260,15 @@
                         {{ request()->is('admin/purchase_header/*') ||
                             request()->is('admin/purchase_order_header_general_return/*') ||
                             request()->is('admin/items_in_stores*') ||
-                            request()->is('admin/inv_stores_inventory/*') ?  'menu-open' : '' }}">
+                            request()->is('admin/inv_stores_inventory/*') ||
+                            request()->is('admin/purchase_order_header_original_return/*') ?  'menu-open' : '' }}">
 
                     <a href="#" class="nav-link
                         {{ request()->is('admin/purchase_header/*') ||
                             request()->is('admin/purchase_order_header_general_return/*') ||
                             request()->is('admin/items_in_stores/*') ||
-                            request()->is('admin/inv_stores_inventory/*') ?  'active' : '' }}">
+                            request()->is('admin/inv_stores_inventory/*') ||
+                            request()->is('admin/purchase_order_header_original_return/*') ?  'active' : '' }}">
 
                     <i class="nav-icon fas fa-tachometer-alt"></i>
                     <p>
@@ -293,6 +295,17 @@
                                     <i class="fa-solid fa-basket-shopping mr-1 ml-3"></i>
                                     <p>
                                         فواتير المرتجعات العام
+                                    </p>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if (check_sub_menu_role('الحركات المخزنية', 'فواتير المرتجعات بالاصل') == true)
+                            <li class="nav-item">
+                                <a href="{{ route('admin.purchase_order_header_original_return.index') }}" class="nav-link {{ request()->is('admin/purchase_order_header_original_return/*') ? 'active' : '' }}">
+                                    <i class="fa-solid fa-basket-shopping mr-1 ml-3"></i>
+                                    <p>
+                                        فواتير المرتجعات بالاصل
                                     </p>
                                 </a>
                             </li>
@@ -328,10 +341,12 @@
             @if (check_main_menu_role('المبيعات') == true)
                 <li class="nav-item has-treeview
                         {{ request()->is('admin/sales_header/*') ||
-                            request()->is('admin/sales_order_header_general_return/*')?  'menu-open' : '' }}">
+                            request()->is('admin/sales_order_header_general_return/*') ||
+                            request()->is('admin/sales_order_header_original_return/*') ?  'menu-open' : '' }}">
                     <a href="#" class="nav-link
                     {{ request()->is('admin/sales_header/*') ||
-                        request()->is('admin/sales_order_header_general_return/*') ?  'active' : '' }}">
+                        request()->is('admin/sales_order_header_general_return/*') ||
+                        request()->is('admin/sales_order_header_original_return/*') ?  'active' : '' }}">
                     <i class="nav-icon fas fa-tachometer-alt"></i>
                     <p>
                         المبيعات
@@ -357,6 +372,17 @@
                                     <i class="fa-brands fa-shopify mr-1 ml-3"></i>
                                     <p>
                                         فواتير المرتجعات العام
+                                    </p>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if (check_sub_menu_role('المبيعات', 'فواتير المرتجعات بالاصل') == true)
+                            <li class="nav-item">
+                                <a href="{{ route('admin.sales_order_header_original_return.index') }}" class="nav-link {{ request()->is('admin/sales_order_header_original_return/*') ? 'active' : '' }}">
+                                    <i class="fa-brands fa-shopify mr-1 ml-3"></i>
+                                    <p>
+                                        فواتير المرتجعات بالاصل
                                     </p>
                                 </a>
                             </li>
@@ -491,6 +517,17 @@
                                     <i class="fa-regular fa-clipboard mr-1 ml-3"></i>
                                     <p>
                                         كشف حساب عميل
+                                    </p>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if (check_sub_menu_role('التقارير', 'كشف التقارير اليومية') == true)
+                            <li class="nav-item">
+                                <a href="{{ route('admin.reports.daily_report') }}" class="nav-link {{ request()->is('admin/reports/daily_report') ? 'active' : '' }}">
+                                    <i class="fa-regular fa-clipboard mr-1 ml-3"></i>
+                                    <p>
+                                        كشف التقارير اليومية
                                     </p>
                                 </a>
                             </li>

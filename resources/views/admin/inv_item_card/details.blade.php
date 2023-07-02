@@ -475,7 +475,6 @@
                 });
             });
 
-
             $(document).on('change', '#store_search', function() {
                 make_search();
             });

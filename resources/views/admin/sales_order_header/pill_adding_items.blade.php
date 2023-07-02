@@ -193,14 +193,14 @@
                     <div class="col-md-3">
                         <div class="form-group">
                             <label>قيمة الضريبة</label>
-                            <input type="text" id="tax-value" class="form-control" name="tax_value" disabled value="{{ $sales_data->tax_value }}">
+                            <input type="text" id="tax-value" class="form-control" name="tax_value" readonly value="{{ $sales_data->tax_value }}">
                         </div>
                     </div>
 
                     <div class="col-md-3">
                         <div class="form-group">
                             <label>الاجمالي بعد الضريبة</label>
-                            <input type="text" id="total-after-tax" class="form-control" disabled value="{{ $sales_data->total_after_tax }}">
+                            <input type="text" id="total-after-tax" name="total_after_tax" class="form-control" readonly value="{{ $sales_data->total_after_tax }}">
                         </div>
                     </div>
 
@@ -282,7 +282,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اعتماد') == true)
                     <button type="submit" class="btn btn-primary m-3" id="approve_pill">اعتماد وترحيل</button>
                 @endif

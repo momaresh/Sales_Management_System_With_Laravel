@@ -23,12 +23,14 @@ use App\Http\Controllers\Admin\ExchangeTransactionController;
 use App\Http\Controllers\Admin\InvStoreInventoryController;
 use App\Http\Controllers\Admin\ItemInStoreController;
 use App\Http\Controllers\Admin\PurchaseOrderHeaderGeneralReturnController;
+use App\Http\Controllers\Admin\PurchaseOrderHeaderOriginalReturnController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RoleMainMenuController;
 use App\Http\Controllers\Admin\RoleSubMenuController;
 use App\Http\Controllers\Admin\SalesOrderHeaderController;
 use App\Http\Controllers\Admin\SalesOrderHeaderGeneralReturnController;
+use App\Http\Controllers\Admin\SalesOrderHeaderOriginalReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -215,6 +217,16 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::get('purchase_order_header_general_return/printA4/{id}/{type}', [PurchaseOrderHeaderGeneralReturnController::class, 'printA4'])->name('admin.purchase_order_header_general_return.printA4');
     /* end purchase_order_header_general_return */
 
+    /* begin purchase_order_header_original_return */
+    Route::get('purchase_order_header_original_return/index', [PurchaseOrderHeaderOriginalReturnController::class, 'index'])->name('admin.purchase_order_header_original_return.index');
+    Route::get('purchase_order_header_original_return/create', [PurchaseOrderHeaderOriginalReturnController::class, 'create'])->name('admin.purchase_order_header_original_return.create');
+    Route::post('purchase_order_header_original_return/get_supplier_pills', [PurchaseOrderHeaderOriginalReturnController::class, 'get_supplier_pills'])->name('admin.purchase_order_header_original_return.get_supplier_pills');
+    Route::post('purchase_order_header_original_return/get_pill_details', [PurchaseOrderHeaderOriginalReturnController::class, 'get_pill_details'])->name('admin.purchase_order_header_original_return.get_pill_details');
+    Route::post('purchase_order_header_original_return/approve_pill/{id}', [PurchaseOrderHeaderOriginalReturnController::class, 'approve_pill'])->name('admin.purchase_order_header_original_return.approve_pill');
+    Route::get('purchase_order_header_original_return/details/{id}', [PurchaseOrderHeaderOriginalReturnController::class, 'details'])->name('admin.purchase_order_header_original_return.details');
+    Route::post('purchase_order_header_original_return/ajax_search', [PurchaseOrderHeaderOriginalReturnController::class, 'ajax_search'])->name('admin.purchase_order_header_original_return.ajax_search');
+    Route::get('purchase_order_header_original_return/printA4/{id}/{type}', [PurchaseOrderHeaderOriginalReturnController::class, 'printA4'])->name('admin.purchase_order_header_original_return.printA4');
+    /* end purchase_order_header_original_return */
 
     /* begin admins */
     Route::get('admins/index', [AdminController::class, 'index'])->name('admin.admins.index');
@@ -299,6 +311,17 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::get('sales_order_header_general_return/printA4/{id}/{type}', [SalesOrderHeaderGeneralReturnController::class, 'printA4'])->name('admin.sales_order_header_general_return.printA4');
     /* end sales_order_header_general_return */
 
+    /* begin sales_order_header_original_return */
+    Route::get('sales_order_header_original_return/index', [SalesOrderHeaderOriginalReturnController::class, 'index'])->name('admin.sales_order_header_original_return.index');
+    Route::get('sales_order_header_original_return/create', [SalesOrderHeaderOriginalReturnController::class, 'create'])->name('admin.sales_order_header_original_return.create');
+    Route::post('sales_order_header_original_return/get_customer_pills', [SalesOrderHeaderOriginalReturnController::class, 'get_customer_pills'])->name('admin.sales_order_header_original_return.get_customer_pills');
+    Route::post('sales_order_header_original_return/get_pill_details', [SalesOrderHeaderOriginalReturnController::class, 'get_pill_details'])->name('admin.sales_order_header_original_return.get_pill_details');
+    Route::post('sales_order_header_original_return/approve_pill/{id}', [SalesOrderHeaderOriginalReturnController::class, 'approve_pill'])->name('admin.sales_order_header_original_return.approve_pill');
+    Route::get('sales_order_header_original_return/details/{id}', [SalesOrderHeaderOriginalReturnController::class, 'details'])->name('admin.sales_order_header_original_return.details');
+    Route::post('sales_order_header_original_return/ajax_search', [SalesOrderHeaderOriginalReturnController::class, 'ajax_search'])->name('admin.sales_order_header_original_return.ajax_search');
+    Route::get('sales_order_header_original_return/printA4/{id}/{type}', [SalesOrderHeaderOriginalReturnController::class, 'printA4'])->name('admin.sales_order_header_original_return.printA4');
+    /* end sales_order_header_original_return */
+
 
     /* begin items_in_stores */
     Route::get('items_in_stores/index', [ItemInStoreController::class, 'index'])->name('admin.items_in_stores.index');
@@ -311,6 +334,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::post('reports/supplier_account_report', [ReportController::class, 'supplier_account_report'])->name('admin.reports.supplier_account_report');
     Route::get('reports/customer_account_report', [ReportController::class, 'customer_account_report'])->name('admin.reports.customer_account_report');
     Route::post('reports/customer_account_report', [ReportController::class, 'customer_account_report'])->name('admin.reports.customer_account_report');
+    Route::get('reports/daily_report', [ReportController::class, 'daily_report'])->name('admin.reports.daily_report');
+    Route::post('reports/daily_report', [ReportController::class, 'daily_report'])->name('admin.reports.daily_report');
     /* end reports */
 
     /* begin inv_stores_inventory */

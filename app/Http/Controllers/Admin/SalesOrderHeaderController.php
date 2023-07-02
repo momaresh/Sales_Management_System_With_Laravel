@@ -586,12 +586,11 @@ class SalesOrderHeaderController extends Controller
                         $sales_data['customer_code'] = SalesOrderHeader::where('invoice_id', $request->id)->value('customer_code');
                         $sales_data['delegate_code'] = SalesOrderHeader::where('invoice_id', $request->id)->value('delegate_code');
                         $sales_data['all_items'] = InvoiceOrderDetail::where('invoice_order_id', $request->id)->count();
-                        $sales_data['tax_value'] = $sales_data['total_before_discount'] * $sales_data['tax_percent'];
+                        $sales_data['tax_value'] = $sales_data['total_before_discount'] * ($sales_data['tax_percent'] / 100);
                         $sales_data['total_after_tax'] = $sales_data['total_before_discount'] + $sales_data['tax_value'];
 
-
                         if ($sales_data['discount_type'] == 1) {
-                            $sales_data['total_cost'] = $sales_data['total_after_tax'] - ($sales_data['total_after_tax'] * $sales_data['discount_percent']);
+                            $sales_data['total_cost'] = $sales_data['total_after_tax'] - ($sales_data['total_after_tax'] * ($sales_data['discount_percent'] / 100));
                         }
                         else {
                             $sales_data['total_cost'] = $sales_data['total_after_tax'] - $sales_data['discount_value'];
@@ -615,6 +614,7 @@ class SalesOrderHeaderController extends Controller
                     $stores = Store::where(['active' => 1, 'com_code' => $com_code])->get(['name', 'id']);
                     $items_card = InvItemCard::where(['active' => 1, 'com_code' => $com_code])->get(['item_code', 'name', 'item_type', 'has_fixed_price']);
 
+                    $check_shift = array();
                     if ($sales_data['is_approved'] == 0) {
                         $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
                         if (empty($check_shift)) {
@@ -894,6 +894,7 @@ class SalesOrderHeaderController extends Controller
 
                 if ($request->discount_type == 1) {
                     $updateInvoice['discount_percent'] = $request->discount_percent;
+                    $updateInvoice['discount_value'] = $request->total_after_tax * ($request->discount_percent / 100);
                 }
                 else if ($request->discount_type == 2) {
                     $updateInvoice['discount_value'] = $request->discount_value;

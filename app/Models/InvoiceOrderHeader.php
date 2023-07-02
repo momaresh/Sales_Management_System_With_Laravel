@@ -16,7 +16,7 @@ class InvoiceOrderHeader extends Model
         'total_before_discount', 'total_cost', 'pill_type', 'what_paid',
         'what_remain', 'money_for_account', 'account_balance_before',
         'account_balance_after', 'notes',
-        'invoice_type', 'is_approved', 'approved_by', 'approved_at',
+        'invoice_type', 'is_original_return', 'is_approved', 'approved_by', 'approved_at',
         'added_by', 'updated_by', 'created_at', 'updated_at', 'com_code'
     ];
 

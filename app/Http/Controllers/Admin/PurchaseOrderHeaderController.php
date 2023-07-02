@@ -823,7 +823,7 @@ class PurchaseOrderHeaderController extends Controller
                         $insertTransaction['money'] = $updateInvoice['what_paid'] * (-1);
                         $insertTransaction['money_for_account'] = $updateInvoice['what_paid'];
                         $insertTransaction['move_date'] = date('Y-m-d');
-                        $insertTransaction['byan'] = ' تسليم نضير فاتورة مشتريات للعميل' . $data['supplier_name'];
+                        $insertTransaction['byan'] = ' تسليم نضير فاتورة مشتريات للمورد' . $data['supplier_name'];
                         $insertTransaction['added_by'] = auth()->user()->id;
                         $insertTransaction['com_code'] = $com_code;
                         $insertTransaction['created_at'] = date('Y-m-d H:i:s');
