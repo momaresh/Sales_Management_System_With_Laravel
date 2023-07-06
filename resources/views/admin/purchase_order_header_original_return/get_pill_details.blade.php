@@ -6,6 +6,7 @@
                 <thead style="background-color:#84B0CA ;" class="text-white">
                     <tr>
                     <th scope="col">رقم الفاتورة</th>
+                    <th scope="col">المورد</th>
                     <th scope="col">تاريخ الفاتورة</th>
                     <th scope="col">نوع الفاتورة</th>
                     <th scope="col">الاجمالي</th>
@@ -21,6 +22,7 @@
                 <tbody>
                     <tr>
                         <td>{{ $pill['pill_code'] }}</td>
+                        <td>{{ $pill['supplier_name'] }}</td>
                         <td>{{ $pill['order_date'] }}</td>
                         <td>
                             @if ($pill['pill_type'] == 1)
@@ -89,16 +91,80 @@
                     <td colspan="7"><input readonly type="text" name="total_pill" id="total_pill" value="0" class="form-control"></td>
                 </tr>
             </table>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>نوع الفاتورة</label>
+                        <select id="pill-type" name="pill_type" class="form-control select2">
+                            <option value="">نوع الفاتورة</option>
+                            <option @if($pill->pill_type == 1) selected @endif value="1">كاش</option>
+                            <option @if($pill->pill_type == 2) selected @endif value="2">آجل</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4" id="what-paid-div">
+                    <div class="form-group">
+                        <label>المبلغ المدفوع</label>
+                        <input type="text" readonly id="what-paid" class="form-control" name="what_paid" value="0">
+                    </div>
+                </div>
+
+                <div class="col-md-4" id="what-remain-div">
+                    <div class="form-group">
+                        <label>المبلغ المتبقي</label>
+                        <input type="text" readonly id="what-remain" class="form-control" name="what_remain" value="0">
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>اسم الخزينة</label>
+                        <input type="text" readonly class="form-control" id="treasuries-id" name="treasuries_name" value="{{ $check_shift['treasuries_name'] }}">
+                    </div>
+
+                </div>
+
+                <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['shift_code'] }}">
+                <input type="hidden" class="form-control" name="treasuries_id" value="{{ $check_shift['treasuries_id'] }}">
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>اجمالي الخزينة</label>
+                        <input type="text" readonly class="form-control" id="treasury-money" name="treasuries_money" value="{{ $check_shift['treasuries_money'] }}">
+                    </div>
+                </div>
+            </div>
+
             <button  class="btn btn-primary" id="approve_pill" type="submit">اعتماد</button>
         </form>
     @else
-        <div class="alert alert-danger col-md-12 text-center">
+        <div class="alert alert-info col-md-12 text-center">
             لقد تم ارجاع الفاتورة مسبقا
         </div>
     @endif
 @else
-    <div class="alert alert-info col-md-12 text-center">
-        لا يوجد بيانات
+    <div class="alert alert-danger col-md-12 text-center">
+        لا يوجد بيانات كهذه
     </div>
 @endif
 
+<script>
+    if ($('#pill-type').val() == 1) {
+        $('#what-paid').prop('readonly', true);;
+        $('#what-remain').prop('readonly', true);;
+        $('#what-paid').val(0);
+        $('#what-remain').val(0);
+    }
+    else if ($('#pill-type').val() == 2) {
+        $('#what-paid').prop('readonly', false);;
+        $('#what-remain').prop('readonly', true);;
+        $('#what-paid').val(0);
+        $('#what-remain').val(0);
+    }
+    else {
+        $('#what-remain-div').hide();
+        $('#what-paid-div').hide();
+    }
+</script>

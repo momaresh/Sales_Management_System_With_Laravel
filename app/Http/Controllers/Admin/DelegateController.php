@@ -178,6 +178,14 @@ class DelegateController extends Controller
             $data['half_group'] = $delegate['percent_sales_commission_half_group'];
             $data['one'] = $delegate['percent_sales_commission_one'];
 
+            if (empty($data)) {
+                return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
+            }
+
+            $account = Account::where('account_number', $data['account_number'])->get(['start_balance_status', 'start_balance'])->first();
+            $data['start_balance_status'] = $account->start_balance_status;
+            $data['start_balance'] = $account->start_balance;
+
             return view('admin.delegates.edit', ['data' => $data]);
         }
         else {
@@ -213,6 +221,28 @@ class DelegateController extends Controller
                     $delegate_updated['percent_sales_commission_one'] = $request->one;
 
                     Delegate::where(['person_id' => $id, 'com_code' => auth()->user()->com_code])->update($delegate_updated);
+
+                    $account_updated['start_balance_status'] = $request->start_balance_status;
+                    if ($account_updated['start_balance_status'] == 1) {
+                        //credit
+                        $account_updated['start_balance'] = $request->start_balance * (-1);
+                    }
+                    else if ($account_updated['start_balance_status'] == 2) {
+                        //debit
+                        $account_updated['start_balance'] = $request->start_balance;
+
+                        if ($account_updated['start_balance'] < 0) {
+                            $account_updated['start_balance'] = $account_updated['start_balance'] * (-1);
+                        }
+                    }
+                    else {
+                        $account_updated['start_balance_status'] = 3;
+                        $account_updated['start_balance'] = 0;
+                    }
+                    $account_updated['updated_by'] = auth()->user()->id;
+                    $account_updated['updated_at'] = date("Y-m-d H:i:s");
+
+                    Account::where(['account_number' => $request->account_number, 'com_code' => auth()->user()->com_code])->update($account_updated);
                 }
 
                 return redirect()->route('admin.delegates.index')->with('success', 'تم تعديل العميل بنجاح');

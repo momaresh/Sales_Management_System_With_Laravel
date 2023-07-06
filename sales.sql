@@ -1364,31 +1364,6 @@ INSERT INTO `roles_sub_menu_control` (`id`, `roles_sub_menu_id`, `name`, `active
 (117, 33, 'طباعة', 1, '2023-07-02 09:14:13', '2023-07-02 09:14:13', 1, NULL, 1);
 
 -- --------------------------------------------------------
-
---
--- Table structure for table `sales_matrial_type`
---
-
-CREATE TABLE `sales_matrial_type` (
-  `id` int(11) NOT NULL,
-  `name` varchar(192) NOT NULL,
-  `active` tinyint(1) NOT NULL DEFAULT 1,
-  `added_by` int(11) DEFAULT NULL,
-  `updated_by` int(11) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  `date` datetime DEFAULT NULL,
-  `com_code` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `sales_matrial_type`
---
-
-INSERT INTO `sales_matrial_type` (`id`, `name`, `active`, `added_by`, `updated_by`, `created_at`, `updated_at`, `date`, `com_code`) VALUES
-(1, 'لحوم', 0, 1, 1, '2023-05-22 11:03:20', '2023-05-23 17:12:30', NULL, 1),
-(3, 'مالي', 1, 2, NULL, '2023-05-31 16:43:20', '2023-05-31 16:43:20', NULL, 2);
-
 -- --------------------------------------------------------
 
 --
@@ -1890,17 +1865,6 @@ ALTER TABLE `roles_sub_menu_control`
   ADD KEY `com_code` (`com_code`);
 
 --
--- Indexes for table `sales_matrial_type`
---
-ALTER TABLE `sales_matrial_type`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `added_by` (`added_by`),
-  ADD KEY `updated_by` (`updated_by`),
-  ADD KEY `com_code` (`com_code`);
-
---
--- Indexes for table `sales_order_header`
---
 ALTER TABLE `sales_order_header`
   ADD PRIMARY KEY (`invoice_id`),
   ADD UNIQUE KEY `auto_serial` (`auto_serial`),
@@ -2085,11 +2049,6 @@ ALTER TABLE `roles_sub_menu`
 ALTER TABLE `roles_sub_menu_control`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
 
---
--- AUTO_INCREMENT for table `sales_matrial_type`
---
-ALTER TABLE `sales_matrial_type`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `stores`
@@ -2354,15 +2313,7 @@ ALTER TABLE `roles_sub_menu_control`
   ADD CONSTRAINT `roles_sub_menu_control_ibfk_3` FOREIGN KEY (`updated_by`) REFERENCES `admin` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `roles_sub_menu_control_ibfk_4` FOREIGN KEY (`com_code`) REFERENCES `admin_panel_settings` (`com_code`) ON UPDATE CASCADE;
 
---
--- Constraints for table `sales_matrial_type`
---
-ALTER TABLE `sales_matrial_type`
-  ADD CONSTRAINT `sales_matrial_type_ibfk_1` FOREIGN KEY (`added_by`) REFERENCES `admin` (`id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `sales_matrial_type_ibfk_2` FOREIGN KEY (`updated_by`) REFERENCES `admin` (`id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `sales_matrial_type_ibfk_3` FOREIGN KEY (`com_code`) REFERENCES `admin_panel_settings` (`com_code`) ON UPDATE CASCADE;
 
---
 -- Constraints for table `sales_order_header`
 --
 ALTER TABLE `sales_order_header`
@@ -2375,9 +2326,9 @@ ALTER TABLE `sales_order_header`
 -- Constraints for table `stores`
 --
 ALTER TABLE `stores`
-  ADD CONSTRAINT `sales_matrial_type_ibfk_11` FOREIGN KEY (`added_by`) REFERENCES `admin` (`id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `sales_matrial_type_ibfk_21` FOREIGN KEY (`updated_by`) REFERENCES `admin` (`id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `sales_matrial_type_ibfk_31` FOREIGN KEY (`com_code`) REFERENCES `admin_panel_settings` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `store_ibfk_11` FOREIGN KEY (`added_by`) REFERENCES `admin` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `store_ibfk_21` FOREIGN KEY (`updated_by`) REFERENCES `admin` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `store_ibfk_31` FOREIGN KEY (`com_code`) REFERENCES `admin_panel_settings` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `suppliers`

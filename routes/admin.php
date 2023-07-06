@@ -5,7 +5,6 @@ use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AdminPanelSettingController;
 use App\Http\Controllers\Admin\TreasuryController;
-use App\Http\Controllers\Admin\SalesMatrialTypeController;
 use App\Http\Controllers\Admin\StoreController;
 use App\Http\Controllers\Admin\InvUnitController;
 use App\Http\Controllers\Admin\InvItemCategoryController;
@@ -69,17 +68,6 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::post('treasuries_delivery/store/{id}', [TreasuryController::class, 'store_delivery'])->name('admin.treasuries_delivery.store');
     Route::get('treasuries_delivery/delete/{id}/{from_id}', [TreasuryController::class, 'delete_delivery'])->name('admin.treasuries_delivery.delete');
     /* end Treasuries */
-
-
-    /* begin Sales_matrial_type */
-    Route::get('sales_matrial_type/index', [SalesMatrialTypeController::class, 'index'])->name('admin.sales_matrial_type.index');
-    Route::get('sales_matrial_type/create', [SalesMatrialTypeController::class, 'create'])->name('admin.sales_matrial_type.create');
-    Route::post('sales_matrial_type/store', [SalesMatrialTypeController::class, 'store'])->name('admin.sales_matrial_type.store');
-    Route::get('sales_matrial_type/edit/{id}', [SalesMatrialTypeController::class, 'edit'])->name('admin.sales_matrial_type.edit');
-    Route::post('sales_matrial_type/update/{id}', [SalesMatrialTypeController::class, 'update'])->name('admin.sales_matrial_type.update');
-    Route::get('sales_matrial_type/delete/{id}', [SalesMatrialTypeController::class, 'destroy'])->name('admin.sales_matrial_type.delete');
-    Route::post('sales_matrial_type/ajax_search', [SalesMatrialTypeController::class, 'ajax_search'])->name('admin.sales_matrial_type.ajax_search');
-    /* end Sales_matrial_type */
 
 
     /* begin Stores */
@@ -249,6 +237,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::get('admin_shifts/end_shift/{id}', [AdminShiftController::class, 'end_shift'])->name('admin.admin_shifts.end_shift');
     Route::get('admin_shifts/printA4/{id}', [AdminShiftController::class, 'printA4'])->name('admin.admin_shifts.printA4');
     Route::post('admin_shifts/review_shift', [AdminShiftController::class, 'review_shift'])->name('admin.admin_shifts.review_shift');
+    Route::post('admin_shifts/ajax_search', [AdminShiftController::class, 'ajax_search'])->name('admin.admin_shifts.ajax_search');
     /* end admin_shifts */
 
     /* begin treasuries_transactions */
@@ -407,4 +396,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
 Route::group(['namespace' => 'Admin', 'prefix' => 'admin', 'middleware' => 'guest:admin'], function(){
     Route::get('login', [LoginController::class, 'showLogin'])->name('admin.show');
     Route::post('login', [LoginController::class, 'login'])->name('admin.login');
+});
+
+Route::fallback(function() {
+    return redirect(route('admin.dashboard'));
 });

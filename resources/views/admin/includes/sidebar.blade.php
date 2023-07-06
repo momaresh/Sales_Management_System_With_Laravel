@@ -69,14 +69,14 @@
 
             @if (check_main_menu_role('المخازن') == true)
                 <li class="nav-item has-treeview
-                    {{  request()->is('admin/sales_matrial_type*') ||
+                    {{
                         request()->is('admin/stores*') ||
                         request()->is('admin/inv_units*') ||
                         request()->is('admin/inv_item_categories*') ||
                         request()->is('admin/inv_item_card*')  ?  'menu-open' : '' }}">
 
                     <a href="#" class="nav-link
-                    {{  request()->is('admin/sales_matrial_type*') ||
+                    {{
                         request()->is('admin/stores*') ||
                         request()->is('admin/inv_units*') ||
                         request()->is('admin/inv_item_categories*') ||
@@ -89,17 +89,6 @@
                     </a>
 
                     <ul class="nav nav-treeview">
-                        @if (check_sub_menu_role('المخازن', 'فئات الفواتير') == true)
-                            <li class="nav-item">
-                                <a href="{{ route('admin.sales_matrial_type.index') }}" class="nav-link {{ request()->is('admin/sales_matrial_type*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-th mr-0 ml-3" style="font-size: 15px"></i>
-                                <p>
-                                    فئات الفواتير
-                                </p>
-                                </a>
-                            </li>
-                        @endif
-
                         @if (check_sub_menu_role('المخازن', 'المخازن') == true)
                             <li class="nav-item">
                                 <a href="{{ route('admin.stores.index') }}" class="nav-link {{ request()->is('admin/store*') ? 'active' : '' }}">

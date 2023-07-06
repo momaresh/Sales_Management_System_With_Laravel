@@ -47,7 +47,8 @@
                             <option value="1">كشف حساب اجمالي</option>
                             <option selected value="2">كشف حساب تفصيلي خلال فترة</option>
                             <option value="3">كشف حساب المشتريات خلال فترة</option>
-                            <option value="4">كشف حساب مرتجع المشتريات خلال فترة</option>
+                            <option value="4">كشف حساب مرتجع المشتريات العام خلال فترة</option>
+                            <option value="6">كشف حساب مرتجع المشتريات بالاصل خلال فترة</option>
                             <option value="5">كشف حساب حركة النقدية خلال فترة</option>
                         </select>
                     </div>

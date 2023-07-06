@@ -12,6 +12,7 @@
             <th>نوع الحساب</th>
             <th>حساب الأب</th>
             <th>الرصيد</th>
+            <th>رصيد اول المدة</th>
             <th>حالة التفعيل</th>
             @if (check_control_menu_role('الحسابات', 'الحسابات' , 'حذف') == true)
                 <th>حذف</th>
@@ -39,8 +40,25 @@
                 @endphp
                 </td>
                 <td>{{ $datum->account_type_name }}</td>
-                <td>{{ $datum->parent_account_number }}</td>
-                <td>{{ $datum->current_balance }}</td>
+                <td>{{ $datum->parent_account_name }}</td>
+                <td>
+                    @if($datum->current_balance == 0)
+                    متزن
+                    @elseif ($datum->current_balance > 0)
+                        مدين ({{ $datum->current_balance }})
+                    @else
+                        دائن ({{ $datum->current_balance * (-1) }})
+                    @endif
+                </td>
+                <td>
+                    @if($datum->start_balance == 0)
+                        متزن
+                    @elseif ($datum->start_balance > 0)
+                        مدين ({{ $datum->start_balance }})
+                    @else
+                        دائن ({{ $datum->start_balance * (-1) }})
+                    @endif
+                </td>
                 @if ($datum->active == 1)
                 <td style="background-color: #5ab6a0a1;">
                     مفعل

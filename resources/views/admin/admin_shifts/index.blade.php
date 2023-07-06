@@ -37,6 +37,52 @@
         </div>
         <!-- /.card-header -->
         <div class="card-body">
+            <div class="mb-3 row">
+                <div class="col-md-4">
+                    <label class="control-label" for="shift_code">بحث بكود الشفت</label>
+                    <input class="form-control" type="search" placeholder="بحث بكود الشفت" id="shift_code">
+                </div>
+                <div class="col-md-4">
+                    <label class="control-label">بحث بالمستخدمين</label>
+                    <select class="form-control select2" name="admin_id_search" id="admin_id_search">
+                        <option value="all">بحث بالكل</option>
+                        @if (@isset($admins) && !@empty($admins))
+                            @foreach ($admins as $info )
+                                <option value="{{ $info->id }}">{{ $info->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="control-label">بحث بالخزن</label>
+                    <select class="form-control select2" name="treasury_id_search" id="treasury_id_search">
+                        <option value="all">بحث بالكل</option>
+                        @if (@isset($treasuries) && !@empty($treasuries))
+                            @foreach ($treasuries as $info )
+                                <option value="{{ $info->id }}">{{ $info->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+
+                <div class="col-md-4 mt-2">
+                    <label class="control-label">حالة الانتهاء</label>
+                    <select class="form-control select2" name="is_finished_search" id="is_finished_search">
+                        <option value="all">بحث بالكل</option>
+                        <option value="1">مغلق</option>
+                        <option value="0">مفتوح</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mt-2">
+                    <label class="control-label">حالة المراجعة والاستلام</label>
+                    <select class="form-control select2" name="is_reviewed_search" id="is_reviewed_search">
+                        <option value="all">بحث بالكل</option>
+                        <option value="1">تم المراجعة والاستلام</option>
+                        <option value="0">لم يستلم</option>
+                    </select>
+                </div>
+            </div>
 
             <div id="ajax_search_result">
                 <table id="example2" class="table table-bordered table-hover">
@@ -129,18 +175,16 @@
                 <div class="row">
                     <div class="col-md-12">
                         <label>المبلغ الذي يجب استلامه من الشفت</label>
-                        <input type="text" readonly oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="should_paid" name="should_paid" class="form-control">
+                        <input type="text" readonly oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="should_paid" name="should_paid" class="form-control" value="0">
                     </div>
-                </div>
 
-                <div class="row">
                     <div class="col-md-12">
                         <label>المبلغ الذي تم استلامه من الشفت</label>
-                        <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="what_paid" name="what_paid" class="form-control">
+                        <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="what_paid" name="what_paid" class="form-control" value="0">
                     </div>
                 </div>
 
-                <input type="hidden" name="do_review_shift_id" value="@if (!@empty($check_shift->id)) $check_shift['id'] @endif">
+                <input type="hidden" name="do_review_shift_id" value="@if (!@empty($check_shift->id)) {{ $check_shift['id'] }} @endif">
                 <input type="hidden" name="was_review_shift_id" id="was_review_shift_id" value="">
 
                 <div class="col-md-12 text-center mt-3">
@@ -204,6 +248,99 @@
                     return false;
                 }
             })
+
+            // ajax search
+            function make_search() {
+                // get the value from the input to search by
+                var shift_code_search = $('#shift_code').val();
+                var admin_id_search = $('#admin_id_search').val();
+                var treasury_id_search = $('#treasury_id_search').val();
+                var is_finished_search = $('#is_finished_search').val();
+                var is_reviewed_search = $('#is_reviewed_search').val();
+
+                jQuery.ajax({
+                    // first argument is the where the from route to
+                    url:"{{ route('admin.admin_shifts.ajax_search') }}",
+                    // second argument is sending type of the form
+                    type:'post',
+                    // third argument is the type of the returned data from the model
+                    datatype:'html',
+                    // first argument is
+                    cache:false,
+                    // forth we send the search data and the token
+                    data:{
+                        shift_code_search:shift_code_search,
+                        admin_id_search:admin_id_search,
+                        treasury_id_search:treasury_id_search,
+                        is_finished_search:is_finished_search,
+                        is_reviewed_search:is_reviewed_search,
+                        '_token':"{{ csrf_token() }}"
+                        },
+                    // If the form and everything okay
+                    success:function(data){
+                        $('#ajax_search_result').html(data);
+                    },
+                    // If the there is an error
+                    error:function() {
+                        alert('حدث خطأ ما');
+                    }
+                });
+            }
+
+            $(document).on('click', '#ajax_pagination_search a', function(e) {
+                // get the value from the input to search by
+                e.preventDefault();
+                var shift_code_search = $('#shift_code').val();
+                var admin_id_search = $('#admin_id_search').val();
+                var treasury_id_search = $('#treasury_id_search').val();
+                var is_finished_search = $('#is_finished_search').val();
+                var is_reviewed_search = $('#is_reviewed_search').val();
+
+                jQuery.ajax({
+                    // first argument is the where the from route to
+                    url:$(this).attr('href'),
+                    // second argument is sending type of the form
+                    type:'post',
+                    // third argument is the type of the returned data from the model
+                    datatype:'html',
+                    // first argument is
+                    cache:false,
+                    // forth we send the search data and the token
+                    data:{
+                        shift_code_search:shift_code_search,
+                        admin_id_search:admin_id_search,
+                        treasury_id_search:treasury_id_search,
+                        is_finished_search:is_finished_search,
+                        is_reviewed_search:is_reviewed_search,
+                        '_token':"{{ csrf_token() }}"
+                        },
+                    // If the form and everything okay
+                    success:function(data){
+                        $('#ajax_search_result').html(data);
+                    },
+                    // If the there is an error
+                    error:function() {
+                        alert('حدث خطأ ما');
+                    }
+                });
+            })
+
+            $(document).on('input', '#shift_code', function() {
+                make_search();
+            });
+
+            $(document).on('change', '#admin_id_search', function() {
+                make_search();
+            });
+            $(document).on('change', '#treasury_id_search', function() {
+                make_search();
+            });
+            $(document).on('change', '#is_finished_search', function() {
+                make_search();
+            });
+            $(document).on('change', '#is_reviewed_search', function() {
+                make_search();
+            });
         })
     </script>
 @endsection

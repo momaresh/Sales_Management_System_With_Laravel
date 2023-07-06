@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('title')
-    المبيعات
+     مرتجع المبيعات العام
 @endsection
 
 @section('content')

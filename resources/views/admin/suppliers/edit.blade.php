@@ -74,6 +74,32 @@
                     </div>
                 </div>
 
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>حالة رصيد اول المدة</label>
+                        <select name="start_balance_status" id="start_balance_status" class="form-control select2">
+                            <option value="">اختر الحالة</option>
+                            <option   @if (old('start_balance_status', $data['start_balance_status']) == 1) selected  @endif value="1">دائن</option>
+                            <option   @if (old('start_balance_status', $data['start_balance_status']) == 2) selected  @endif value="2">مدين</option>
+                            <option   @if (old('start_balance_status', $data['start_balance_status']) == 3) selected  @endif value="3">متزن</option>
+                        </select>
+
+                        @error('start_balance_status')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>رصيد أول المدة للحساب</label>
+                        <input name="start_balance" id="start_balance" class="form-control"  oninput="this.value=this.value.replace(/[^0-9.]/g,'');" value="{{ old('start_balance', $data['start_balance']) }}">
+
+                        @error('start_balance')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
 
                 <div class="col-md-6">
                     <label>مفعل</label>
@@ -89,6 +115,7 @@
                     </div>
                 </div>
 
+                <input name="account_number" type="hidden" value="{{ $data['account_number'] }}">
 
             </div>
           <!-- /.card-body -->
@@ -112,4 +139,8 @@
 
 @section('contentheaderactive')
     تعديل
+@endsection
+
+@section('script')
+    <script src="{{ asset('assets/admin/js/accounts.js') }}"></script>
 @endsection

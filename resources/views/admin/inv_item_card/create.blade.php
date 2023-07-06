@@ -71,7 +71,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>نوع الصنف</label>
-                        <select name="item_type" id="item_type" class="form-control">
+                        <select name="item_type" id="item_type" class="form-control select2">
                             <option value="">اختر النوع</option>
                             <option   @if(old('item_type') == 1) selected  @endif value="1"> مخزني</option>
                             <option   @if(old('item_type') == 2) selected  @endif value="2"> استهلاكي بتاريخ صلاحية</option>
@@ -151,7 +151,7 @@
                 <div class="col-md-6 relatied_retial_counter" @if (old('does_has_retailunit') != 1 ) style="display: none;" @endif  id="retail_uom_idDiv">
                     <div class="form-group">
                         <label>وحدة القياس التجزئة بالنسبة للاساسية(<span class="parent_unit_name"></span>)</label>
-                        <select name="retail_unit_id" id="retail_unit_id" class="form-control ">
+                        <select name="retail_unit_id" id="retail_unit_id" class="form-control select2">
                             <option value="">اختر الوحدة التجزئة</option>
                             @if (@isset($inv_unit_child) && !@empty($inv_unit_child))
                             @foreach ($inv_unit_child as $info )

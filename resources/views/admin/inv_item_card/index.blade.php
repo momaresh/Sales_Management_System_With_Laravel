@@ -48,7 +48,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="control-label">بحث بنوع الصنف</label>
-                    <select class="form-control" id="type_search">
+                    <select class="form-control select2" id="type_search">
                         <option value="all">بحث بالكل</option>
                         <option value="1">مخزني</option>
                         <option value="2">استهلاكي بصلاحية انتهاء</option>
@@ -57,7 +57,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="control-label">بحث بفئة الصنف</label>
-                    <select class="form-control" id="category_search">
+                    <select class="form-control select2" id="category_search">
                         <option value="all">بحث بالكل</option>
                         @if (@isset($inv_itemCard_categories) && !@empty($inv_itemCard_categories))
                             @foreach ($inv_itemCard_categories as $info )

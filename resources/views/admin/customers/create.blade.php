@@ -131,7 +131,7 @@
             <!-- /.card-body -->
             <div class="card-footer">
                 <button type="submit" class="btn btn-info">اضافة</button>
-                <button type="reset" class="btn btn-default float-right">الغاء</button>
+                <a href="{{ route('admin.customers.index') }}" class="btn btn-danger float-right">الغاء</a>
             </div>
             <!-- /.card-footer -->
          </form>

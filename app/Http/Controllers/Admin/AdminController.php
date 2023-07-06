@@ -51,7 +51,7 @@ class AdminController extends Controller
     public function create()
     {
         //
-        $roles = Role::all();
+        $roles = Role::where(['com_code' => auth()->user()->com_code])->get();
 
         return view('admin.admins.create', ['roles' => $roles]);
     }
@@ -159,7 +159,7 @@ class AdminController extends Controller
         if (empty($data)) {
             return redirect()->back();
         }
-        $roles = Role::all();
+        $roles = Role::where(['com_code' => auth()->user()->com_code])->get();
 
         return view('admin.admins.edit', ['data' => $data, 'roles' => $roles]);
     }

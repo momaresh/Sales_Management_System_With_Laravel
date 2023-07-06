@@ -128,43 +128,45 @@
             <hr style="border: 1px solid #007bff">
         @endif
 
-        <table id="example2" class="table table-bordered table-hover">
-            <h5 class="my-col-main" style="width:fit-content; margin: 10px auto">الاصناف المضافة</h5>
-            <thead>
-                <tr style="background-color: #007bff; color:white;">
-                    <th>اسم المخزن</th>
-                    <th>اسم الصنف</th>
-                    <th>نوع البيع</th>
-                    <th>وحدة البيع</th>
-                    <th>الكمية</th>
-                    <th>سعر الوحدة</th>
-                    <th>الاجمالي</th>
-                    @if ($sales_data->is_approved == 0)
-                        <th>حذف</th>
-                    @endif
-                </tr>
-            </thead>
-
-            <tbody id="add_new_item_row_result">
-                @foreach ($items as $data)
-                    <tr>
-                        <input type="hidden" name="total_price_array[]" class="total_price_array" value="{{ $data['total_price'] }}">
-
-
-                        <td>{{ $data['store_name'] }}</td>
-                        <td>{{ $data['item_name'] }}</td>
-                        <td>{{ $data['sales_type_name'] }}</td>
-                        <td>{{ $data['unit_name'] }}</td>
-                        <td>{{ $data['quantity'] }}</td>
-                        <td>{{ $data['unit_price'] }}</td>
-                        <td>{{ $data['total_price'] }}</td>
+        <div id="reload_items_result">
+            <table id="example2" class="table table-bordered table-hover">
+                <h5 class="my-col-main" style="width:fit-content; margin: 10px auto">الاصناف المضافة</h5>
+                <thead>
+                    <tr style="background-color: #007bff; color:white;">
+                        <th>اسم المخزن</th>
+                        <th>اسم الصنف</th>
+                        <th>نوع البيع</th>
+                        <th>وحدة البيع</th>
+                        <th>الكمية</th>
+                        <th>سعر الوحدة</th>
+                        <th>الاجمالي</th>
                         @if ($sales_data->is_approved == 0)
-                            <td><button data-id="{{ $data['id'] }}" class="btn btn-danger remove_item_active"><i class="fa-solid fa-trash-can"></i></button></td>
+                            <th>حذف</th>
                         @endif
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody id="add_new_item_row_result">
+                    @foreach ($items as $data)
+                        <tr>
+                            <input type="hidden" name="total_price_array[]" class="total_price_array" value="{{ $data['total_price'] }}">
+
+
+                            <td>{{ $data['store_name'] }}</td>
+                            <td>{{ $data['item_name'] }}</td>
+                            <td>{{ $data['sales_type_name'] }}</td>
+                            <td>{{ $data['unit_name'] }}</td>
+                            <td>{{ $data['quantity'] }}</td>
+                            <td>{{ $data['unit_price'] }}</td>
+                            <td>{{ $data['total_price'] }}</td>
+                            @if ($sales_data->is_approved == 0)
+                                <td><button data-id="{{ $data['id'] }}" class="btn btn-danger remove_item_active"><i class="fa-solid fa-trash-can"></i></button></td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
         <hr style="border: 1px solid #007bff">
 

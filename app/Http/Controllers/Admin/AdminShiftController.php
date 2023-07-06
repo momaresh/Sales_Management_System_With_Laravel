@@ -38,7 +38,6 @@ class AdminShiftController extends Controller
                         $d['allowed_review'] = false;
                         if (check_control_menu_role('حركة شفتات الخزن', 'شفتات الخزن', 'مراجعة شفت') == true) {
                             if ($d['is_finished'] == 1 && empty($d['delivered_to_shift_id']) && !empty($check_shift)) {
-
                                 $allowed_tre = TreasuryDelivery::where(['treasuries_id' => $check_shift['treasuries_id']])->get(['treasuries_receive_from_id']);
 
                                 if (!empty($allowed_tre)) {
@@ -54,9 +53,11 @@ class AdminShiftController extends Controller
                     }
                 }
 
+                $com_code = auth()->user()->com_code;
+                $admins = Admin::where(['com_code' => $com_code, 'active' => 1])->get(['id', 'name']);
+                $treasuries = Treasury::where(['com_code' => $com_code, 'active' => 1])->get(['id', 'name']);
 
-
-                return view('admin.admin_shifts.index', ['data' => $data, 'check_shift' => $check_shift]);
+                return view('admin.admin_shifts.index', ['data' => $data, 'check_shift' => $check_shift, 'admins' => $admins, 'treasuries' => $treasuries]);
             }
             catch (Exception $e) {
 
@@ -311,7 +312,8 @@ class AdminShiftController extends Controller
                     $update_treasuries['last_collection_arrive'] = $last_collect_arrive + 1;
                     Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
 
-                    $money = $request->what_paid - $do_review_shift['money_should_delivered'];
+                    $money = $request->what_paid - $was_review_shift['money_should_delivered'];
+
                     if ($money == 0) {
                         $update_shift['money_state'] = 0;
                     }
@@ -343,5 +345,110 @@ class AdminShiftController extends Controller
          else {
              return redirect()->back();
          }
+    }
+
+    public function ajax_search(Request $request) {
+        if ($request->ajax()) {
+
+            $shift_code_search = $request->shift_code_search;
+            $admin_id_search = $request->admin_id_search;
+            $treasury_id_search = $request->treasury_id_search;
+            $is_finished_search = $request->is_finished_search;
+            $is_reviewed_search = $request->is_reviewed_search;
+
+
+            if ($shift_code_search == '') {
+                $filed1 = 'id';
+                $operator1 = '>';
+                $value1 = 0;
+            }
+            else {
+                $filed1 = 'shift_code';
+                $operator1 = 'LIKE';
+                $value1 = '%'. $shift_code_search . '%';
+            }
+
+
+
+            if ($admin_id_search == 'all') {
+                $filed2 = 'id';
+                $operator2 = '>';
+                $value2 = 0;
+            }
+            else {
+                $filed2 = 'admin_id';
+                $operator2 = 'LIKE';
+                $value2 = '%'. $admin_id_search . '%';
+            }
+
+            if ($treasury_id_search == 'all') {
+                $filed3 = 'id';
+                $operator3 = '>';
+                $value3 = 0;
+            }
+            else {
+                $filed3 = 'treasuries_id';
+                $operator3 = '=';
+                $value3 = $treasury_id_search;
+            }
+
+            if ($is_finished_search == 'all') {
+                $filed4 = 'id';
+                $operator4 = '>';
+                $value4 = 0;
+            }
+            else {
+                $filed4 = 'is_finished';
+                $operator4 = '=';
+                $value4 = $is_finished_search;
+            }
+
+            if ($is_reviewed_search == 'all') {
+                $filed5 = 'id';
+                $operator5 = '>';
+                $value5 = 0;
+            }
+            else {
+                if ($is_reviewed_search == 0) {
+                    $filed5 = 'delivered_to_shift_id';
+                    $operator5 = '=';
+                    $value5 = null;
+                }
+                else if ($is_reviewed_search == 1) {
+                    $filed5 = 'delivered_to_shift_id';
+                    $operator5 = '!=';
+                    $value5 = null;
+                }
+            }
+
+
+            $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'is_finished' => 0, 'com_code' => auth()->user()->com_code])->get(['treasuries_id', 'id'])->first();
+
+            $data = AdminShift::where($filed1, $operator1, $value1)->where($filed2, $operator2, $value2)->where($filed3, $operator3, $value3)->where($filed4, $operator4, $value4)->where($filed5, $operator5, $value5)->where(['com_code' => auth()->user()->com_code])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
+
+            if (!empty($data)) {
+                foreach ($data as $d) {
+                    $d['admin_name'] = Admin::where(['id' => $d['admin_id']])->value('name');
+                    $d['treasuries_name'] = Treasury::where(['id' => $d['treasuries_id']])->value('name');
+                    $d['allowed_review'] = false;
+                    if (check_control_menu_role('حركة شفتات الخزن', 'شفتات الخزن', 'مراجعة شفت') == true) {
+                        if ($d['is_finished'] == 1 && empty($d['delivered_to_shift_id']) && !empty($check_shift)) {
+                            $allowed_tre = TreasuryDelivery::where(['treasuries_id' => $check_shift['treasuries_id']])->get(['treasuries_receive_from_id']);
+
+                            if (!empty($allowed_tre)) {
+                                foreach ($allowed_tre as $tre) {
+                                    if ($d['treasuries_id'] == $tre['treasuries_receive_from_id']) {
+                                        $d['allowed_review'] = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return view('admin.admin_shifts.ajax_search', ['data' => $data, 'check_shift' => $check_shift]);
+        }
     }
 }

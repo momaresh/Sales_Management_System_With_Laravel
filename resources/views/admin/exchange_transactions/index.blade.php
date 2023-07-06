@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('title')
-    حركات شفتات الخزن
+شاشة صرف النقدية
 @endsection
 
 @section('content')

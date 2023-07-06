@@ -26,6 +26,8 @@ class UpdateSupplierRequest extends FormRequest
         return [
             'first_name' => 'required',
             'last_name' => 'required',
+            'start_balance_status' => 'required',
+            'start_balance' => 'required|min:0',
             'address' => 'required',
             'phone' => 'required',
             'active' => 'required',
@@ -37,6 +39,9 @@ class UpdateSupplierRequest extends FormRequest
         return [
             'first_name.required' => 'الاسم الاول للمورد مطلوب',
             'last_name.required' => 'الاسم الاخير للمورد مطلوب',
+            'start_balance_status.required' => 'حالة حساب اول المدة مطلوب',
+            'start_balance.required' => 'حساب اول المدة مطلوب',
+            'start_balance.min' => 'حساب اول المدة رقم موجب صحيح',
             'address.required' => 'عنوان المورد مطلوب',
             'phone.required' => 'هاتف المورد مطلوب',
             'active.required' => 'حالة تفعيل الصنف مطلوب',

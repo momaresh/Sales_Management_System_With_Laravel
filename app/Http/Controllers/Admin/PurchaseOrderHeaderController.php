@@ -78,7 +78,7 @@ class PurchaseOrderHeaderController extends Controller
             $com_code = auth()->user()->com_code;
 
             $suppliers_code = Supplier::where(['com_code' => auth()->user()->com_code])->get(['supplier_code', 'person_id']);
-            $stores = Store::get(['id', 'name']);
+            $stores = Store::where(['com_code' => $com_code])->get(['id', 'name']);
             if (!empty($suppliers_code)) {
                 foreach ($suppliers_code as $sup) {
                     $sup['first_name'] = Person::where('id', $sup['person_id'])->value('first_name');
@@ -265,7 +265,7 @@ class PurchaseOrderHeaderController extends Controller
             $data['supplier_code'] = $purchase_data['supplier_code'];
 
             $suppliers_code = Supplier::where(['com_code' => $com_code])->get(['supplier_code', 'person_id']);
-            $stores = Store::get(['id', 'name']);
+            $stores = Store::where(['com_code' => $com_code])->get(['id', 'name']);
             if (!empty($suppliers_code)) {
                 foreach ($suppliers_code as $sup) {
                     $sup['first_name'] = Person::where(['id' => $sup['person_id'], 'com_code' => auth()->user()->com_code])->value('first_name');
@@ -776,7 +776,7 @@ class PurchaseOrderHeaderController extends Controller
 
                     // change the supplier current balance in accounts
                     $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
-                    $update_account['current_balance'] = $get_current - $request->total_cost;
+                    $update_account['current_balance'] = $get_current - $updateInvoice['total_cost'];
                     Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
 
                     // there is many action to take

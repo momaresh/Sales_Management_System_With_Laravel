@@ -1,8 +1,9 @@
 @extends('layout.admin')
 
 @section('title')
-    حركات شفتات الخزن
+شاشة تحصيل النقدية
 @endsection
+
 
 @section('content')
 

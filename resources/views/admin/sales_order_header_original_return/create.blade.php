@@ -31,7 +31,7 @@
             <div class="col-md-4">
                 <label for="inputEmail3">كود الفاتورة</label>
                 <div class="form-group">
-                    <input type="text" name="pill_code" id="pill_code" class="form-control" value="" placeholder="كود الفاتورة">
+                    <input type="text" name="pill_code" id="pill_code_add" class="form-control" value="" placeholder="كود الفاتورة">
                 </div>
             </div>
 

@@ -1,3 +1,4 @@
+
 <tr>
     <input type="hidden" name="total_price_array[]" class="total_price_array" value="{{ $data['total_price'] }}">
 
@@ -9,5 +10,5 @@
     <td>{{ $data['quantity'] }}</td>
     <td>{{ $data['unit_price'] }}</td>
     <td>{{ $data['total_price'] }}</td>
-    <td><button data-id="{{ $data['id'] }}" class="btn btn-danger remove_item_active"><i class="fa-solid fa-trash-can"></i></button></td>
+    <td><button class="btn btn-danger remove_item"><i class="fa-solid fa-trash-can"></i></button></td>
 </tr>

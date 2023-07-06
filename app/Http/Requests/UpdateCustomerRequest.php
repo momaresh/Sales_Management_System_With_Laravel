@@ -26,6 +26,9 @@ class UpdateCustomerRequest extends FormRequest
         return [
             'first_name' => 'required',
             'last_name' => 'required',
+            'start_balance_status' => 'required',
+            'start_balance' => 'required|min:0',
+            'last_name' => 'required',
             'address' => 'required',
             'phone' => 'required',
             'active' => 'required',
@@ -37,6 +40,9 @@ class UpdateCustomerRequest extends FormRequest
         return [
             'first_name.required' => 'الاسم الاول للعميل مطلوب',
             'last_name.required' => 'الاسم الاخير للعميل مطلوب',
+            'start_balance_status.required' => 'حالة حساب اول المدة مطلوب',
+            'start_balance.required' => 'حساب اول المدة مطلوب',
+            'start_balance.min' => 'حساب اول المدة رقم موجب صحيح',
             'address.required' => 'عنوان العميل مطلوب',
             'phone.required' => 'هاتف العميل مطلوب',
             'active.required' => 'حالة تفعيل الصنف مطلوب',

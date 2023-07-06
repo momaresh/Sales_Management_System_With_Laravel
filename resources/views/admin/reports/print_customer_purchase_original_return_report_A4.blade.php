@@ -55,8 +55,8 @@
                     text-align: center;
                     color: red;
                     border: 1px solid black; ">
-                    @if ($data['report_type'] == 4)
-                        كشف حساب مرتجع المبيعات العام من ({{ $data['from_date'] }}) الى ({{ $data['to_date'] }})
+                    @if ($data['report_type'] == 6)
+                        كشف حساب مرتجع المبيعات بالفاتورة الاصل من ({{ $data['from_date'] }}) الى ({{ $data['to_date'] }})
                     @endif
                 </span>
                 </td>
@@ -82,16 +82,16 @@
 
         <table dir="rtl" border="1" style="width: 98%; margin: 0 auto;">
             <tr>
-                <th style="width: 30%; text-align:center">مرتجع المبيعات العام</th>
-                <td style="padding-right: 10px">عدد ({{ $data['all_general_return_purchase_count'] }}) فاتورة بقيمة ({{ $data['all_general_return_purchase_cost'] }})</td>
+                <th style="width: 30%; text-align:center">مرتجع المبيعات بالفاتورة الاصل</th>
+                <td style="padding-right: 10px">عدد ({{ $data['all_original_return_purchase_count'] }}) فاتورة بقيمة ({{ $data['all_original_return_purchase_cost'] }})</td>
             </tr>
         </table>
 
 
         <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-            <h4>فواتير مرتجع المبيعات العام</h4>
-            @if ($data['report_type'] == 4 && !@empty($sales_general_return_pill[0]))
-                @foreach ($sales_general_return_pill as $sales)
+            <h4>فواتير مرتجع المبيعات بالفاتورة الاصل</h4>
+            @if ($data['report_type'] == 6 && !@empty($sales_original_return_pill[0]))
+                @foreach ($sales_original_return_pill as $sales)
                     <table class="table table-striped table-borderless mytable mb-0">
                         <thead style="background-color:#84B0CA ;" class="text-white">
                             <tr>
@@ -135,6 +135,7 @@
                             <th>#</th>
                             <th>اسم الصنف</th>
                             <th>الوحدة</th>
+                            <th>الكمية</th>
                             <th>الكمية المرتجعة</th>
                             <th>سعر الوحدة</th>
                             <th>الاجمالي</th>
@@ -153,6 +154,7 @@
                                 <td>{{ $detail['item_name'] }}</td>
                                 <td>{{ $detail['unit_name'] }}</td>
                                 <td>{{ $detail['quantity'] }}</td>
+                                <td>{{ $detail['rejected_quantity'] }}</td>
                                 <td>{{ $detail['unit_price'] }}</td>
                                 <td>{{ $detail['total_price'] }}</td>
                                 <td>{{ $detail['store_name'] }}</td>

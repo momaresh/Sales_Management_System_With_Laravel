@@ -56,7 +56,7 @@
                     color: red;
                     border: 1px solid black; ">
                     @if ($data['report_type'] == 4)
-                        كشف حساب مرتجع المشتريات من ({{ $data['from_date'] }}) الى ({{ $data['to_date'] }})
+                        كشف حساب مرتجع المشتريات العام من ({{ $data['from_date'] }}) الى ({{ $data['to_date'] }})
                     @endif
                 </span>
                 </td>
@@ -82,16 +82,16 @@
 
         <table dir="rtl" border="1" style="width: 98%; margin: 0 auto;">
             <tr>
-                <th style="width: 30%; text-align:center">مرتجع المشتريات</th>
-                <td style="padding-right: 10px">عدد ({{ $data['all_return_purchase_count'] }}) فاتورة بقيمة ({{ $data['all_return_purchase_cost'] }})</td>
+                <th style="width: 30%; text-align:center">مرتجع المشتريات العام</th>
+                <td style="padding-right: 10px">عدد ({{ $data['all_general_return_purchase_count'] }}) فاتورة بقيمة ({{ $data['all_general_return_purchase_cost'] }})</td>
             </tr>
         </table>
 
 
         <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-            <h4>فواتير مرتجع المشتريات</h4>
-            @if ($data['report_type'] == 4 && !@empty($sales_return_pill[0]))
-                @foreach ($sales_return_pill as $sales)
+            <h4>فواتير مرتجع المشتريات العام</h4>
+            @if ($data['report_type'] == 4 && !@empty($sales_general_return_pill[0]))
+                @foreach ($sales_general_return_pill as $sales)
                     <table class="table table-striped table-borderless mytable mb-0">
                         <thead style="background-color:#84B0CA ;" class="text-white">
                             <tr>
@@ -137,7 +137,7 @@
                             <th>#</th>
                             <th>اسم الصنف</th>
                             <th>الوحدة</th>
-                            <th>الكمية</th>
+                            <th>الكمية المرتجعة</th>
                             <th>سعر الوحدة</th>
                             <th>الاجمالي</th>
                         </tr>

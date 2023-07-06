@@ -36,8 +36,12 @@ class AccountController extends Controller
                         }
 
                         if (empty($d['parent_account_number'])) {
-                            $d['parent_account_number'] = "لا يوجد";
+                            $d['parent_account_name'] = "لا يوجد";
                         }
+                        else {
+                            $d['parent_account_name'] = Account::where(['account_number' => $d['parent_account_number']])->value('notes');
+                        }
+
                     }
                 }
                 return view('admin.accounts.index', ['data' => $data, 'account_types' => $account_types]);
@@ -63,7 +67,7 @@ class AccountController extends Controller
         if (check_control_menu_role('الحسابات', 'الحسابات' , 'اضافة') == true) {
             $com_code = auth()->user()->com_code;
             $account_types = AccountType::where(["active" => 1, 'related_internal_accounts' => 0])->get(['id', 'name']);
-            $parent_accounts = Account::where(["active" => 0, "com_code" => $com_code, 'is_parent' => 1])->get(['account_number', 'notes']);
+            $parent_accounts = Account::where(["active" => 1, "com_code" => $com_code, 'is_parent' => 1])->get(['account_number', 'notes']);
 
             return view('admin.accounts.create', ['account_types' => $account_types, 'parent_accounts' => $parent_accounts]);
         }
@@ -176,7 +180,7 @@ class AccountController extends Controller
 
             $related_internal_accounts = AccountType::where('id', $data['account_type'])->value('related_internal_accounts');
 
-            if ($related_internal_accounts == 0) {
+            if ($related_internal_accounts == 1) {
                 return redirect()->route('admin.accounts.index')->with(['error' => 'عفوا لايمكن تحديث هذا الحساب الي من شاشته الخاصه حسب نوعه']);
             }
 
@@ -208,7 +212,7 @@ class AccountController extends Controller
             try {
                 $related_internal_accounts = AccountType::where('id', $request->account_type)->value('related_internal_accounts');
 
-                if ($related_internal_accounts == 0) {
+                if ($related_internal_accounts == 1) {
                     return redirect()->route('admin.accounts.index')->with(['error' => 'عفوا لايمكن تحديث هذا الحساب الي من شاشته الخاصه حسب نوعه']);
                 }
 
@@ -232,10 +236,6 @@ class AccountController extends Controller
                     if ($updated['start_balance'] < 0) {
                         $updated['start_balance'] = $updated['start_balance'] * (-1);
                     }
-                }
-                elseif ($updated['start_balance_status'] == 3) {
-                    //balanced
-                    $updated['start_balance'] = 0;
                 }
                 else {
                     $updated['start_balance_status'] = 3;
@@ -361,8 +361,12 @@ class AccountController extends Controller
                     }
 
                     if (empty($d['parent_account_number'])) {
-                        $d['parent_account_number'] = "لا يوجد";
+                        $d['parent_account_name'] = "لا يوجد";
                     }
+                    else {
+                        $d['parent_account_name'] = Account::where(['account_number' => $d['parent_account_number']])->value('notes');
+                    }
+
                 }
             }
 

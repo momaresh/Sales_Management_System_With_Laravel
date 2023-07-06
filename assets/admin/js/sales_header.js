@@ -294,12 +294,6 @@ $(document).ready(function() {
             return false;
         }
 
-        var batch_quantity = $('#batch_id_add').children('option:selected').data('quantity');
-        if (parseFloat(quantity) > parseFloat(batch_quantity)) {
-            alert('من فضلك الكمية غير كافية في الباتش الحالي');
-            $('#quantity_add').focus();
-            return false;
-        }
 
         var production_date = $('#batch_id_add').children('option:selected').data('production_date');
         var expire_date = $('#batch_id_add').children('option:selected').data('expire_date');
@@ -618,6 +612,7 @@ $(document).ready(function() {
         var unit_id = $('#unit_id_add').val();
         var search_url = $('#ajax_get_item_batch_route').val();
         var store_id = $('#store_id_add').val();
+        var batch_id = $('#batch_id_add').children('option:selected').data('batch_id');
         jQuery.ajax({
             url: search_url,
             type: 'post',
@@ -627,6 +622,7 @@ $(document).ready(function() {
                 unit_id:unit_id,
                 item_code:item_code,
                 store_id:store_id,
+                batch_id:batch_id,
                 '_token':search_token
             },
             success: function(data) {
@@ -685,8 +681,8 @@ $(document).ready(function() {
         }
 
         // in case is not return pill
-
-        if (batch_id != 'new' && $('.batch_id_add_return').val() == '') {
+        var batch_id_add_return = $('.batch_id_add_return').length;
+        if (batch_id != 'new' && batch_id_add_return == 0) {
             var batch_quantity = $('#batch_id_add').children('option:selected').data('quantity');
             if (parseFloat(quantity) > parseFloat(batch_quantity)) {
                 alert('من فضلك الكمية غير كافية في الباتش الحالي');
@@ -714,41 +710,7 @@ $(document).ready(function() {
 
 
         var invoice_order_id = $('#invoice_order_id').val();
-        var store_name = $('#store_id_add option:selected').text();
-        var sales_type_name = $('#sales_type option:selected').text();
-        var item_name = $('#item_code_add option:selected').text();
-        var unit_name = $('#unit_id_add option:selected').text();
         var search_token = $('#token_search').val();
-        var search_url = $('#ajax_add_new_item_row_route').val();
-
-        jQuery.ajax({
-            url:search_url,
-            type:'post',
-            dataType:'html',
-            cache: false,
-            data: {
-                item_code:item_code,
-                unit_id:unit_id,
-                quantity:quantity,
-                unit_price:unit_price,
-                total_price:total_price,
-                batch_id:batch_id,
-                store_id:store_id,
-                store_name:store_name,
-                sales_type_name:sales_type_name,
-                item_name:item_name,
-                unit_name:unit_name,
-                '_token':search_token
-            },
-            success: function(data) {
-                $('#add_new_item_row_result').append(data);
-                calc_total_cost();
-            },
-            error: function(data) {
-                alert('حدث جطأ ما');
-            }
-        });
-
 
         var search_url = $('#ajax_store_item_route').val();
         jQuery.ajax({
@@ -770,7 +732,9 @@ $(document).ready(function() {
                 '_token':search_token
             },
             success: function(data) {
+                $("#reload_items_result").html(data);
                 reload_batches();
+                calc_total_cost();
             },
             error: function(data) {
 
@@ -778,9 +742,12 @@ $(document).ready(function() {
         });
     });
 
+    $(document).on('mouseenter', '#add_to_detail_active', function() {
+        reload_batches();
+    });
+
     $(document).on('click', '.remove_item_active', function(e) {
         e.preventDefault();
-        $(this).closest('tr').remove();
         calc_total_cost();
 
         var search_token = $("#token_search").val();
@@ -799,7 +766,9 @@ $(document).ready(function() {
                 '_token':search_token
             },
             success: function(data) {
+                $("#reload_items_result").html(data);
                 reload_batches();
+                calc_total_cost();
             },
             error: function(data) {
 

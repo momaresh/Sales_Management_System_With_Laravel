@@ -396,7 +396,7 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                 }
             }
 
-            return view("admin.sales_order_header_general_return.get_item_batch", ['item_card_batches' => $item_card_batches]);
+            return view("admin.sales_order_header_general_return.get_item_batch", ['item_card_batches' => $item_card_batches, 'batch_id' => $request->batch_id]);
         }
     }
 
@@ -446,35 +446,6 @@ class SalesOrderHeaderGeneralReturnController extends Controller
         }
     }
 
-    public function add_new_item_row(Request $request)
-    {
-        # code...
-        if ($request->ajax()) {
-            try {
-                $max = InvoiceOrderDetail::max('id');
-                $data['id'] = $max + 1;
-                $data['store_id'] = $request->store_id;
-                $data['sales_type'] = $request->sales_type;
-                $data['item_code'] = $request->item_code;
-                $data['unit_id'] = $request->unit_id;
-                $data['batch_id'] = $request->batch_id;
-                $data['quantity'] = $request->quantity;
-                $data['unit_price'] = $request->unit_price;
-                $data['total_price'] = $request->total_price;
-                $data['store_name'] = $request->store_name;
-                $data['sales_type_name'] = $request->sales_type_name;
-                $data['item_name'] = $request->item_name;
-                $data['unit_name'] = $request->unit_name;
-
-                return view('admin.sales_order_header_general_return.add_new_item_row', ['data' => $data]);
-            }
-            catch (Exception $e) {
-                return redirect()->back()->with('error', $e->getMessage());
-            }
-
-        }
-    }
-
     public function store_item(Request $request)
     {
         # code...
@@ -503,30 +474,28 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                     $update_invoice['total_before_discount'] = $total_before_discount;
                     InvoiceOrderHeader::where('id', $request->invoice_order_id)->update($update_invoice);
 
-
-                    $data = InvoiceOrderDetail::where($dataInsert)->first();
-                    $data['store_name'] = $request->store_name;
-                    $data['sales_type_name'] = $request->sales_type_name;
-                    $data['item_name'] = $request->item_name;
-                    $data['unit_name'] = $request->unit_name;
-
-                    $com_code = auth()->user()->com_code;
-                    // get customer name
-                    $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $data['invoice_order_id'], 'com_code' => $com_code])->value('customer_code');
-
-                    if (!empty($data['customer_code'])) {
-                        // get the name from the customer_code
-                        // 1- get the person id from the customer model
-                        $person_id = Customer::where(['customer_code' => $data['customer_code'], 'com_code' => $com_code])->value('person_id');
-                        $first_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('first_name');
-                        $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
-                        $data['customer_name'] = $first_name . ' ' . $last_name;
+                    $sales_type = SalesOrderHeader::where(['invoice_id' => $request->invoice_order_id])->value('sales_type');
+                    if ($sales_type == 1) {
+                        $sales_type_name = 'جملة';
+                    }
+                    else if ($sales_type == 2) {
+                        $sales_type_name = 'نص جملة';
                     }
                     else {
-                        $data['customer_name'] = 'لا يوجد';
+                        $sales_type_name = 'قطاعي';
+                    }
+                    $data_header = InvoiceOrderHeader::where(['id' => $request->invoice_order_id])->get(['is_approved'])->first();
+                    $items = InvoiceOrderDetail::where(['invoice_order_id' => $request->invoice_order_id])->get();
+                    if (!empty($items)) {
+                        foreach ($items as $d) {
+                            $d['store_name'] = Store::where(['id' => $d['store_id']])->value('name');
+                            $d['sales_type_name'] = $sales_type_name;
+                            $d['item_name'] = InvItemCard::where(['item_code' => $d['item_code']])->value('name');
+                            $d['unit_name'] = InvUnit::where(['id' => $d['unit_id']])->value('name');
+                        }
                     }
 
-                    return view('admin.sales_order_header_general_return.add_new_item_row', ['data' => $data]);
+                    return view('admin.sales_order_header_general_return.reload_items', ['items' => $items, 'data' => $data_header]);
                 }
                 catch (Exception $e) {
                     return redirect()->back()->with('error', $e->getMessage());
@@ -551,6 +520,31 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                 $total_before_discount = InvoiceOrderDetail::where('invoice_order_id', $request->invoice_order_id)->sum('total_price');
                 $update_invoice['total_before_discount'] = $total_before_discount;
                 InvoiceOrderHeader::where('id', $request->invoice_order_id)->update($update_invoice);
+
+
+                $sales_type = SalesOrderHeader::where(['invoice_id' => $request->invoice_order_id])->value('sales_type');
+                if ($sales_type == 1) {
+                    $sales_type_name = 'جملة';
+                }
+                else if ($sales_type == 2) {
+                    $sales_type_name = 'نص جملة';
+                }
+                else {
+                    $sales_type_name = 'قطاعي';
+                }
+                $data_header = InvoiceOrderHeader::where(['id' => $request->invoice_order_id])->get(['is_approved'])->first();
+                $items = InvoiceOrderDetail::where(['invoice_order_id' => $request->invoice_order_id])->get();
+                if (!empty($items)) {
+                    foreach ($items as $d) {
+                        $d['store_name'] = Store::where(['id' => $d['store_id']])->value('name');
+                        $d['sales_type_name'] = $sales_type_name;
+                        $d['item_name'] = InvItemCard::where(['item_code' => $d['item_code']])->value('name');
+                        $d['unit_name'] = InvUnit::where(['id' => $d['unit_id']])->value('name');
+                    }
+                }
+
+                return view('admin.sales_order_header_general_return.reload_items', ['items' => $items, 'data' => $data_header]);
+
             }
             catch (Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage());
@@ -685,6 +679,7 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                 $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('customer_code');
                 $data['delegate_code'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('delegate_code');
                 $data['sales_type'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('sales_type');
+                $data['total_cost'] = $request->total_cost;
 
                 if (empty($data)) {
                     return redirect()->back()->with('error', 'لا توجد بيانات كهذه');

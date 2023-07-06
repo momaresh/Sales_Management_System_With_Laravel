@@ -3,7 +3,7 @@
    <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title> طباعة كشف حساب عميل </title>
+        <title> طباعة كشف حساب مورد </title>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
         <link rel="stylesheet" href="{{ asset('assets/admin/css/bootstrap_rtl-v4.2.1/bootstrap.min.css')}}">
         <style>
@@ -20,16 +20,16 @@
     <body style="padding-top: 10px;font-family: tahoma;">
         <table class="mb-3" cellspacing="0" style="width: 30%; margin-right: 5px; float: right;  border: 1px dashed black "  dir="rtl">
             <tr>
-                <td style="padding: 5px; text-align: right;font-weight: bold;"> كود العميل
-                    @if (!@empty($data['customer_code']))
-                        <span style="margin-right: 10px;">/ {{ $data["customer_code"] }}</span>
+                <td style="padding: 5px; text-align: right;font-weight: bold;"> كود المورد
+                    @if (!@empty($data['supplier_code']))
+                        <span style="margin-right: 10px;">/ {{ $data["supplier_code"] }}</span>
                     @else
                     /لايوجد
                     @endif
                 </td>
             </tr>
             <tr>
-                <td style="padding: 5px; text-align: right;font-weight: bold;">اسم العميل<span style="margin-right: 10px;">/ {{ $data->first_name }} {{ $data->last_name }}</span></td>
+                <td style="padding: 5px; text-align: right;font-weight: bold;">اسم المورد<span style="margin-right: 10px;">/ {{ $data->first_name }} {{ $data->last_name }}</span></td>
             </tr>
             <tr>
                 <td style="padding: 5px; text-align: right;font-weight: bold;">رقم التيلفون<span style="margin-right: 10px;">/ {{ $data['phone'];}}</span></td>
@@ -45,7 +45,7 @@
                     height: 30px;
                     text-align: center;
                     background: yellow !important;
-                    border: 1px solid black; border-radius: 15px;font-weight: bold;">كشف حساب عميل</span>
+                    border: 1px solid black; border-radius: 15px;font-weight: bold;">كشف حساب مورد</span>
                 </td>
             </tr>
             <tr>
@@ -55,8 +55,8 @@
                     text-align: center;
                     color: red;
                     border: 1px solid black; ">
-                    @if ($data['report_type'] == 4)
-                        كشف حساب مرتجع المبيعات العام من ({{ $data['from_date'] }}) الى ({{ $data['to_date'] }})
+                    @if ($data['report_type'] == 6)
+                        كشف حساب مرتجع المشتريات بالفاتورة الاصل من ({{ $data['from_date'] }}) الى ({{ $data['to_date'] }})
                     @endif
                 </span>
                 </td>
@@ -82,16 +82,16 @@
 
         <table dir="rtl" border="1" style="width: 98%; margin: 0 auto;">
             <tr>
-                <th style="width: 30%; text-align:center">مرتجع المبيعات العام</th>
-                <td style="padding-right: 10px">عدد ({{ $data['all_general_return_purchase_count'] }}) فاتورة بقيمة ({{ $data['all_general_return_purchase_cost'] }})</td>
+                <th style="width: 30%; text-align:center">مرتجع المشتريات بالفاتورة الاصل</th>
+                <td style="padding-right: 10px">عدد ({{ $data['all_original_return_purchase_count'] }}) فاتورة بقيمة ({{ $data['all_original_return_purchase_cost'] }})</td>
             </tr>
         </table>
 
 
         <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-            <h4>فواتير مرتجع المبيعات العام</h4>
-            @if ($data['report_type'] == 4 && !@empty($sales_general_return_pill[0]))
-                @foreach ($sales_general_return_pill as $sales)
+            <h4>فواتير مرتجع المشتريات بالفاتورة الاصل</h4>
+            @if ($data['report_type'] == 6 && !@empty($sales_original_return_pill[0]))
+                @foreach ($sales_original_return_pill as $sales)
                     <table class="table table-striped table-borderless mytable mb-0">
                         <thead style="background-color:#84B0CA ;" class="text-white">
                             <tr>
@@ -102,6 +102,7 @@
                             <th scope="col">المدفوع</th>
                             <th scope="col">المتبقي</th>
                             <th scope="col">الحالة</th>
+                            <th scope="col">المخزن</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -125,6 +126,7 @@
                                         غير معتمدة
                                     @endif
                                 </td>
+                                <td>{{ $sales['store_name'] }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -135,10 +137,10 @@
                             <th>#</th>
                             <th>اسم الصنف</th>
                             <th>الوحدة</th>
+                            <th>الكمية</th>
                             <th>الكمية المرتجعة</th>
                             <th>سعر الوحدة</th>
                             <th>الاجمالي</th>
-                            <th>المخزن</th>
                         </tr>
                         @php
                             $i = 1;
@@ -153,9 +155,9 @@
                                 <td>{{ $detail['item_name'] }}</td>
                                 <td>{{ $detail['unit_name'] }}</td>
                                 <td>{{ $detail['quantity'] }}</td>
+                                <td>{{ $detail['rejected_quantity'] }}</td>
                                 <td>{{ $detail['unit_price'] }}</td>
                                 <td>{{ $detail['total_price'] }}</td>
-                                <td>{{ $detail['store_name'] }}</td>
                             </tr>
                             @php
                                 $i++;

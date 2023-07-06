@@ -167,6 +167,15 @@ class SupplierController extends Controller
         //
         if (check_control_menu_role('الحسابات', 'الموردين' , 'تعديل') == true) {
             $data = Person::where(['id' => $id, 'com_code' => auth()->user()->com_code])->first();
+
+            if (empty($data)) {
+                return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
+            }
+
+            $account = Account::where('account_number', $data['account_number'])->get(['start_balance_status', 'start_balance'])->first();
+            $data['start_balance_status'] = $account->start_balance_status;
+            $data['start_balance'] = $account->start_balance;
+
             return view('admin.suppliers.edit', ['data' => $data]);
         }
         else {
@@ -197,6 +206,28 @@ class SupplierController extends Controller
                 if (Person::where(['id' => $id, 'com_code' => auth()->user()->com_code])->update($person_updated)) {
                     $supplier_updated['updated_at'] = date('Y-m-d H:i:s');
                     Supplier::where(['person_id' => $id, 'com_code' => auth()->user()->com_code])->update($supplier_updated);
+
+                    $account_updated['start_balance_status'] = $request->start_balance_status;
+                    if ($account_updated['start_balance_status'] == 1) {
+                        //credit
+                        $account_updated['start_balance'] = $request->start_balance * (-1);
+                    }
+                    else if ($account_updated['start_balance_status'] == 2) {
+                        //debit
+                        $account_updated['start_balance'] = $request->start_balance;
+
+                        if ($account_updated['start_balance'] < 0) {
+                            $account_updated['start_balance'] = $account_updated['start_balance'] * (-1);
+                        }
+                    }
+                    else {
+                        $account_updated['start_balance_status'] = 3;
+                        $account_updated['start_balance'] = 0;
+                    }
+                    $account_updated['updated_by'] = auth()->user()->id;
+                    $account_updated['updated_at'] = date("Y-m-d H:i:s");
+
+                    Account::where(['account_number' => $request->account_number, 'com_code' => auth()->user()->com_code])->update($account_updated);
                 }
 
                 return redirect()->route('admin.suppliers.index')->with('success', 'تم تعديل العميل بنجاح');

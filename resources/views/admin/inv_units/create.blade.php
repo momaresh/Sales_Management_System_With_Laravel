@@ -46,8 +46,8 @@
                 <div class="col-sm-10">
                     <select name="master" class="form-control">
                         <option value="">اختر النوع</option>
-                        <option @if (old('master') == 0 && old('master') != '') selected @endif value="0">تجزئة</option>
-                        <option @if (old('master') == 1) selected @endif value="1">جملة</option>
+                        <option @if (old('master') == 0 && old('master') != '') selected @endif value="0">وحدة جزئية</option>
+                        <option @if (old('master') == 1) selected @endif value="1">وحدة رئيسية</option>
                     </select>
 
                     @error('master')

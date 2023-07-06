@@ -19,6 +19,7 @@ use App\Models\AdminPanelSetting;
 use App\Models\InvItemCard;
 use App\Models\InvUnit;
 use App\Models\MoveType;
+use App\Models\OriginalReturnInvoice;
 use App\Models\Person;
 use App\Models\Store;
 use App\Models\TreasuryTransaction;
@@ -57,8 +58,10 @@ class ReportController extends Controller
                             $all_purchase = PurchaseOrderHeader::where(['supplier_code' => $supplier['supplier_code'], 'com_code' => $com_code])->get('invoice_id');
                             $supplier['all_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'com_code' => $com_code])->count();
                             $supplier['all_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'com_code' => $com_code])->sum('total_cost');
-                            $supplier['all_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->count();
-                            $supplier['all_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->sum('total_cost');
+                            $supplier['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->count();
+                            $supplier['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->sum('total_cost');
+                            $supplier['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->count();
+                            $supplier['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->sum('total_cost');
                             $supplier['all_exchange'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->sum('money');
                             $supplier['all_collection'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->sum('money');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
@@ -70,8 +73,10 @@ class ReportController extends Controller
                             $all_purchase = PurchaseOrderHeader::where(['supplier_code' => $supplier['supplier_code'], 'com_code' => $com_code])->get('invoice_id');
                             $supplier['all_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->count();
                             $supplier['all_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
-                            $supplier['all_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->count();
-                            $supplier['all_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
+                            $supplier['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->count();
+                            $supplier['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
+                            $supplier['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->count();
+                            $supplier['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->sum('total_cost');
                             $supplier['all_exchange'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('money');
                             $supplier['all_collection'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('money');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
@@ -91,14 +96,34 @@ class ReportController extends Controller
                                 }
                             }
 
-                            $sales_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
-                            if(!empty($sales_return_pill)) {
-                                foreach ($sales_return_pill as $pill) {
+                            $sales_general_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
+                            if(!empty($sales_general_return_pill)) {
+                                foreach ($sales_general_return_pill as $pill) {
                                     $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('store_id');
                                     $pill['store_name'] = Store::where('id', $pill['store_id'])->value('name');
                                     $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
                                     if (!empty($pill['details'])) {
                                         foreach($pill['details'] as $s) {
+                                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                                        }
+                                    }
+                                }
+                            }
+
+                            $sales_original_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
+                            if(!empty($sales_original_return_pill)) {
+                                foreach ($sales_original_return_pill as $pill) {
+                                    $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('store_id');
+                                    $pill['store_name'] = Store::where('id', $pill['store_id'])->value('name');
+                                    $sales_original_data = OriginalReturnInvoice::where('invoice_order_id', $pill['id'])->get()->first();
+                                    $pill['total_cost'] = $sales_original_data['total_cost'];
+                                    $pill['what_paid'] = $sales_original_data['what_paid'];
+                                    $pill['what_remain'] = $sales_original_data['what_remain'];
+                                    $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                                    if (!empty($pill['details'])) {
+                                        foreach($pill['details'] as $s) {
+                                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
                                             $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
                                             $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
                                         }
@@ -113,7 +138,7 @@ class ReportController extends Controller
                                 }
                             }
 
-                            return view('admin.reports.print_supplier_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'sales_pill' => $sales_pill, 'sales_return_pill' => $sales_return_pill, 'transactions' => $transactions]);
+                            return view('admin.reports.print_supplier_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'sales_pill' => $sales_pill, 'sales_general_return_pill' => $sales_general_return_pill, 'sales_original_return_pill' => $sales_original_return_pill, 'transactions' => $transactions]);
                         }
                         else if ($supplier['report_type'] == 3) {
                             $supplier['from_date'] = $request->from_date;
@@ -143,13 +168,13 @@ class ReportController extends Controller
                             $supplier['from_date'] = $request->from_date;
                             $supplier['to_date'] = $request->to_date;
                             $all_purchase = PurchaseOrderHeader::where(['supplier_code' => $supplier['supplier_code'], 'com_code' => $com_code])->get('invoice_id');
-                            $supplier['all_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->count();
-                            $supplier['all_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
+                            $supplier['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->count();
+                            $supplier['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
 
-                            $sales_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
-                            if(!empty($sales_return_pill)) {
-                                foreach ($sales_return_pill as $pill) {
+                            $sales_general_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
+                            if(!empty($sales_general_return_pill)) {
+                                foreach ($sales_general_return_pill as $pill) {
                                     $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('store_id');
                                     $pill['store_name'] = Store::where('id', $pill['store_id'])->value('name');
                                     $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
@@ -161,9 +186,8 @@ class ReportController extends Controller
                                     }
                                 }
                             }
-                            return view('admin.reports.print_supplier_purchase_return_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'sales_return_pill' => $sales_return_pill]);
+                            return view('admin.reports.print_supplier_purchase_return_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'sales_general_return_pill' => $sales_general_return_pill]);
                         }
-
                         else if ($supplier['report_type'] == 5) {
                             $supplier['from_date'] = $request->from_date;
                             $supplier['to_date'] = $request->to_date;
@@ -185,6 +209,35 @@ class ReportController extends Controller
                             }
 
                             return view('admin.reports.print_supplier_transaction_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'exchange_transactions' => $exchange_transactions, 'collection_transactions' => $collection_transactions]);
+                        }
+                        else if ($supplier['report_type'] == 6) {
+                            $supplier['from_date'] = $request->from_date;
+                            $supplier['to_date'] = $request->to_date;
+                            $all_purchase = PurchaseOrderHeader::where(['supplier_code' => $supplier['supplier_code'], 'com_code' => $com_code])->get('invoice_id');
+                            $supplier['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->count();
+                            $supplier['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
+                            $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
+
+                            $sales_original_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
+                            if(!empty($sales_original_return_pill)) {
+                                foreach ($sales_original_return_pill as $pill) {
+                                    $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('store_id');
+                                    $pill['store_name'] = Store::where('id', $pill['store_id'])->value('name');
+                                    $sales_original_data = OriginalReturnInvoice::where('invoice_order_id', $pill['id'])->get()->first();
+                                    $pill['total_cost'] = $sales_original_data['total_cost'];
+                                    $pill['what_paid'] = $sales_original_data['what_paid'];
+                                    $pill['what_remain'] = $sales_original_data['what_remain'];
+                                    $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                                    if (!empty($pill['details'])) {
+                                        foreach($pill['details'] as $s) {
+                                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
+                                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                                        }
+                                    }
+                                }
+                            }
+                            return view('admin.reports.print_supplier_purchase_original_return_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'sales_original_return_pill' => $sales_original_return_pill]);
                         }
                     }
                     else {
@@ -233,8 +286,10 @@ class ReportController extends Controller
                             $all_purchase = SalesOrderHeader::where(['customer_code' => $customer['customer_code'], 'com_code' => $com_code])->get('invoice_id');
                             $customer['all_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->count();
                             $customer['all_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->sum('total_cost');
-                            $customer['all_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->count();
-                            $customer['all_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->sum('total_cost');
+                            $customer['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->count();
+                            $customer['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->sum('total_cost');
+                            $customer['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->count();
+                            $customer['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->sum('total_cost');
                             $customer['all_exchange'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->sum('money');
                             $customer['all_collection'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->sum('money');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
@@ -246,13 +301,16 @@ class ReportController extends Controller
                             $all_purchase = SalesOrderHeader::where(['customer_code' => $customer['customer_code'], 'com_code' => $com_code])->get('invoice_id');
                             $customer['all_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->count();
                             $customer['all_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
-                            $customer['all_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->count();
-                            $customer['all_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
+                            $customer['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->count();
+                            $customer['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
+                            $customer['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->count();
+                            $customer['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->sum('total_cost');
                             $customer['all_exchange'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('money');
                             $customer['all_collection'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('money');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
 
                             $sales_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
+
                             if(!empty($sales_pill)) {
                                 foreach ($sales_pill as $pill) {
                                     $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
@@ -266,9 +324,27 @@ class ReportController extends Controller
                                 }
                             }
 
-                            $sales_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
-                            if(!empty($sales_return_pill)) {
-                                foreach ($sales_return_pill as $pill) {
+                            $sales_general_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
+                            if(!empty($sales_general_return_pill)) {
+                                foreach ($sales_general_return_pill as $pill) {
+                                    $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                                    if (!empty($pill['details'])) {
+                                        foreach($pill['details'] as $s) {
+                                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
+                                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                                        }
+                                    }
+                                }
+                            }
+
+                            $sales_original_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
+                            if(!empty($sales_original_return_pill)) {
+                                foreach ($sales_original_return_pill as $pill) {
+                                    $sales_original_data = OriginalReturnInvoice::where('invoice_order_id', $pill['id'])->get()->first();
+                                    $pill['total_cost'] = $sales_original_data['total_cost'];
+                                    $pill['what_paid'] = $sales_original_data['what_paid'];
+                                    $pill['what_remain'] = $sales_original_data['what_remain'];
                                     $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
                                     if (!empty($pill['details'])) {
                                         foreach($pill['details'] as $s) {
@@ -287,7 +363,7 @@ class ReportController extends Controller
                                 }
                             }
 
-                            return view('admin.reports.print_customer_report_A4', ['data' => $customer, 'systemData' => $systemData, 'sales_pill' => $sales_pill, 'sales_return_pill' => $sales_return_pill, 'transactions' => $transactions]);
+                            return view('admin.reports.print_customer_report_A4', ['data' => $customer, 'systemData' => $systemData, 'sales_pill' => $sales_pill, 'sales_general_return_pill' => $sales_general_return_pill, 'sales_original_return_pill' => $sales_original_return_pill, 'transactions' => $transactions]);
                         }
                         else if ($customer['report_type'] == 3) {
                             $customer['from_date'] = $request->from_date;
@@ -316,13 +392,13 @@ class ReportController extends Controller
                             $customer['from_date'] = $request->from_date;
                             $customer['to_date'] = $request->to_date;
                             $all_purchase = SalesOrderHeader::where(['customer_code' => $customer['customer_code'], 'com_code' => $com_code])->get('invoice_id');
-                            $customer['all_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->count();
-                            $customer['all_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
+                            $customer['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->count();
+                            $customer['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
 
-                            $sales_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->orWhere('order_type', 2)->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
-                            if(!empty($sales_return_pill)) {
-                                foreach ($sales_return_pill as $pill) {
+                            $sales_general_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
+                            if(!empty($sales_general_return_pill)) {
+                                foreach ($sales_general_return_pill as $pill) {
                                     $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
                                     if (!empty($pill['details'])) {
                                         foreach($pill['details'] as $s) {
@@ -333,9 +409,8 @@ class ReportController extends Controller
                                     }
                                 }
                             }
-                            return view('admin.reports.print_customer_purchase_return_report_A4', ['data' => $customer, 'systemData' => $systemData, 'sales_return_pill' => $sales_return_pill]);
+                            return view('admin.reports.print_customer_purchase_return_report_A4', ['data' => $customer, 'systemData' => $systemData, 'sales_general_return_pill' => $sales_general_return_pill]);
                         }
-
                         else if ($customer['report_type'] == 5) {
                             $customer['from_date'] = $request->from_date;
                             $customer['to_date'] = $request->to_date;
@@ -358,6 +433,34 @@ class ReportController extends Controller
 
                             return view('admin.reports.print_customer_transaction_report_A4', ['data' => $customer, 'systemData' => $systemData, 'exchange_transactions' => $exchange_transactions, 'collection_transactions' => $collection_transactions]);
                         }
+                        else if ($customer['report_type'] == 6) {
+                            $customer['from_date'] = $request->from_date;
+                            $customer['to_date'] = $request->to_date;
+                            $all_purchase = SalesOrderHeader::where(['customer_code' => $customer['customer_code'], 'com_code' => $com_code])->get('invoice_id');
+                            $customer['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->count();
+                            $customer['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
+                            $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
+
+                            $sales_original_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
+                            if(!empty($sales_original_return_pill)) {
+                                foreach ($sales_original_return_pill as $pill) {
+                                    $sales_original_data = OriginalReturnInvoice::where('invoice_order_id', $pill['id'])->get()->first();
+                                    $pill['total_cost'] = $sales_original_data['total_cost'];
+                                    $pill['what_paid'] = $sales_original_data['what_paid'];
+                                    $pill['what_remain'] = $sales_original_data['what_remain'];
+                                    $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                                    if (!empty($pill['details'])) {
+                                        foreach($pill['details'] as $s) {
+                                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
+                                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                                        }
+                                    }
+                                }
+                            }
+                            return view('admin.reports.print_customer_purchase_original_return_report_A4', ['data' => $customer, 'systemData' => $systemData, 'sales_original_return_pill' => $sales_original_return_pill]);
+                        }
+
                     }
                     else {
                         return redirect()->back();

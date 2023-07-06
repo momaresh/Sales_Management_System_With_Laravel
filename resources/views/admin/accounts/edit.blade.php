@@ -96,22 +96,6 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 parentDiv"   @if(old('is_parent', $data['is_parent']) == 1 ) style="display: none;" @endif   >
-                        <div class="form-group">
-                            <label>اسم صاحب الحساب المالي</label>
-
-                            @if (@isset($person_name) && !@empty($person_name))
-                            <select name="person_id" id="person_id" class="form-control select2">
-                                <option selected value="{{ $person_name->id }}"> {{ $person_name->first_name }}  {{ $person_name->last_name }} </option>
-                            </select>
-                            @endif
-
-                            @error('person_id')
-                            <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>حالة رصيد اول المدة</label>
@@ -142,7 +126,7 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>   ملاحظات</label>
+                            <label>اسم الحساب</label>
                             <input name="notes" id="notes" class="form-control" value="{{ old('notes', $data['notes']) }}"    >
 
                             @error('notes')
@@ -180,5 +164,4 @@
 
 @section('script')
     <script src="{{ asset('assets/admin/js/accounts.js') }}"></script>
-
 @endsection

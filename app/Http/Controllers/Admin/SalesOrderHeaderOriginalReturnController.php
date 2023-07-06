@@ -20,6 +20,7 @@ use App\Models\Treasury;
 use App\Models\TreasuryTransaction;
 use App\Models\InvItemCardBatch;
 use App\Models\InvItemCardMovement;
+use App\Models\OriginalReturnInvoice;
 use App\Models\SalesOrderHeader;
 use Exception;
 
@@ -56,19 +57,7 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                             $d['delegate_name'] = 'لا يوجد';
                         }
 
-                        $d['tax_value'] = $d['total_before_discount'] * $d['tax_percent'] / 100;
-                        $d['total_after_tax'] = $d['total_before_discount'] + $d['tax_value'];
-                        $d['discount_percent'] = $d['discount_value'] / $d['total_after_tax'];
-
-                        $details = InvoiceOrderDetail::where('invoice_order_id', $d['id'])->get();
-                        $total_cost = 0;
-                        foreach ($details as $detail) {
-                            $total_price = $detail['unit_price'] * $detail['rejected_quantity'];
-                            $total_price += $total_price * $d['tax_percent'] / 100;
-                            $total_price -= $total_price * $d['discount_percent'];
-                            $total_cost += round($total_price,2);
-                        }
-                        $d['total_cost'] = round($total_cost,2);
+                        $d['total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $d['id'])->value('total_cost');
                     }
                 }
 
@@ -91,8 +80,6 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                     $sup['delegate_code'] = Delegate::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('delegate_code');
                     $sup['delegate_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
                 }
-
-
 
                 return view('admin.sales_order_header_original_return.index', ['data' => $data, 'customers' => $customers, 'delegates' => $delegates]);
             }
@@ -163,38 +150,46 @@ class SalesOrderHeaderOriginalReturnController extends Controller
 
             $pill = InvoiceOrderHeader::where(['pill_code' => $pill_code, 'invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->get()->first();
             $pill_details = array();
-            if ($pill['is_original_return'] == 0) {
-                if (!empty($pill)) {
-                    $pill['tax_value'] = $pill['total_before_discount'] * $pill['tax_percent'] / 100;
-                    $pill['total_after_tax'] = $pill['total_before_discount'] + $pill['tax_value'];
-                    $pill['discount_percent'] = $pill['discount_value'] / $pill['total_after_tax'];
+            $check_shift = array();
+            if (!empty($pill)) {
+                if ($pill['is_original_return'] == 0) {
+                    if (!empty($pill)) {
+                        $pill['tax_value'] = $pill['total_before_discount'] * $pill['tax_percent'] / 100;
+                        $pill['total_after_tax'] = $pill['total_before_discount'] + $pill['tax_value'];
+                        $pill['discount_percent'] = $pill['discount_value'] / $pill['total_after_tax'];
 
-                    $pill['customer_code'] = SalesOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $pill['id']])->value('customer_code');
-                    $pill['delegate_code'] = SalesOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $pill['id']])->value('delegate_code');
-                    if ($pill['customer_code'] != null) {
-                        $person_id = Customer::where(['customer_code' => $pill['customer_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
-                        $customer = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
-                        $pill['customer_name'] = $customer->first_name . ' ' . $customer->last_name;
+                        $pill['customer_code'] = SalesOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $pill['id']])->value('customer_code');
+                        $pill['delegate_code'] = SalesOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $pill['id']])->value('delegate_code');
+                        if ($pill['customer_code'] != null) {
+                            $person_id = Customer::where(['customer_code' => $pill['customer_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
+                            $customer = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
+                            $pill['customer_name'] = $customer->first_name . ' ' . $customer->last_name;
+                        }
+                        if ($pill['delegate_code'] != null) {
+                            $person_id = Delegate::where(['delegate_code' => $pill['delegate_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
+                            $customer = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
+                            $pill['delegate_name'] = $customer->first_name . ' ' . $customer->last_name;
+                        }
                     }
-                    if ($pill['delegate_code'] != null) {
-                        $person_id = Delegate::where(['delegate_code' => $pill['delegate_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
-                        $customer = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
-                        $pill['delegate_name'] = $customer->first_name . ' ' . $customer->last_name;
-                    }
-                }
 
-                $pill_details = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
-                if (!empty($pill_details)) {
-                    foreach ($pill_details as $s) {
-                        $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
-                        $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
-                        $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
-                        $s['remain_quantity'] = $s['quantity'] - $s['rejected_quantity'];
+                    $pill_details = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                    if (!empty($pill_details)) {
+                        foreach ($pill_details as $s) {
+                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
+                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                            $s['remain_quantity'] = $s['quantity'] - $s['rejected_quantity'];
+                        }
                     }
+
+                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+                    $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
+                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+
                 }
             }
 
-            return view("admin.sales_order_header_original_return.get_pill_details", ['pill' => $pill, 'pill_details' => $pill_details]);
+            return view("admin.sales_order_header_original_return.get_pill_details", ['pill' => $pill, 'pill_details' => $pill_details, 'check_shift' => $check_shift]);
         }
     }
 
@@ -225,6 +220,19 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                 $flag = InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code, 'order_type' => 1, 'invoice_type' => 2])->update($updateInvoice);
 
                 if ($flag) {
+                    $insertReturnInvoice['invoice_order_id'] = $data['id'];
+                    $insertReturnInvoice['pill_type'] = $request->pill_type;
+                    $insertReturnInvoice['what_paid'] = $request->what_paid;
+                    $insertReturnInvoice['what_remain'] = $request->what_remain;
+                    $insertReturnInvoice['total_cost'] = $request->total_pill;
+                    $insertReturnInvoice['money_for_account'] = $request->total_pill * (-1);
+                    $insertReturnInvoice['added_by'] = auth()->user()->id;
+                    $insertReturnInvoice['created_at'] = date('Y-m-d H:i:s');
+                    $insertReturnInvoice['return_date'] = date('Y-m-d');
+                    $insertReturnInvoice['com_code'] = $com_code;
+
+                    $flag = OriginalReturnInvoice::create($insertReturnInvoice);
+
                     $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('customer_code');
                     $data['delegate_code'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('delegate_code');
                     $data['commission_type'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('delegate_commission_type');
@@ -264,7 +272,7 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                         Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
                     }
 
-                    if ($request->total_pill > 0) {
+                    if ($request->what_paid > 0) {
 
                         $max_transaction_code = TreasuryTransaction::where('com_code', $com_code)->max('transaction_code');
                         if (empty($max_transaction_code)) {
@@ -476,11 +484,12 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                 else {
                     $data['delegate_name'] = 'لا يوجد';
                 }
+                $data['total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $data['id'])->value('total_cost');
+
 
                 $details = InvoiceOrderDetail::where(['invoice_order_id' => $id, 'com_code' => $com_code])->where('rejected_quantity', '>', 0)->get();
 
                 if (!empty($details)) {
-                    $total_cost = 0;
                     foreach($details as $detail) {
                         $detail['item_card_name'] = InvItemCard::where('item_code', $detail['item_code'])->value('name');
                         $detail['added_by_name'] = Admin::where('id', $detail['added_by'])->value('name');
@@ -494,9 +503,7 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                         $total_price += $total_price * $data['tax_percent'] / 100;
                         $total_price -= $total_price * $data['discount_percent'];
                         $detail['total_price'] = round($total_price,2);
-                        $total_cost += round($total_price,2);
                     }
-                    $data['total_cost'] = round($total_cost,2);
                 }
 
                 return view('admin.sales_order_header_original_return.details', ['data' => $data, 'details' => $details]);
@@ -607,19 +614,7 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                             $d['delegate_name'] = 'لا يوجد';
                         }
 
-                        $d['tax_value'] = $d['total_before_discount'] * $d['tax_percent'] / 100;
-                        $d['total_after_tax'] = $d['total_before_discount'] + $d['tax_value'];
-                        $d['discount_percent'] = $d['discount_value'] / $d['total_after_tax'];
-
-                        $details = InvoiceOrderDetail::where('invoice_order_id', $d['id'])->get();
-                        $total_cost = 0;
-                        foreach ($details as $detail) {
-                            $total_price = $detail['unit_price'] * $detail['rejected_quantity'];
-                            $total_price += $total_price * $d['tax_percent'] / 100;
-                            $total_price -= $total_price * $d['discount_percent'];
-                            $total_cost += round($total_price,2);
-                        }
-                        $d['total_cost'] = round($total_cost,2);
+                        $d['total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $d['id'])->value('total_cost');
                     }
                 }
                 return view('admin.sales_order_header_original_return.ajax_search', ['data' => $data]);
@@ -650,12 +645,12 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                     $data['tax_value'] = $data['total_before_discount'] * $data['tax_percent'] / 100;
                     $data['total_after_tax'] = $data['total_before_discount'] + $data['tax_value'];
                     $data['discount_percent'] = round($data['discount_value'] / $data['total_after_tax'], 3);
+                    $data['total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $data['id'])->value('total_cost');
 
 
                     $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
                     $sales_invoices_details = InvoiceOrderDetail::where('invoice_order_id', $id)->get();
                     if (!empty($sales_invoices_details)) {
-                        $total_cost = 0;
                         foreach ($sales_invoices_details as $detail) {
                             $detail['item_name'] = InvItemCard::where('item_code', $detail['item_code'])->value('name');
                             $detail['store_name'] = Store::where('id', $detail['store_id'])->value('name');
@@ -664,9 +659,7 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                             $total_price += $total_price * $data['tax_percent'] / 100;
                             $total_price -= $total_price * $data['discount_percent'];
                             $detail['total_price'] = round($total_price,2);
-                            $total_cost += round($total_price,2);
                         }
-                        $data['total_cost'] = round($total_cost,2);
                     }
                 }
 
