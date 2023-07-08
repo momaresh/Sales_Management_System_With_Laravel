@@ -6,6 +6,7 @@
                 <th>تعديل</th>
             @endif
             <th>الكود</th>
+            <th>الباركود</th>
             <th>الاسم</th>
             <th>النوع</th>
             <th>الفئة</th>
@@ -32,6 +33,7 @@
                 @endif
 
                 <td>{{ $datum->item_code }}</td>
+                <td>{{ $datum->barcode }}</td>
                 <td>{{ $datum->name }}</td>
                 <td>
                     @if ($datum->item_type == 1)

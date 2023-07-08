@@ -20,7 +20,7 @@
             <div class="form-group row">
                 <label for="inputEmail3" class="col-sm-2 control-label">تاريخ الجرد</label>
                 <div class="col-sm-10">
-                    <input type="date" readonly name="inventory_date" class="form-control" value="{{ old('inventory_date', date('Y-m-d')) }}">
+                    <input type="date" name="inventory_date" class="form-control" value="{{ old('inventory_date', date('Y-m-d')) }}">
 
                     @error('inventory_date')
                         <div class="text-danger">{{ $message }}</div>

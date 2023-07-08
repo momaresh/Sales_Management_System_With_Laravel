@@ -66,7 +66,7 @@
                                     </td>
                                 @endif
 
-                                <td>{{ $datum->id }}</td>
+                                <td>{{ $datum->category_code }}</td>
                                 <td>{{ $datum->name }}</td>
                                 @if ($datum->active == 1)
                                 <td style="background-color: #5ab6a0a1;">
@@ -141,7 +141,7 @@
 @endsection
 
 @section('contentheader')
-    الضبط العام
+  المخازن
 @endsection
 
 @section('contentheaderlink')
@@ -160,7 +160,6 @@
             $(document).on('input', '#ajax_search', function() {
                 // get the value from the input to search by
                 var search_value = $(this).val();
-
                 jQuery.ajax({
                     // first argument is the where the from route to
                     url:"{{ route('inv_item_categories.ajax_search') }}",
@@ -184,8 +183,7 @@
 
                 $(document).on('click', '#ajax_search_pagination a', function(e) {
                     e.preventDefault();
-                    // get the value from the input to search by
-                    //var search_value = $(this).val();
+                    var search_value = $('#ajax_search').val();
 
                     jQuery.ajax({
                         // first argument is the where the from route to

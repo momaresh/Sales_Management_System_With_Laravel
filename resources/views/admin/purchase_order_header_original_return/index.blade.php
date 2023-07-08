@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('title')
-    المرتجعات
+المرتجعات بالفاتورة الاصل
 @endsection
 
 @section('contentheader')

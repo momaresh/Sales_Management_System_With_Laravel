@@ -234,7 +234,7 @@
     <!-- /.col -->
 </div>
 
-<input type="hidden" id="item_code_search" value="{{ $data['item_code'] }}">
+<input type="hidden" id="item_id_search" value="{{ $data['id'] }}">
 
 @if (check_control_menu_role('المخازن', 'الاصناف' , 'عرض الحركات') == true)
     <div class="row">
@@ -402,7 +402,7 @@
                 var from_date_search = $('#from_date_search').val();
                 var to_date_search = $('#to_date_search').val();
                 var order_search = $('#order_search').val();
-                var item_code_search = $('#item_code_search').val();
+                var item_id_search = $('#item_id_search').val();
 
                 jQuery.ajax({
                     // first argument is the where the from route to
@@ -421,7 +421,7 @@
                         from_date_search:from_date_search,
                         to_date_search:to_date_search,
                         order_search:order_search,
-                        item_code_search:item_code_search,
+                        item_id_search:item_id_search,
                         '_token':"{{ csrf_token() }}"},
                     // If the form and everything okay
                     success:function(data){
@@ -443,7 +443,7 @@
                 var from_date_search = $('#from_date_search').val();
                 var to_date_search = $('#to_date_search').val();
                 var order_search = $('#order_search').val();
-                var item_code_search = $('#item_code_search').val();
+                var item_id_search = $('#item_id_search').val();
 
                 jQuery.ajax({
                     // first argument is the where the from route to
@@ -462,7 +462,7 @@
                         from_date_search:from_date_search,
                         to_date_search:to_date_search,
                         order_search:order_search,
-                        item_code_search:item_code_search,
+                        item_id_search:item_id_search,
                         '_token':"{{ csrf_token() }}"},
                     // If the form and everything okay
                     success:function(data){

@@ -11,6 +11,6 @@ class InvUnit extends Model
 
     protected $table = 'inv_units';
 
-    protected $fillable = ['name', 'active', 'master', 'added_by', 'updated_by', 'date', 'com_code'];
+    protected $fillable = ['name', 'unit_code', 'active', 'master', 'added_by', 'updated_by', 'date', 'com_code'];
 
 }

@@ -20,7 +20,7 @@
                         <i class="fas fa-edit"></i>
                     </a>
                 </td>
-                <td>{{ $datum->id }}</td>
+                <td>{{ $datum->unit_code }}</td>
                 <td>{{ $datum->name }}</td>
                 <td>
                     @if ($datum->master == 1)

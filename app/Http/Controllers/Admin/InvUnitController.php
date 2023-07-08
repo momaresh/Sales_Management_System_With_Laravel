@@ -34,10 +34,6 @@ class InvUnitController extends Controller
                         if ($d['updated_by'] != null) {
                             $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
                         }
-
-                        // if ($d['com_code'] != null) {
-                        //     $d['com_code_name'] = AdminPanelSetting::where('id', $d['com_code'])->value('system_name');
-                        // }
                     }
                 }
 
@@ -80,6 +76,21 @@ class InvUnitController extends Controller
         //
         if (check_control_menu_role('المخازن', 'الوحدات' , 'اضافة') == true) {
             try {
+                $com_code = auth()->user()->com_code;
+
+                $check = InvUnit::where(['name' => $request->name , 'com_code' => $com_code])->count();
+                if ($check > 0) {
+                    return redirect()->back()->with('error', 'اسم الوحدة مسجل مسبقاً')->withInput();
+                }
+
+                $unit_code = InvUnit::where(['com_code' => $com_code])->max('unit_code');
+                if (empty($unit_code)) {
+                    $inserted['unit_code'] = 1;
+                }
+                else {
+                    $inserted['unit_code'] = $unit_code + 1;
+                }
+
                 $inserted['name'] = $request->name;
                 $inserted['active'] = $request->active;
                 $inserted['master'] = $request->master;
@@ -101,23 +112,6 @@ class InvUnitController extends Controller
 
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
         //
@@ -143,24 +137,24 @@ class InvUnitController extends Controller
 
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function update(Request $request, $id)
     {
         //
         $request->validate([
-            'name' => 'required|unique:inv_units,name,'.$id,
+            'name' => 'required',
             'master' =>'required',
             'active' =>'required',
         ]);
 
         if (check_control_menu_role('المخازن', 'الوحدات' , 'تعديل') == true) {
             try {
+                $com_code = auth()->user()->com_code;
+
+                $check = InvUnit::where(['name' => $request->name , 'com_code' => $com_code])->where('id', '!=', $id)->count();
+                if ($check > 0) {
+                    return redirect()->back()->with('error', 'اسم الوحدة مسجل مسبقاً')->withInput();
+                }
 
                 $updated['name'] = $request->name;
                 $updated['master'] = $request->master;
@@ -256,7 +250,7 @@ class InvUnitController extends Controller
                 $value2 = $search_by_type;
             }
 
-            $data = InvUnit::where("$filed1", "$operator1", "%$value1%")->where("$filed2", "$operator2", "$value2")->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
+            $data = InvUnit::where("$filed1", "$operator1", "%$value1%")->where("$filed2", "$operator2", "$value2")->where(['com_code' => auth()->user()->com_code])->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
             if (!empty($data)) {
                 foreach ($data as $d) {
                     if ($d['added_by'] != null) {

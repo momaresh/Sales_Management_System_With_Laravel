@@ -62,7 +62,7 @@
                 <div class="col-md-6" @if(!@empty($data['is_used'])) style="display: none" @endif>
                     <div class="form-group">
                         <label>نوع الصنف</label>
-                        <select name="item_type" id="item_type" class="form-control">
+                        <select name="item_type" id="item_type" class="form-control select2">
                             <option value="">اختر النوع</option>
                             <option   @if(old('item_type', $data->item_type) == 1) selected  @endif value="1"> مخزني</option>
                             <option   @if(old('item_type', $data->item_type) == 2) selected  @endif value="2"> استهلاكي بتاريخ صلاحية</option>
@@ -77,7 +77,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>فئة الصنف</label>
-                        <select name="inv_itemcard_categories_id" id="inv_itemcard_categories_id" class="form-control ">
+                        <select name="inv_itemcard_categories_id" id="inv_itemcard_categories_id" class="form-control select2">
                             <option value="">اختر الفئة</option>
                             @if (@isset($inv_itemCard_categories) && !@empty($inv_itemCard_categories))
                             @foreach ($inv_itemCard_categories as $info )
@@ -94,7 +94,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>الصنف الاب له</label>
-                        <select name="parent_inv_itemcard_id" id="parent_inv_itemcard_id" class="form-control ">
+                        <select name="parent_inv_itemcard_id" id="parent_inv_itemcard_id" class="form-control select2">
                             <option selected value="0"> هو اب</option>
 
                             @if (@isset($item_card_data) && !@empty($item_card_data))
@@ -114,7 +114,7 @@
                 <div class="col-md-6" @if(!@empty($data['is_used'])) style="display: none" @endif>
                     <div class="form-group">
                         <label>وحدة القياس الاساسية</label>
-                        <select name="unit_id" id="unit_id" class="form-control ">
+                        <select name="unit_id" id="unit_id" class="form-control select2">
                             <option value="">اختر الوحدة الاب</option>
 
                             @if (@isset($inv_unit_parent) && !@empty($inv_unit_parent))
@@ -135,7 +135,7 @@
                 <div class="col-md-6" @if(!@empty($data['is_used'])) style="display: none" @endif>
                     <div class="form-group" >
                         <label>هل للصنف وحدة تجزئة</label>
-                        <select name="does_has_retailunit" id="does_has_retailunit" class="form-control">
+                        <select name="does_has_retailunit" id="does_has_retailunit" class="form-control select2">
                             <option value="">اختر الحالة</option>
                             <option   @if (old('does_has_retailunit', $data->does_has_retailunit) == 1) selected  @endif value="1"> نعم </option>
                             <option @if (old('does_has_retailunit', $data->does_has_retailunit) == 0 and old('does_has_retailunit', $data->does_has_retailunit) != "" ) selected   @endif value="0"> لا</option>
@@ -149,7 +149,7 @@
                 <div class="col-md-6 @if(@empty($data['is_used'])) relatied_retial_counter @endif" @if (old('does_has_retailunit') != 1 ) style="display: none;" @endif  id="retail_uom_idDiv" @if(!@empty($data['is_used'])) style="display: none" @endif>
                     <div class="form-group">
                         <label>وحدة القياس التجزئة بالنسبة للاساسية(<span class="parent_unit_name"></span>)</label>
-                        <select name="retail_unit_id" id="retail_unit_id" class="form-control ">
+                        <select name="retail_unit_id" id="retail_unit_id" class="form-control select2">
                             <option value="">اختر الوحدة التجزئة</option>
 
                             @if (@isset($inv_unit_child) && !@empty($inv_unit_child))
@@ -262,7 +262,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>هل للصنف سعر ثابت</label>
-                        <select name="has_fixed_price" id="has_fixed_price" class="form-control">
+                        <select name="has_fixed_price" id="has_fixed_price" class="form-control select2">
                         <option value="">اختر الحالة</option>
                         <option @if (old('has_fixed_price', $data->has_fixed_price) == 1) selected  @endif value="1"> نعم ثابت ولايتغير بالفواتير</option>
                         <option @if (old('has_fixed_price', $data->has_fixed_price) == 0 and old('has_fixed_price', $data->has_fixed_price) != "" ) selected   @endif value="0"> لا وقابل للتغير بالفواتير</option>
@@ -276,7 +276,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>  حالة التفعيل</label>
-                        <select name="active" id="active" class="form-control">
+                        <select name="active" id="active" class="form-control select2">
                         <option value="">اختر الحالة</option>
                         <option   @if (old('active', $data->active) == 1) selected  @endif value="1"> نعم</option>
                         <option @if (old('active', $data->active) == 0 and old('active', $data->active) != "" ) selected   @endif value="0"> لا</option>

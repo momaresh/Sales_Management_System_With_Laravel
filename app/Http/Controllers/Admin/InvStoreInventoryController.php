@@ -36,7 +36,7 @@ class InvStoreInventoryController extends Controller
                     }
                 }
 
-                $stores = Store::where('com_code', $com_code)->get(['id', 'name']);
+                $stores = Store::where(['com_code' => $com_code, 'active' => 1])->get(['id', 'name']);
 
                 return view('admin.inv_stores_inventory.index', ['data' => $data, 'stores' => $stores]);
             }
@@ -59,10 +59,9 @@ class InvStoreInventoryController extends Controller
     {
         //
         if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اضافة') == true) {
-            $stores = Store::where('com_code', auth()->user()->com_code)->get(['id', 'name']);
+            $stores = Store::where(['com_code' => auth()->user()->com_code, 'active' => 1])->get(['id', 'name']);
 
             return view('admin.inv_stores_inventory.create', ['stores' => $stores]);
-
         }
         else {
             return redirect()->back();
@@ -96,6 +95,14 @@ class InvStoreInventoryController extends Controller
                 $check = InvStoreInventoryHeader::where(['is_closed' => 0, 'store_id' => $request->store_id, 'com_code' => auth()->user()->com_code])->value('id');
                 if (!empty($check)) {
                     return redirect()->route('admin.inv_stores_inventory.index')->with('error', 'يوجد جرد لا يزال مفتوحاً');
+                }
+
+                $inventory_code = InvStoreInventoryHeader::where(['com_code' => auth()->user()->com_code])->max('inventory_code');
+                if (empty($inventory_code)) {
+                    $inserted['inventory_code'] = 1;
+                }
+                else {
+                    $inserted['inventory_code'] = $inventory_code + 1;
                 }
 
                 $inserted['store_id'] = $request->store_id;
@@ -154,6 +161,7 @@ class InvStoreInventoryController extends Controller
                     foreach ($details as $detail) {
                         $batch = InvItemCardBatch::where(['id' => $detail['batch_id'], 'com_code' => $com_code])->get()->first();
                         $detail['item_name'] = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->value('name');
+                        $detail['batch_code'] = $batch['batch_code'];
                         $detail['unit_cost'] = $batch['unit_cost_price'];
                         $detail['production_date'] = $batch['production_date'];
                         $detail['expire_date'] = $batch['expire_date'];
@@ -187,7 +195,7 @@ class InvStoreInventoryController extends Controller
             }
 
             $data = InvStoreInventoryHeader::where('id', $id)->get()->first();
-            $stores = Store::where('com_code', auth()->user()->com_code)->get(['id', 'name']);
+            $stores = Store::where(['com_code' => auth()->user()->com_code, 'active' => 1])->get(['id', 'name']);
 
             return view('admin.inv_stores_inventory.edit', ['data' => $data, 'stores' => $stores]);
         }
@@ -527,7 +535,6 @@ class InvStoreInventoryController extends Controller
                 }
 
                 $details = InvStoreInventoryDetail::where(['inv_stores_inventory_header_id' => $header_id, 'is_closed' => 0])->get(['id', 'batch_id', 'item_code', 'new_quantity']);
-
                 if (!empty($details)) {
                     foreach ($details as $detail) {
                         // before i make insert or update i should get the quantity in all store and current store from the batch

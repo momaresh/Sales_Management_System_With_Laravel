@@ -25,7 +25,7 @@ class CreateUnitRequest extends FormRequest
     {
         return [
             //
-            'name' => 'required|unique:inv_units',
+            'name' => 'required',
             'master' => 'required',
             'active' => 'required',
         ];
@@ -37,7 +37,6 @@ class CreateUnitRequest extends FormRequest
         return [
             //
             'name.required' => 'يجب ادخال اسم المخزن',
-            'name.unique' => 'اسم المخزن مضاف من قبل',
             'master.required' => 'يجب ادخال نوع الوحدة',
             'active.required' => 'يجب ادخال حالة التفعيل',
         ];

@@ -104,9 +104,9 @@
                 <div class="col-md-6">
                     <label>مفعل</label>
                     <div class="form-group">
-                        <select name="active" class="form-control">
-                            <option @if (old('active', $data->active) == 0) selected @endif value="0">No</option>
-                            <option @if (old('active', $data->active) == 1) selected @endif value="1">Yes</option>
+                        <select name="active" class="form-control select2">
+                            <option @if (old('active', $data->active) == 1) selected @endif value="1">نعم</option>
+                            <option @if (old('active', $data->active) == 0) selected @endif value="0">لا</option>
                         </select>
 
                         @error('active')

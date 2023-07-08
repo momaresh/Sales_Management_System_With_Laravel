@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\AdminShift;
 use Illuminate\Http\Request;
 use App\Models\Admin;
@@ -17,11 +18,6 @@ use Exception;
 
 class AdminShiftController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
         if (check_control_menu_role('حركة شفتات الخزن', 'شفتات الخزن', 'عرض') == true) {
@@ -67,15 +63,16 @@ class AdminShiftController extends Controller
             return redirect()->back();
         }
     }
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function create()
     {
         if (check_control_menu_role('حركة شفتات الخزن', 'شفتات الخزن', 'اضافة') == true) {
            // we need to get all the treasuries that the admin has privilege to and no other user still work on it
+           $has_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => auth()->user()->com_code, 'is_finished' => 0])->first();
+           if (!empty($has_shift)) {
+               return redirect()->back()->with('error', 'انت تملك شفت ما زال مستخدما')->withInput();
+           }
+
            $treasuries = AdminTreasury::where(['admin_id' => auth()->user()->id, 'com_code' => auth()->user()->com_code, 'active' => 1])->get('treasuries_id');
            $not_available_treasuries_array = array();
 
@@ -108,12 +105,6 @@ class AdminShiftController extends Controller
 
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         //
@@ -178,7 +169,7 @@ class AdminShiftController extends Controller
                     }
                 }
 
-                $money = TreasuryTransaction::where(['shift_code' => $check['shift_code'], 'com_code' => auth()->user()->com_code])->sum('money');
+                $money = TreasuryTransaction::where(['shift_code' => $check['id'], 'com_code' => auth()->user()->com_code])->sum('money');
                 $updated['is_finished'] = 1;
                 $updated['money_should_delivered'] = $money;
                 $updated['end_date'] = date('Y-m-d H:i:s');
@@ -224,17 +215,17 @@ class AdminShiftController extends Controller
                     }
                 }
 
-                $data['all_exchange'] = TreasuryTransaction::where(['shift_code' => $data['shift_code'], 'com_code' => $com_code, 'transaction_type' => 1])->sum('money');
-                $data['all_collection'] = TreasuryTransaction::where(['shift_code' => $data['shift_code'], 'com_code' => $com_code, 'transaction_type' => 2])->sum('money');
+                $data['all_exchange'] = TreasuryTransaction::where(['shift_code' => $data['id'], 'com_code' => $com_code, 'transaction_type' => 1])->sum('money');
+                $data['all_collection'] = TreasuryTransaction::where(['shift_code' => $data['id'], 'com_code' => $com_code, 'transaction_type' => 2])->sum('money');
 
-                $exchange_transactions = TreasuryTransaction::where(['shift_code' => $data['shift_code'], 'transaction_type' => 1, 'com_code' => $com_code])->get();
+                $exchange_transactions = TreasuryTransaction::where(['shift_code' => $data['id'], 'transaction_type' => 1, 'com_code' => $com_code])->get();
                 if (!empty($exchange_transactions)) {
                     foreach ($exchange_transactions as $tran) {
                         $tran['type_name'] = MoveType::where('id', $tran['move_type'])->value('name');
                     }
                 }
 
-                $collection_transactions = TreasuryTransaction::where(['shift_code' => $data['shift_code'], 'transaction_type' => 2, 'com_code' => $com_code])->get();
+                $collection_transactions = TreasuryTransaction::where(['shift_code' => $data['id'], 'transaction_type' => 2, 'com_code' => $com_code])->get();
                 if (!empty($collection_transactions)) {
                     foreach ($collection_transactions as $tran) {
                         $tran['type_name'] = MoveType::where('id', $tran['move_type'])->value('name');
@@ -274,68 +265,161 @@ class AdminShiftController extends Controller
                     return redirect()->back()->with('error', 'لقد تم مراجعة هذا الشفت');
                 }
 
-                $max_transaction_code = TreasuryTransaction::where('com_code', $com_code)->max('transaction_code');
-                if (empty($max_transaction_code)) {
-                    $inserted['transaction_code'] = 1;
-                }
-                else {
-                    $inserted['transaction_code'] = $max_transaction_code + 1;
-                }
-
-                $inserted['shift_code'] = $do_review_shift['shift_code'];
-                $last_collect_arrive = Treasury::where(['id' => $do_review_shift['treasuries_id'], 'com_code' => $com_code])->value('last_collection_arrive');
-                if (empty($last_collect_arrive)) {
-                    return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
-                }
-                else {
-                    $inserted['last_arrive'] = $last_collect_arrive + 1;
-                }
-
-                $treasury_name = Treasury::where(['id' => $was_review_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                $admin_name = Admin::where(['id' => $was_review_shift['admin_id'], 'com_code' => $com_code])->value('name');
-
-
-                $inserted['move_type'] = 1;
-                $inserted['transaction_type'] = 2;
-                $inserted['is_account'] = 0;
-                $inserted['is_approved'] = 1;
-                $inserted['treasuries_id'] = $do_review_shift['treasuries_id'];
-                $inserted['money'] = $request->what_paid;
-                $inserted['move_date'] = date('Y-m-d');
-                $inserted['byan'] = 'مراجعة واستلام الخزنة ' . $treasury_name . ' من المستخدم ' . $admin_name . ' رقم الشفت ' . $request->was_review_shift_id;
-                $inserted['added_by'] = auth()->user()->id;
-                $inserted['com_code'] = $com_code;
-                $inserted['created_at'] = date('Y-m-d H:i:s');
-                $flag = TreasuryTransaction::create($inserted);
-
-                if($flag) {
-                    $update_treasuries['last_collection_arrive'] = $last_collect_arrive + 1;
-                    Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
-
-                    $money = $request->what_paid - $was_review_shift['money_should_delivered'];
-
-                    if ($money == 0) {
-                        $update_shift['money_state'] = 0;
+                if ($request->what_paid > 0) {
+                    $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 2,'com_code' => $com_code])->max('transaction_code');
+                    if (empty($max_transaction_code)) {
+                        $inserted['transaction_code'] = 1;
                     }
-                    else if ($money < 0) {
-                        $update_shift['money_state'] = 1;
-                    }
-                    else if ($money > 0) {
-                        $update_shift['money_state'] = 2;
+                    else {
+                        $inserted['transaction_code'] = $max_transaction_code + 1;
                     }
 
-                    $update_shift['delivered_to_shift_id'] = $do_review_shift['id'];
-                    $update_shift['money_state_value'] = $money;
-                    $update_shift['what_really_delivered'] = $request->what_paid;
-                    $update_shift['review_receive_date'] = date('Y-m-d H:i:s');
-                    $update_shift['updated_by'] = auth()->user()->id;
-                    $update_shift['updated_at'] = date('Y-m-d H:i:s');
-                    AdminShift::where('id', $request->was_review_shift_id)->update($update_shift);
+                    $inserted['shift_code'] = $do_review_shift['id'];
+                    $last_collection_arrive = Treasury::where(['id' => $do_review_shift['treasuries_id'], 'com_code' => $com_code])->value('last_collection_arrive');
+                    if (empty($last_collection_arrive)) {
+                        return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                    }
+                    else {
+                        $inserted['last_arrive'] = $last_collection_arrive + 1;
+                    }
 
-                    return redirect()->back()->with('success', 'تم تحصيل النقدية ومراجعة الشفت بنجاح');
-                }
-                else {
-                    return redirect()->back()->with('error', 'حدث خطأ ما');
+                    $treasury_name = Treasury::where(['id' => $was_review_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
+                    $admin_name = Admin::where(['id' => $was_review_shift['admin_id'], 'com_code' => $com_code])->value('name');
+                    $account_number = Treasury::where(['id' => $was_review_shift['treasuries_id']])->value('account_number');
+
+
+                    $inserted['move_type'] = 1;
+                    $inserted['transaction_type'] = 2;
+                    $inserted['is_account'] = 1;
+                    $inserted['account_number'] = $account_number;
+                    $inserted['is_approved'] = 1;
+                    $inserted['treasuries_id'] = $do_review_shift['treasuries_id'];
+                    $inserted['money'] = $request->what_paid;
+                    $inserted['money_for_account'] = $request->what_paid * (-1);
+                    $inserted['move_date'] = date('Y-m-d');
+                    $inserted['byan'] = 'مراجعة واستلام الخزنة ' . $treasury_name . ' من المستخدم ' . $admin_name . ' رقم الشفت الذي تم مراجعته ' . $request->was_review_shift_id;
+                    $inserted['added_by'] = auth()->user()->id;
+                    $inserted['com_code'] = $com_code;
+                    $inserted['created_at'] = date('Y-m-d H:i:s');
+                    $flag = TreasuryTransaction::create($inserted);
+
+                    if($flag) {
+                        $update_treasuries['last_collection_arrive'] = $last_collection_arrive + 1;
+                        Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
+
+                        $money = $request->what_paid - $was_review_shift['money_should_delivered'];
+                        if ($money == 0) {
+                            $update_shift['money_state'] = 0;
+                        }
+                        else if ($money < 0) {
+                            $update_shift['money_state'] = 1;
+
+                            $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 3,'com_code' => $com_code])->max('transaction_code');
+                            if (empty($max_transaction_code)) {
+                                $inserted['transaction_code'] = 1;
+                            }
+                            else {
+                                $inserted['transaction_code'] = $max_transaction_code + 1;
+                            }
+
+                            $inserted['shift_code'] = $do_review_shift['id'];
+                            $last_unpaid_arrive = Treasury::where(['id' => $do_review_shift['treasuries_id'], 'com_code' => $com_code])->value('last_unpaid_arrive');
+                            if (empty($last_unpaid_arrive)) {
+                                return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                            }
+                            else {
+                                $inserted['last_arrive'] = $last_unpaid_arrive + 1;
+                            }
+
+                            $treasury_name = Treasury::where(['id' => $was_review_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
+                            $admin_name = Admin::where(['id' => $was_review_shift['admin_id'], 'com_code' => $com_code])->value('name');
+                            $account_number = Treasury::where(['id' => $was_review_shift['treasuries_id']])->value('account_number');
+
+
+                            $inserted['move_type'] = 1;
+                            $inserted['transaction_type'] = 3;
+                            $inserted['is_account'] = 1;
+                            $inserted['account_number'] = $account_number;
+                            $inserted['is_approved'] = 1;
+                            $inserted['treasuries_id'] = $was_review_shift['treasuries_id'];
+                            $inserted['money'] = 0;
+                            $inserted['money_for_account'] = $money * (-1);
+                            $inserted['move_date'] = date('Y-m-d');
+                            $inserted['byan'] = 'مراجعة واستلام الخزنة ' . $treasury_name . ' من المستخدم ' . $admin_name . ' رقم الشفت الذي تم مراجعته ' . $request->was_review_shift_id;
+                            $inserted['added_by'] = auth()->user()->id;
+                            $inserted['com_code'] = $com_code;
+                            $inserted['created_at'] = date('Y-m-d H:i:s');
+                            TreasuryTransaction::create($inserted);
+
+                            $update_treasuries['last_unpaid_arrive'] = $last_unpaid_arrive + 1;
+                            Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
+
+                            $get_current = Account::where(['account_number' => $account_number, 'com_code' => $com_code])->value('current_balance');
+                            $update_account['current_balance'] = $get_current + ($money * (-1));
+                            Account::where(['account_number' => $account_number, 'com_code' => $com_code])->update($update_account);
+                        }
+                        else if ($money > 0) {
+                            $update_shift['money_state'] = 2;
+
+                            $update_shift['money_state'] = 1;
+
+                            $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 3,'com_code' => $com_code])->max('transaction_code');
+                            if (empty($max_transaction_code)) {
+                                $inserted['transaction_code'] = 1;
+                            }
+                            else {
+                                $inserted['transaction_code'] = $max_transaction_code + 1;
+                            }
+
+                            $inserted['shift_code'] = $do_review_shift['id'];
+                            $last_unpaid_arrive = Treasury::where(['id' => $do_review_shift['treasuries_id'], 'com_code' => $com_code])->value('last_unpaid_arrive');
+                            if (empty($last_unpaid_arrive)) {
+                                return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                            }
+                            else {
+                                $inserted['last_arrive'] = $last_unpaid_arrive + 1;
+                            }
+
+                            $treasury_name = Treasury::where(['id' => $was_review_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
+                            $admin_name = Admin::where(['id' => $was_review_shift['admin_id'], 'com_code' => $com_code])->value('name');
+                            $account_number = Treasury::where(['id' => $was_review_shift['treasuries_id']])->value('account_number');
+
+                            $inserted['move_type'] = 1;
+                            $inserted['transaction_type'] = 3;
+                            $inserted['is_account'] = 1;
+                            $inserted['account_number'] = $account_number;
+                            $inserted['is_approved'] = 1;
+                            $inserted['treasuries_id'] = $was_review_shift['treasuries_id'];
+                            $inserted['money'] = 0;
+                            $inserted['money_for_account'] = $money * (-1);
+                            $inserted['move_date'] = date('Y-m-d');
+                            $inserted['byan'] = 'مراجعة واستلام الخزنة ' . $treasury_name . ' من المستخدم ' . $admin_name . ' رقم الشفت الذي تم مراجعته ' . $request->was_review_shift_id;
+                            $inserted['added_by'] = auth()->user()->id;
+                            $inserted['com_code'] = $com_code;
+                            $inserted['created_at'] = date('Y-m-d H:i:s');
+                            TreasuryTransaction::create($inserted);
+
+                            $update_treasuries['last_unpaid_arrive'] = $last_unpaid_arrive + 1;
+                            Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
+
+                            $get_current = Account::where(['account_number' => $account_number, 'com_code' => $com_code])->value('current_balance');
+                            $update_account['current_balance'] = $get_current - ($money);
+                            Account::where(['account_number' => $account_number, 'com_code' => $com_code])->update($update_account);
+                        }
+
+                        $update_shift['delivered_to_shift_id'] = $do_review_shift['id'];
+                        $update_shift['money_state_value'] = $money;
+                        $update_shift['what_really_delivered'] = $request->what_paid;
+                        $update_shift['review_receive_date'] = date('Y-m-d H:i:s');
+                        $update_shift['updated_by'] = auth()->user()->id;
+                        $update_shift['updated_at'] = date('Y-m-d H:i:s');
+                        AdminShift::where('id', $request->was_review_shift_id)->update($update_shift);
+
+                        return redirect()->back()->with('success', 'تم تحصيل النقدية ومراجعة الشفت بنجاح');
+                    }
+                    else {
+                        return redirect()->back()->with('error', 'حدث خطأ ما');
+                    }
                 }
             }
             catch (Exception $e) {
@@ -356,7 +440,6 @@ class AdminShiftController extends Controller
             $is_finished_search = $request->is_finished_search;
             $is_reviewed_search = $request->is_reviewed_search;
 
-
             if ($shift_code_search == '') {
                 $filed1 = 'id';
                 $operator1 = '>';
@@ -364,8 +447,8 @@ class AdminShiftController extends Controller
             }
             else {
                 $filed1 = 'shift_code';
-                $operator1 = 'LIKE';
-                $value1 = '%'. $shift_code_search . '%';
+                $operator1 = '=';
+                $value1 = $shift_code_search;
             }
 
 

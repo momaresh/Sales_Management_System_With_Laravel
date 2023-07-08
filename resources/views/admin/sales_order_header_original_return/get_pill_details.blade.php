@@ -100,16 +100,18 @@
                 </table>
 
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>نوع الفاتورة</label>
-                            <select id="pill-type" name="pill_type" class="form-control select2">
-                                <option value="all">نوع الفاتورة</option>
-                                <option @if($pill->pill_type == 1) selected @endif value="1">كاش</option>
-                                <option @if($pill->pill_type == 2) selected @endif value="2">آجل</option>
-                            </select>
+                    @if(!@empty($pill->customer_code))
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>نوع الفاتورة</label>
+                                <select id="pill-type" name="pill_type" class="form-control select2">
+                                    <option value="all">نوع الفاتورة</option>
+                                    <option @if($pill->pill_type == 1) selected @endif value="1">كاش</option>
+                                    <option @if($pill->pill_type == 2) selected @endif value="2">آجل</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
                     <div class="col-md-4" id="what-paid-div">
                         <div class="form-group">
@@ -130,10 +132,9 @@
                             <label>اسم الخزينة</label>
                             <input type="text" readonly class="form-control" id="treasuries-id" name="treasuries_name" value="{{ $check_shift['treasuries_name'] }}">
                         </div>
-
                     </div>
 
-                    <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['shift_code'] }}">
+                    <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['id'] }}">
                     <input type="hidden" class="form-control" name="treasuries_id" value="{{ $check_shift['treasuries_id'] }}">
 
                     <div class="col-md-4">

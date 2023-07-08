@@ -3,7 +3,7 @@
 
 
 @section('title')
-    الخزن
+    اضافة خزنة مستلم منها
 @endsection
 
 @section('content')
@@ -33,7 +33,7 @@
             <div class="form-group row">
                 <label class="col-sm-2 control-label">اسم الخزنة</label>
                 <div class="col-sm-10">
-                    <select name="receive_from_id" class="form-control">
+                    <select name="receive_from_id" class="form-control select2">
                         @if (!@empty($data))
                             <option value="">اختر خزينة...</option>
                             @foreach ($data as $datum)
@@ -63,7 +63,7 @@
 @endsection
 
 @section('contentheader')
-    الضبط العام
+    الحسابات
 @endsection
 
 @section('contentheaderlink')

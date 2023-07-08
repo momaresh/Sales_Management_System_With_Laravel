@@ -31,6 +31,11 @@
             @if (!@empty($data))
 
                 <tr>
+                    <th>كود الجرد</th>
+                    <td>{{ $data->inventory_code }}</td>
+                </tr>
+
+                <tr>
                     <th>تاريخ الجرد</th>
                     <td>{{ $data->inventory_date }}</td>
                 </tr>
@@ -169,7 +174,7 @@
 
                         @foreach ($details as $detail)
                             <tr>
-                                <td>{{ $detail->batch_id }}</td>
+                                <td>{{ $detail->batch_code }}</td>
                                 <td>
                                     {{ $detail->item_name }} <br>
                                     <span style="color: green">{{ $detail['production_date'] }}</span> <br/>
@@ -190,7 +195,7 @@
                                             @endif
 
                                             @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق باتش') == true)
-                                                <a href="{{ route('admin.inv_stores_inventory.close_detail', [$detail->id, $data->id]) }}" class="btn btn-warning are_you_sure">
+                                                <a href="{{ route('admin.inv_stores_inventory.close_detail', [$detail->id, $data->id]) }}" class="btn btn-warning">
                                                     ترحيل
                                                 </a>
                                             @endif

@@ -235,7 +235,7 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'لا يوجد مستخدم كهذا');
         }
 
-        $data = Treasury::get();
+        $data = Treasury::where(['com_code' => auth()->user()->com_code])->get();
         return view('admin.admins.create_treasuries', ['data' => $data, 'admin_id' => $id]);
     }
 

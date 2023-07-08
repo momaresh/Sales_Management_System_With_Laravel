@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('title')
-    الضبط العام
+    تفاصيل الخزن
 @endsection
 
 @section('content')
@@ -29,6 +29,10 @@
         <table id="example2" class="table table-bordered table-hover">
 
             @if (!@empty($data))
+                <tr>
+                    <th>كود الخزينة</th>
+                    <td>{{ $data->treasury_code }}</td>
+                </tr>
 
                 <tr>
                     <th>اسم الخزينة</th>
@@ -36,8 +40,29 @@
                 </tr>
 
                 <tr>
-                    <th>كود الخزينة</th>
-                    <td>{{ $data->id }}</td>
+                    <th>رصيد اول المدة</th>
+                    <td>
+                        @if($data->start_balance == 0)
+                            متزن
+                        @elseif ($data->start_balance > 0)
+                            مدين ({{ $data->start_balance }})
+                        @else
+                            دائن ({{ $data->start_balance * (-1) }})
+                        @endif
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>الرصيد الحالي</th>
+                    <td>
+                        @if($data->current_balance == 0)
+                            متزن
+                        @elseif ($data->current_balance > 0)
+                            مدين ({{ $data->current_balance }})
+                        @else
+                            دائن ({{ $data->current_balance * (-1) }})
+                        @endif
+                    </td>
                 </tr>
 
                 <tr>
@@ -73,6 +98,11 @@
                 </tr>
 
                 <tr>
+                    <th>اخر ايصال آجل</th>
+                    <td>{{ $data->last_unpaid_arrive }}</td>
+                </tr>
+
+                <tr>
                     <th>تم الاضافة</th>
 
                     <td>
@@ -84,7 +114,7 @@
 
                             {{ $date }}
                             بواسطة
-                            {{ $data['added_by_admin'] }}
+                            {{ $data['added_by_name'] }}
                         @else
                             لا يوجد اي بيانات
                         @endif
@@ -103,7 +133,7 @@
 
                             {{ $date }}
                             بواسطة
-                            {{ $data['updated_by_admin'] }}
+                            {{ $data['updated_by_name'] }}
                         @else
                             لا يوجد اي تحديث
                         @endif
@@ -128,7 +158,7 @@
 
 
 <div>
-    @if (check_control_menu_role('الضبط العام', 'الخزن' , 'اضافة خزنة استلام') == true)
+    @if (check_control_menu_role('الحسابات', 'الخزن' , 'اضافة خزنة استلام') == true)
         <a href="{{ route('admin.treasuries_delivery.create', $data->id) }}" style="background-color: #007bff; font-size: 15px; margin: 10px auto; width: fit-content; display: block; color: white" class="btn">
             <i class="fas fa-plus-circle"></i> اضافة جديد
         </a>
@@ -149,15 +179,15 @@
                     @if (!@empty($treasuries[0]))
 
                         <tr style="background-color: #007bff; color:white;">
-                            <th>كود الخزينة</th>
                             <th>اسم الخزينة</th>
                             <th>تاريخ الاضافة</th>
-                            <th>حذف</th>
+                            @if (check_control_menu_role('الحسابات', 'الخزن' , 'حذف خزنة استلام') == true)
+                                <th>حذف</th>
+                            @endif
                         </tr>
 
                         @foreach ($treasuries as $treasury)
                             <tr>
-                                <td>{{ $treasury->treasury_id }}</td>
                                 <td>{{ $treasury->treasury_name }}</td>
 
                                 <td>
@@ -175,13 +205,13 @@
                                     @endif
                                 </td>
 
-                                <td>
-                                    @if (check_control_menu_role('الضبط العام', 'الخزن' , 'حذف خزنة استلام') == true)
+                                @if (check_control_menu_role('الحسابات', 'الخزن' , 'حذف خزنة استلام') == true)
+                                    <td>
                                         <a href="{{ route('admin.treasuries_delivery.delete', [$treasury->treasury_id, $data->id]) }}" class="btn btn-danger are_you_sure">
                                             حذف
                                         </a>
-                                    @endif
-                                </td>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
 
@@ -207,7 +237,7 @@
 @endsection
 
 @section('contentheader')
-    الضبط العام
+    الحسابات
 @endsection
 
 @section('contentheaderlink')

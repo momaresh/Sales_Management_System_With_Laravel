@@ -11,6 +11,6 @@ class InvItemCategory extends Model
 
     protected $table = 'inv_item_categories';
 
-    protected $fillable = ['name', 'active', 'added_by', 'updated_by', 'date', 'com_code'];
+    protected $fillable = ['name', 'category_code', 'active', 'added_by', 'updated_by', 'date', 'com_code'];
 
 }

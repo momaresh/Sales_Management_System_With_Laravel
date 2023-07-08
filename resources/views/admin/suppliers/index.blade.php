@@ -82,6 +82,7 @@
                             <th>رقم حساب المورد</th>
                             <th>الرصيد</th>
                             <th>رصيد اول المدة</th>
+                            <th>حالة التفعيل</th>
                             @if (check_control_menu_role('الحسابات', 'الموردين' , 'التفاصيل') == true)
                                 <th>التفاصيل</th>
                             @endif
@@ -122,6 +123,15 @@
                                         دائن ({{ $datum->start_balance * (-1) }})
                                     @endif
                                 </td>
+                                @if ($datum->active == 1)
+                                <td style="background-color: #5ab6a0a1;">
+                                    مفعل
+                                </td>
+                                @elseif ($datum->active == 0)
+                                <td style="background-color: #c15670a1;;">
+                                    غير مفعل
+                                </td>
+                                @endif
                                 @if (check_control_menu_role('الحسابات', 'الموردين' , 'التفاصيل') == true)
                                     <td>
                                         <button data-id="{{ $datum->id }}" class="details_button btn" style="color: rgb(38, 123, 29); font-size: 25px;">
@@ -249,15 +259,14 @@
 
         $(document).on('click', '#ajax_search_pagination a', function(e) {
             e.preventDefault();
-            // get the value from the input to search by
             var search_by_name = $('#ajax_search').val();
-            var search_by_type = $('#type_search').val();
-            var search_by_category = $('#category_search').val();
             var search_by_radio = $('input[type=radio][name=search_by_radio]:checked').val();
+            var current_status_search = $('#current_status_search').val();
+            var start_status_search = $('#start_status_search').val();
 
             jQuery.ajax({
                 // first argument is the where the from route to
-                url:$(this).attr("href"),
+                url: $(this).attr("href"),
                 // second argument is sending type of the form
                 type:'post',
                 // third argument is the type of the returned data from the model
@@ -265,7 +274,12 @@
                 // first argument is
                 cache:false,
                 // forth we send the search data and the token
-                data:{search_by_name:search_by_name,search_by_radio,search_by_radio, '_token':"{{ csrf_token() }}"},
+                data:{
+                    search_by_name:search_by_name,
+                    search_by_radio:search_by_radio,
+                    current_status_search:current_status_search,
+                    start_status_search:start_status_search,
+                    '_token':"{{ csrf_token() }}"},
                 // If the form and everything okay
                 success:function(data){
                     $('#ajax_search_result').html(data);

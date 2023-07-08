@@ -50,13 +50,14 @@ class PurchaseOrderHeaderController extends Controller
 
 
                 $com_code = auth()->user()->com_code;
-                $suppliers = Person::where(['person_type' => 2, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
-                foreach ($suppliers as $sup) {
-                    $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('supplier_code');
-                    $sup['supplier_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
+                $suppliers = Person::where(['person_type' => 2, 'com_code' => auth()->user()->com_code, 'active' => 1])->get(['id', 'first_name', 'last_name']);
+                $stores = Store::where(['com_code' => $com_code, 'active' => 1])->get(['id', 'name']);
+                if (!empty($suppliers)) {
+                    foreach ($suppliers as $sup) {
+                        $sup['supplier_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
+                        $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id']])->value('supplier_code');
+                    }
                 }
-
-                $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
 
                 return view('admin.purchase_order_header.index', ['data' => $data, 'suppliers' => $suppliers, 'stores' => $stores]);
             }
@@ -77,17 +78,15 @@ class PurchaseOrderHeaderController extends Controller
         if (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'اضافة') == true) {
             $com_code = auth()->user()->com_code;
 
-            $suppliers_code = Supplier::where(['com_code' => auth()->user()->com_code])->get(['supplier_code', 'person_id']);
-            $stores = Store::where(['com_code' => $com_code])->get(['id', 'name']);
+            $suppliers_code = Person::where(['person_type' => 2, 'com_code' => auth()->user()->com_code, 'active' => 1])->get(['id', 'first_name', 'last_name']);
+            $stores = Store::where(['com_code' => $com_code, 'active' => 1])->get(['id', 'name']);
             if (!empty($suppliers_code)) {
                 foreach ($suppliers_code as $sup) {
-                    $sup['first_name'] = Person::where('id', $sup['person_id'])->value('first_name');
-                    $sup['last_name'] = Person::where('id', $sup['person_id'])->value('last_name');
+                    $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id']])->value('supplier_code');
                 }
             }
 
             return view('admin.purchase_order_header.create', ['suppliers_code' => $suppliers_code, 'stores' => $stores]);
-
         }
         else {
             return redirect()->back();
@@ -264,12 +263,11 @@ class PurchaseOrderHeaderController extends Controller
             $data['store_id'] = $purchase_data['store_id'];
             $data['supplier_code'] = $purchase_data['supplier_code'];
 
-            $suppliers_code = Supplier::where(['com_code' => $com_code])->get(['supplier_code', 'person_id']);
-            $stores = Store::where(['com_code' => $com_code])->get(['id', 'name']);
+            $suppliers_code = Person::where(['person_type' => 2, 'com_code' => auth()->user()->com_code, 'active' => 1])->get(['id', 'first_name', 'last_name']);
+            $stores = Store::where(['com_code' => $com_code, 'active' => 1])->get(['id', 'name']);
             if (!empty($suppliers_code)) {
                 foreach ($suppliers_code as $sup) {
-                    $sup['first_name'] = Person::where(['id' => $sup['person_id'], 'com_code' => auth()->user()->com_code])->value('first_name');
-                    $sup['last_name'] = Person::where(['id' => $sup['person_id'], 'com_code' => auth()->user()->com_code])->value('last_name');
+                    $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id']])->value('supplier_code');
                 }
             }
             return view('admin.purchase_order_header.edit', ['data' => $data, 'suppliers_code' => $suppliers_code, 'stores' => $stores]);
@@ -660,12 +658,12 @@ class PurchaseOrderHeaderController extends Controller
                     $data['all_items'] = InvoiceOrderDetail::where(['com_code' => $com_code, 'invoice_order_id' => $auto_serial])->count();
 
                     //Check if has shift
-                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
                     if (empty($check_shift)) {
                         return Response()->json(['error' => ''], 404);
                     }
                     $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => $com_code])->sum('money');
 
                     return view('admin.purchase_order_header.load_modal_approved', ['data' => $data, 'check_shift' => $check_shift]);
                 }
@@ -688,12 +686,12 @@ class PurchaseOrderHeaderController extends Controller
         if ($request->ajax()) {
             try {
                //Check if has shift
-               $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => auth()->user()->com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+               $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => auth()->user()->com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
                if (empty($check_shift)) {
                    return Response()->json(['error' => ''], 404);
                }
                $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => auth()->user()->com_code])->value('name');
-               $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => auth()->user()->com_code])->sum('money');
+               $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => auth()->user()->com_code])->sum('money');
 
                return view('admin.purchase_order_header.check_shift_and_reload_money', ['check_shift' => $check_shift]);
             }
@@ -713,6 +711,7 @@ class PurchaseOrderHeaderController extends Controller
                 $data = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 1, 'invoice_type' => 1])->first();
                 $data['supplier_code'] = PurchaseOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('supplier_code');
                 $data['store_id'] = PurchaseOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('store_id');
+                $data['total_cost'] = $request->total_cost;
 
                 if (empty($data)) {
                     return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
@@ -783,7 +782,7 @@ class PurchaseOrderHeaderController extends Controller
                     // first if the what_paid > 0, we will make transaction action and will be in minus,
                     // because we make exchange
                     if ($request->what_paid > 0) {
-                        $max_transaction_code = TreasuryTransaction::where('com_code', $com_code)->max('transaction_code');
+                        $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 1, 'com_code' => $com_code])->max('transaction_code');
                         if (empty($max_transaction_code)) {
                             $insertTransaction['transaction_code'] = 1;
                         }
@@ -803,7 +802,7 @@ class PurchaseOrderHeaderController extends Controller
                         $last_exchange_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_exchange_arrive');
 
 
-                        if (empty($last_exchange_arrive)) {
+                        if (empty($last_exchange_arrive) && $last_exchange_arrive != 0) {
                             return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
                         }
                         else {
@@ -838,6 +837,60 @@ class PurchaseOrderHeaderController extends Controller
                             $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
                             $update_account['current_balance'] = $get_current + $data['what_paid'];
                             Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
+                        }
+                    }
+
+                    if ($request->what_remain > 0) {
+                        $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 3,'com_code' => $com_code])->max('transaction_code');
+                        if (empty($max_transaction_code)) {
+                            $insertTransaction['transaction_code'] = 1;
+                        }
+                        else {
+                            $insertTransaction['transaction_code'] = $max_transaction_code + 1;
+                        }
+
+
+                        $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'treasuries_id' => $request->treasuries_id, 'com_code' => $com_code, 'is_finished' => 0])->first();
+                        if (empty($check_shift)) {
+                            return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
+                        }
+                        else {
+                            $insertTransaction['shift_code'] = $request->shift_code;
+                        }
+
+                        $last_unpaid_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_unpaid_arrive');
+
+
+                        if (empty($last_unpaid_arrive) && $last_unpaid_arrive != 0) {
+                            return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                        }
+                        else {
+                            $insertTransaction['last_arrive'] = $last_unpaid_arrive + 1;
+                        }
+
+
+                        // Move type will number 9 صرف نضير مورد
+                        $insertTransaction['move_type'] = 9;
+                        // Account number will be like the account number for the supplier in the purchaseHeader
+                        $insertTransaction['account_number'] = $data['account_number'];
+                        $insertTransaction['transaction_type'] = 3;
+                        $insertTransaction['is_account'] = 1;
+                        $insertTransaction['is_approved'] = 1;
+                        $insertTransaction['invoice_id'] = $auto_serial;
+                        $insertTransaction['treasuries_id'] = $request->treasuries_id;
+                        $insertTransaction['money'] = 0;
+                        $insertTransaction['money_for_account'] = $updateInvoice['what_remain'] * (-1);
+                        $insertTransaction['move_date'] = date('Y-m-d');
+                        $insertTransaction['byan'] = ' تسليم نضير فاتورة مشتريات للمورد' . $data['supplier_name'];
+                        $insertTransaction['added_by'] = auth()->user()->id;
+                        $insertTransaction['com_code'] = $com_code;
+                        $insertTransaction['created_at'] = date('Y-m-d H:i:s');
+
+                        $flag = TreasuryTransaction::create($insertTransaction);
+
+                        if($flag) {
+                            $update_treasuries['last_unpaid_arrive'] = $last_unpaid_arrive + 1;
+                            Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
                         }
                     }
 

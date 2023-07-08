@@ -21,17 +21,18 @@ class AdminPanelSettingController extends Controller
         //
         if (check_control_menu_role('الضبط العام', 'الضبط العام' , 'عرض') == true) {
             $com_code = auth()->user()->com_code;
-            $data = AdminPanelSetting::where('id', auth()->user()->com_code)->first();
+            $data = AdminPanelSetting::where('com_code', auth()->user()->com_code)->first();
 
             if (!empty($data)) {
                 if ($data['updated_by'] > 0 && $data['updated_by'] != null) {
-                    $data['updated_by_admin'] = Admin::where('id', $data['updated_by'])->value('name');
+                    $data['updated_by_name'] = Admin::where('id', $data['updated_by'])->value('name');
                 }
 
                 $data['customer_parent_account_name'] = Account::where(['account_number' => $data['customer_parent_account'], 'com_code' => $com_code])->value('notes');
                 $data['supplier_parent_account_name'] = Account::where(['account_number' => $data['supplier_parent_account'], 'com_code' => $com_code])->value('notes');
                 $data['delegate_parent_account_name'] = Account::where(['account_number' => $data['delegate_parent_account'], 'com_code' => $com_code])->value('notes');
                 $data['employee_parent_account_name'] = Account::where(['account_number' => $data['employee_parent_account'], 'com_code' => $com_code])->value('notes');
+                $data['treasury_parent_account_name'] = Account::where(['account_number' => $data['treasury_parent_account'], 'com_code' => $com_code])->value('notes');
 
                 return view('admin.admin_panel_settings.index', ['data' => $data]);
             }
@@ -41,44 +42,6 @@ class AdminPanelSettingController extends Controller
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
         if (check_control_menu_role('الضبط العام', 'الضبط العام' , 'تعديل') == true) {
@@ -111,12 +74,12 @@ class AdminPanelSettingController extends Controller
             $updated['supplier_parent_account'] = $request->supplier_parent_account;
             $updated['delegate_parent_account'] = $request->delegate_parent_account;
             $updated['employee_parent_account'] = $request->employee_parent_account;
+            $updated['treasury_parent_account'] = $request->treasury_parent_account;
             $updated['customer_first_code'] = $request->customer_first_code;
             $updated['supplier_first_code'] = $request->supplier_first_code;
             $updated['delegate_first_code'] = $request->delegate_first_code;
             $updated['employee_first_code'] = $request->employee_first_code;
             $updated['active'] = $request->active;
-            $updated['general_alert'] = $request->general_alert;
             $updated['updated_by'] = auth()->user()->id;
             $updated['updated_at'] = date('Y-m-d H:i:s');
 
@@ -128,9 +91,11 @@ class AdminPanelSettingController extends Controller
                 $image->move('assets\admin\uploads\images\\', $file_name);
                 $updated['photo'] = $file_name;
 
-                // deleting the old image from the folder
-                if(file_exists("assets/admin/uploads/images/".$old_image)) {
-                    unlink("assets/admin/uploads/images/".$old_image);
+                if (!empty($old_image)) {
+                    // deleting the old image from the folder
+                    if(file_exists("assets/admin/uploads/images/".$old_image)) {
+                        unlink("assets/admin/uploads/images/".$old_image);
+                    }
                 }
             }
 
@@ -141,16 +106,5 @@ class AdminPanelSettingController extends Controller
         else {
             return redirect()->back();
         }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
 }

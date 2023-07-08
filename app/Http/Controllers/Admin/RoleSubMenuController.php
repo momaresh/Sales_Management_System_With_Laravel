@@ -132,13 +132,12 @@ class RoleSubMenuController extends Controller
             }
 
             $updated['name'] = $request->name;
-            $inserted['roles_main_menu_id'] = $request->main_menu_id;
+            $updated['roles_main_menu_id'] = $request->main_menu_id;
             $updated['active'] = $request->active;
             $updated['updated_by'] = auth()->user()->id;
             $updated['updated_at'] = date('Y-m-d H:i:s');
-            $updated['com_code'] = auth()->user()->com_code;
 
-            RoleSubMenu::where('id', $id)->update($updated);
+            RoleSubMenu::where(['id' => $id])->update($updated);
 
             return redirect()->route('admin.roles_sub_menu.index')->with('success', 'تم تعديل القائمة بنجاح');
         } catch (Exception $e) {

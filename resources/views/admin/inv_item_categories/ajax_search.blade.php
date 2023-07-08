@@ -26,7 +26,7 @@
                     </td>
                 @endif
 
-                <td>{{ $datum->id }}</td>
+                <td>{{ $datum->category_code }}</td>
                 <td>{{ $datum->name }}</td>
                 @if ($datum->active == 1)
                 <td style="background-color: #5ab6a0a1;">

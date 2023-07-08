@@ -103,7 +103,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>الصنف الاب له</label>
-                        <select name="parent_inv_itemcard_id" id="parent_inv_itemcard_id" class="form-control ">
+                        <select name="parent_inv_itemcard_id" id="parent_inv_itemcard_id" class="form-control select2">
                             <option selected value="0"> هو اب</option>
                             @if (@isset($item_card_data) && !@empty($item_card_data))
                             @foreach ($item_card_data as $info )
@@ -137,7 +137,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>هل للصنف وحدة تجزئة</label>
-                        <select name="does_has_retailunit" id="does_has_retailunit" class="form-control">
+                        <select name="does_has_retailunit" id="does_has_retailunit" class="form-control select2">
                             <option value="">اختر الحالة</option>
                             <option   @if (old('does_has_retailunit') == 1) selected  @endif value="1"> نعم </option>
                             <option @if (old('does_has_retailunit') == 0 and old('does_has_retailunit') != "" ) selected   @endif value="0"> لا</option>
@@ -178,7 +178,7 @@
                 <div class="col-md-6 relatied_parent_counter "  @if(old('unit_id')=='' ) style="display: none;" @endif>
                     <div class="form-group">
                     <label>سعر القطاعي بوحدة (<span class="parent_unit_name"></span>)  </label>
-                    <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_one_in_master_unit" id="price_per_one_in_master_unit" class="form-control"  value="{{ old('price_per_one_in_master_unit') }}" placeholder="ادخل السعر " >
+                    <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_one_in_master_unit" id="price_per_one_in_master_unit" class="form-control"  value="{{ old('price_per_one_in_master_unit', '0') }}" placeholder="ادخل السعر " >
                     @error('price_per_one_in_master_unit')
                     <span class="text-danger">{{ $message }}</span>
                     @enderror
@@ -188,7 +188,7 @@
                 <div class="col-md-6 relatied_parent_counter "  @if(old('unit_id')=='' ) style="display: none;" @endif>
                     <div class="form-group">
                         <label>سعر النص جملة بوحدة (<span class="parent_unit_name"></span>)  </label>
-                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_half_group_in_master_unit" id="price_per_half_group_in_master_unit" class="form-control"  value="{{ old('price_per_half_group_in_master_unit') }}" placeholder="ادخل السعر " >
+                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_half_group_in_master_unit" id="price_per_half_group_in_master_unit" class="form-control"  value="{{ old('price_per_half_group_in_master_unit', '0') }}" placeholder="ادخل السعر " >
                         @error('price_per_half_group_in_master_unit')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -198,7 +198,7 @@
                 <div class="col-md-6 relatied_parent_counter "  @if(old('unit_id')=='' ) style="display: none;" @endif>
                     <div class="form-group">
                         <label>سعر  جملة بوحدة (<span class="parent_unit_name"></span>)  </label>
-                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_group_in_master_unit" id="price_per_group_in_master_unit" class="form-control"  value="{{ old('price_per_group_in_master_unit') }}" placeholder="ادخل السعر " >
+                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_group_in_master_unit" id="price_per_group_in_master_unit" class="form-control"  value="{{ old('price_per_group_in_master_unit', '0') }}" placeholder="ادخل السعر " >
                         @error('price_per_group_in_master_unit')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -208,7 +208,7 @@
                 <div class="col-md-6 relatied_parent_counter "  @if(old('unit_id')=='' ) style="display: none;" @endif>
                     <div class="form-group">
                         <label>سعر  تكلفة الشراء لوحدة (<span class="parent_unit_name"></span>)  </label>
-                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="cost_price_in_master" id="cost_price_in_master" class="form-control"  value="{{ old('cost_price_in_master') }}" placeholder="ادخل السعر " >
+                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="cost_price_in_master" id="cost_price_in_master" class="form-control"  value="{{ old('cost_price_in_master', '0') }}" placeholder="ادخل السعر " >
                         @error('cost_price_in_master')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -218,7 +218,7 @@
                 <div class="col-md-6 relatied_retial_counter " @if(old('retail_unit_id')=="" ) style="display: none;" @endif>
                     <div class="form-group">
                         <label>سعر القطاعي بوحدة (<span class="child_unit_name"></span>)  </label>
-                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_one_in_retail_unit" id="price_per_one_in_retail_unit" class="form-control"  value="{{ old('price_per_one_in_retail_unit') }}" placeholder="ادخل السعر " >
+                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_one_in_retail_unit" id="price_per_one_in_retail_unit" class="form-control"  value="{{ old('price_per_one_in_retail_unit', '0') }}" placeholder="ادخل السعر " >
                         @error('price_per_one_in_retail_unit')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -228,7 +228,7 @@
                 <div class="col-md-6 relatied_retial_counter " @if(old('retail_unit_id')=="") style="display: none;" @endif>
                     <div class="form-group">
                         <label>سعر النص جملة بوحدة (<span class="child_unit_name"></span>)  </label>
-                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_half_group_in_retail_unit" id="price_per_half_group_in_retail_unit" class="form-control"  value="{{ old('price_per_half_group_in_retail_unit') }}" placeholder="ادخل السعر " >
+                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_half_group_in_retail_unit" id="price_per_half_group_in_retail_unit" class="form-control"  value="{{ old('price_per_half_group_in_retail_unit', '0') }}" placeholder="ادخل السعر " >
                         @error('price_per_half_group_in_retail_unit')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -238,7 +238,7 @@
                 <div class="col-md-6 relatied_retial_counter " @if(old('retail_unit_id')=="" ) style="display: none;" @endif>
                     <div class="form-group">
                         <label>سعر  الجملة بوحدة (<span class="child_unit_name"></span>)  </label>
-                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_group_in_retail_unit" id="price_per_group_in_retail_unit" class="form-control"  value="{{ old('price_per_group_in_retail_unit') }}" placeholder="ادخل السعر " >
+                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="price_per_group_in_retail_unit" id="price_per_group_in_retail_unit" class="form-control"  value="{{ old('price_per_group_in_retail_unit', '0') }}" placeholder="ادخل السعر " >
                         @error('price_per_group_in_retail_unit')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -249,7 +249,7 @@
                 <div class="col-md-6 relatied_retial_counter " @if(old('retail_unit_id')=="" ) style="display: none;" @endif>
                     <div class="form-group">
                         <label>سعر  الشراء بوحدة (<span class="child_unit_name"></span>)  </label>
-                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="cost_price_in_retail" id="cost_price_in_retail" class="form-control"  value="{{ old('cost_price_in_retail') }}" placeholder="ادخل السعر " >
+                        <input oninput="this.value=this.value.replace(/[^0-9.]/g,'');" name="cost_price_in_retail" id="cost_price_in_retail" class="form-control"  value="{{ old('cost_price_in_retail', '0') }}" placeholder="ادخل السعر " >
                         @error('cost_price_in_retail')
                         <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -259,7 +259,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>هل للصنف سعر ثابت</label>
-                        <select name="has_fixed_price" id="has_fixed_price" class="form-control">
+                        <select name="has_fixed_price" id="has_fixed_price" class="form-control select2">
                         <option value="">اختر الحالة</option>
                         <option @if (old('has_fixed_price') == 1) selected  @endif value="1"> نعم ثابت ولايتغير بالفواتير</option>
                         <option @if (old('has_fixed_price') == 0 and old('active') != "" ) selected   @endif value="0"> لا وقابل للتغير بالفواتير</option>
@@ -273,7 +273,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>  حالة التفعيل</label>
-                        <select name="active" id="active" class="form-control">
+                        <select name="active" id="active" class="form-control select2">
                         <option value="">اختر الحالة</option>
                         <option   @if(old('active')==1) selected  @endif value="1"> نعم</option>
                         <option @if(old('active')==0 and old('active')!="" ) selected   @endif value="0"> لا</option>

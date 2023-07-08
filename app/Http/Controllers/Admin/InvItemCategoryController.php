@@ -74,6 +74,20 @@ class InvItemCategoryController extends Controller
         //
         if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'اضافة') == true) {
             try {
+                $com_code = auth()->user()->com_code;
+
+                $check = InvItemCategory::where(['name' => $request->name , 'com_code' => $com_code])->count();
+                if ($check > 0) {
+                    return redirect()->back()->with('error', 'اسم الفئة مسجل مسبقاً')->withInput();
+                }
+
+                $category_code = InvItemCategory::where(['com_code' => $com_code])->max('category_code');
+                if (empty($category_code)) {
+                    $inserted['category_code'] = 1;
+                }
+                else {
+                    $inserted['category_code'] = $category_code + 1;
+                }
                 $inserted['name'] = $request->name;
                 $inserted['active'] = $request->active;
                 $inserted['added_by'] = auth()->user()->id;
@@ -94,23 +108,6 @@ class InvItemCategoryController extends Controller
 
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
         //
@@ -138,12 +135,17 @@ class InvItemCategoryController extends Controller
     {
         //
         $request->validate([
-            'name' => 'required|unique:inv_item_categories,name,'.$id,
+            'name' => 'required',
             'active' =>'required'
         ]);
 
         if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'تعديل') == true) {
             try {
+                $check = InvItemCategory::where(['name' => $request->name , 'com_code' => auth()->user()->com_code])->where('id', '!=', $id)->count();
+                if ($check > 0) {
+                    return redirect()->back()->with('error', 'اسم الفئة مسجل مسبقاً')->withInput();
+                }
+
                 $updated['name'] = $request->name;
                 $updated['active'] = $request->active;
                 $updated['updated_by'] = auth()->user()->id;
@@ -165,28 +167,16 @@ class InvItemCategoryController extends Controller
 
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     *
-     */
-
-
     public function delete($id)
     {
         # code...
         if (check_control_menu_role('المخازن', 'فئات الاصناف' , 'حذف') == true) {
             try {
-
                 $data_check = InvItemCategory::where(['id' => $id, 'com_code' => auth()->user()->id])->first();
-
 
                 if (empty($data_check)) {
                     return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
                 }
-
 
                 $flag = InvItemCategory::where(['id' => $id, 'com_code' => auth()->user()->id])->delete();
 
@@ -196,7 +186,6 @@ class InvItemCategoryController extends Controller
                 else {
                     return redirect()->back()->with('error', 'غير قادر على الحذف ');
                 }
-
             }
             catch(Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage());
@@ -219,7 +208,18 @@ class InvItemCategoryController extends Controller
     public function ajax_search(Request $request) {
         if ($request->ajax()) {
             $value = $request->search_value;
-            $data = InvItemCategory::where('name', 'like', "%$value%")->paginate(PAGINATION_COUNT);
+            $data = InvItemCategory::where('name', 'like', "%$value%")->where('com_code', auth()->user()->com_code)->paginate(PAGINATION_COUNT);
+            if (!empty($data)) {
+                foreach ($data as $d) {
+                    if ($d['added_by'] != null) {
+                        $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                    }
+
+                    if ($d['updated_by'] != null) {
+                        $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
+                    }
+                }
+            }
             return view('admin.inv_item_categories.ajax_search', ['data' => $data]);
         }
     }

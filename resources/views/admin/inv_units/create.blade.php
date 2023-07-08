@@ -44,7 +44,7 @@
             <div class="form-group row">
                 <label class="col-sm-2 control-label">نوع الوحدة</label>
                 <div class="col-sm-10">
-                    <select name="master" class="form-control">
+                    <select name="master" class="form-control select2">
                         <option value="">اختر النوع</option>
                         <option @if (old('master') == 0 && old('master') != '') selected @endif value="0">وحدة جزئية</option>
                         <option @if (old('master') == 1) selected @endif value="1">وحدة رئيسية</option>
@@ -59,10 +59,10 @@
             <div class="form-group row">
                 <label class="col-sm-2 control-label">مفعلة</label>
                 <div class="col-sm-10">
-                    <select name="active" class="form-control">
+                    <select name="active" class="form-control select2">
                         <option value="">اختر الحالة</option>
-                        <option @if (old('active') == 0 && old('active') != '') selected @endif value="0">No</option>
-                        <option @if (old('active') == 1) selected @endif value="1">Yes</option>
+                        <option @if (old('active') == 1) selected @endif value="1">نعم</option>
+                        <option @if (old('active') == 0 && old('active') != '') selected @endif value="0">لا</option>
                     </select>
 
                     @error('active')
@@ -87,7 +87,7 @@
 @endsection
 
 @section('contentheader')
-    الضبط العام
+    المخازن
 @endsection
 
 @section('contentheaderlink')

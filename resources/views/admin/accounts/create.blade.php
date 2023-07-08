@@ -65,7 +65,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>هل الحساب أب</label>
-                            <select name="is_parent" id="is_parent" class="form-control">
+                            <select name="is_parent" id="is_parent" class="form-control select2">
                                 <option value="">اختر الحالة</option>
                                 <option @if (old('is_parent') == 1) selected  @endif value="1">نعم</option>
                                 <option @if (old('is_parent') == 0 and old('is_parent') != "") selected  @endif value="0">لا</option>
@@ -79,7 +79,7 @@
                     <div class="col-md-6 parentDiv"  @if(old('is_parent')==1||old('is_parent')=='')   style="display: none;"  @endif  >
                         <div class="form-group">
                             <label>الحسابات الأب</label>
-                            <select name="parent_account_number" id="parent_account_number" class="form-control ">
+                            <select name="parent_account_number" id="parent_account_number" class="form-control select2">
                                 <option value="">اختر الحساب الاب</option>
 
                                 @if (@isset($parent_accounts) && !@empty($parent_accounts))
@@ -101,7 +101,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>حالة رصيد اول المدة</label>
-                            <select name="start_balance_status" id="start_balance_status" class="form-control">
+                            <select name="start_balance_status" id="start_balance_status" class="form-control select2">
                                 <option value="">اختر الحالة</option>
                                 <option   @if (old('start_balance_status') == 1) selected  @endif value="1">دائن</option>
                                 <option   @if (old('start_balance_status') == 2) selected  @endif value="2">مدين</option>
@@ -127,7 +127,7 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>ملاحظات</label>
+                            <label>اسم او وصف الحساب</label>
                             <input name="notes" id="notes" class="form-control" value="{{ old('notes') }}">
 
                             @error('notes')
@@ -139,7 +139,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>حالة التفعيل</label>
-                            <select name="active" id="active" class="form-control">
+                            <select name="active" id="active" class="form-control select2">
                                 <option value="">اختر الحالة</option>
                                 <option @if(old('active') == 1 ) selected  @endif value="1">نعم</option>
                                 <option @if(old('active') == 0  and old('active') != "") selected @endif value="0">لا</option>

@@ -26,12 +26,10 @@
                with font-awesome or any other icon font library -->
             @if (check_main_menu_role('الضبط العام') == true)
                 <li class="nav-item has-treeview
-                        {{ request()->is('admin/panelSetting*') ||
-                        request()->is('admin/treasuries/*') ?  'menu-open' : '' }}">
+                        {{ request()->is('admin/panelSetting*') ?  'menu-open' : '' }}">
 
                     <a href="#" class="nav-link
-                        {{ request()->is('admin/panelSetting*') ||
-                        request()->is('admin/treasuries/*') ?  'active' : '' }}">
+                        {{ request()->is('admin/panelSetting*') ?  'active' : '' }}">
                         <i class="fa-solid fa-screwdriver-wrench mr-2"></i>
                     <p>
                         الضبط العام
@@ -51,18 +49,6 @@
                                 </a>
                             </li>
                         @endif
-
-                        @if (check_sub_menu_role('الضبط العام', 'الخزن') == true)
-                            <li class="nav-item">
-                                <a href="{{ route('admin.treasuries.index') }}" class="nav-link {{ request()->is('admin/treasuries/*') ? 'active' : '' }}">
-                                <i class="fa-solid fa-cash-register mr-1 ml-3"></i>
-                                <p>
-                                    الخزن
-                                </p>
-                                </a>
-                            </li>
-                        @endif
-
                     </ul>
                 </li>
             @endif
@@ -146,7 +132,9 @@
                             request()->is('admin/delegates*') ||
                             request()->is('admin/suppliers*') ||
                             request()->is('admin/treasuries_transactions*') ||
-                            request()->is('admin/exchange_transactions*') ?  'menu-open' : '' }}">
+                            request()->is('admin/exchange_transactions*') ||
+                            request()->is('admin/unpaid_transactions*') ||
+                            request()->is('admin/treasuries/*') ?  'menu-open' : '' }}">
 
                     <a href="#" class="nav-link
                             {{ request()->is('admin/account_types*') ||
@@ -155,7 +143,9 @@
                             request()->is('admin/delegates*') ||
                             request()->is('admin/suppliers*') ||
                             request()->is('admin/treasuries_transactions*') ||
-                            request()->is('admin/exchange_transactions*') ?  'active' : '' }}">
+                            request()->is('admin/exchange_transactions*') ||
+                            request()->is('admin/unpaid_transactions*') ||
+                            request()->is('admin/treasuries/*') ?  'active' : '' }}">
                     <i class="fa-solid fa-money-bill-trend-up mr-2"></i>
                     <p>
                         الحسابات
@@ -219,6 +209,17 @@
                             </li>
                         @endif
 
+                        @if (check_sub_menu_role('الحسابات', 'الخزن') == true)
+                            <li class="nav-item">
+                                <a href="{{ route('admin.treasuries.index') }}" class="nav-link {{ request()->is('admin/treasuries/*') ? 'active' : '' }}">
+                                <i class="fa-solid fa-cash-register mr-1 ml-3"></i>
+                                <p>
+                                    الخزن
+                                </p>
+                                </a>
+                            </li>
+                        @endif
+
                         @if (check_sub_menu_role('الحسابات', 'شاشة تحصيل النقدية') == true)
                             <li class="nav-item">
                                 <a href="{{ route('admin.treasuries_transactions.index') }}" class="nav-link {{ request()->is('admin/treasuries_transactions*') ? 'active' : '' }}">
@@ -236,6 +237,17 @@
                                     <i class="fa-solid fa-sack-dollar mr-1 ml-3"></i>
                                     <p>
                                         شاشة صرف النقدية
+                                    </p>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if (check_sub_menu_role('الحسابات', 'شاشة الدفع الآجل') == true)
+                            <li class="nav-item">
+                                <a href="{{ route('admin.unpaid_transactions.index') }}" class="nav-link {{ request()->is('admin/unpaid_transactions*') ? 'active' : '' }}">
+                                    <i class="fa-solid fa-hand-holding-dollar mr-1 ml-3"></i>
+                                    <p>
+                                        شاشة الدفع الآجل
                                     </p>
                                 </a>
                             </li>

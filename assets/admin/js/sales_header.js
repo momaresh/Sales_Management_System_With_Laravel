@@ -547,6 +547,14 @@ $(document).ready(function() {
             return false;
         }
 
+        if (customer_code == '') {
+            if (pill_type == 2) {
+                alert('من فضلك نوع الفاتورة يجب ان يكون نقدا في حال لا يوجد عميل');
+                $("#pill_type").focus();
+                return false;
+            }
+        }
+
         jQuery.ajax({
             url:search_url,
             type:'post',
@@ -817,6 +825,7 @@ $(document).ready(function() {
         var treasury_money = $('.treasury_money_return').val();
         if (treasury_money == '') treasury_money = 0;
         treasury_money = parseFloat(treasury_money);
+
         if (what_paid > treasury_money) {
             alert('عفوا ليس لديك رصيد كافي في الخزنة');
             $("#what-paid").focus();

@@ -30,8 +30,7 @@ class CreateAccountRequest extends FormRequest
             'start_balance_status' => 'required',
             'start_balance' => 'required|min:0',
             'active' => 'required',
-            'notes' => 'required',
-            'notes' => 'unique:accounts',
+            'notes' => 'required'
         ];
     }
 
@@ -44,8 +43,7 @@ class CreateAccountRequest extends FormRequest
             'start_balance_status.required' => 'حالة الحساب اول المدة مطلوب',
             'start_balance.required' => 'رصيد اول المدة مطلوب',
             'active.required' => 'حالة تفعيل الصنف مطلوب',
-            'notes.required' => 'ادخل الملاحظة حول الحساب مثل اسمه',
-            'notes.unique' => 'الملاحظة موجودة مسبقاً',
+            'notes.required' => 'ادخل وصف للحساب مثل اسمه'
         ];
     }
 }

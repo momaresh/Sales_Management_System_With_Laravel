@@ -63,19 +63,13 @@ class SalesOrderHeaderOriginalReturnController extends Controller
 
 
                 $com_code = auth()->user()->com_code;
-                $customers = Person::where(['person_type' => 1, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
+                $customers = Person::where(['active' => 1, 'person_type' => 1, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
                 foreach ($customers as $sup) {
                     $sup['customer_code'] = Customer::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('customer_code');
                     $sup['customer_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
                 }
 
-                $customers = Person::where(['person_type' => 1, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
-                foreach ($customers as $sup) {
-                    $sup['customer_code'] = Customer::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('customer_code');
-                    $sup['customer_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
-                }
-
-                $delegates = Person::where(['person_type' => 3, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
+                $delegates = Person::where(['active' => 1, 'person_type' => 3, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
                 foreach ($delegates as $sup) {
                     $sup['delegate_code'] = Delegate::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('delegate_code');
                     $sup['delegate_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
@@ -99,26 +93,25 @@ class SalesOrderHeaderOriginalReturnController extends Controller
             try {
                 $com_code = auth()->user()->com_code;
 
-                $customers = Person::where(['person_type' => 1, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
+                $customers = Person::where(['active' => 1, 'person_type' => 1, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
                 foreach ($customers as $sup) {
                     $sup['customer_code'] = Customer::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('customer_code');
                     $sup['customer_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
                 }
 
 
-                $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
-                $items_card = InvItemCard::where(['active' => 1, 'com_code' => $com_code])->get(['item_code', 'name', 'item_type', 'has_fixed_price']);
+                $stores = Store::where(['active' => 1, 'com_code' => $com_code])->get(['name', 'id']);
 
-                $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+                $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
                 if (empty($check_shift)) {
                     return Response()->json(['error' => 'انت لاتملك شفت حالي لعمل اضافة'], 404);
                 }
 
                 $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+                $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => $com_code])->sum('money');
 
 
-                return view('admin.sales_order_header_original_return.create', ['items_card' => $items_card, 'customers' => $customers, 'stores' => $stores, 'check_shift' => $check_shift]);
+                return view('admin.sales_order_header_original_return.create', ['customers' => $customers, 'stores' => $stores, 'check_shift' => $check_shift]);
             }
             catch (Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage());
@@ -177,14 +170,14 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                         foreach ($pill_details as $s) {
                             $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
                             $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
-                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                            $s['item_name'] = InvItemCard::where(['item_code' => $s['item_code'], 'com_code' => $com_code])->value('name');
                             $s['remain_quantity'] = $s['quantity'] - $s['rejected_quantity'];
                         }
                     }
 
-                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
                     $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => $com_code])->sum('money');
 
                 }
             }
@@ -205,6 +198,10 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                 }
 
                 $data = InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code, 'order_type' => 1, 'invoice_type' => 2])->get()->first();
+                $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('customer_code');
+                $data['delegate_code'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('delegate_code');
+                $data['commission_type'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('delegate_commission_type');
+                $data['commission'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('delegate_commission');
 
                 if (empty($data)) {
                     return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
@@ -212,6 +209,10 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                 if ($data['is_original_return'] == 1) {
                     return redirect()->back()->with('error', 'الفاتورة تم ارجاعها من قبل');
                 }
+                if ($data['customer_code'] == '' && $request->pill_type == 2) {
+                    return redirect()->back()->with('error', 'الفاتورة التي لا تحتوي على عميل يجب ان تكون كاش');
+                }
+
 
                 $updateInvoice['is_original_return'] = 1;
                 $updateInvoice['updated_by'] = auth()->user()->id;
@@ -233,10 +234,6 @@ class SalesOrderHeaderOriginalReturnController extends Controller
 
                     $flag = OriginalReturnInvoice::create($insertReturnInvoice);
 
-                    $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('customer_code');
-                    $data['delegate_code'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('delegate_code');
-                    $data['commission_type'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('delegate_commission_type');
-                    $data['commission'] = SalesOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('delegate_commission');
 
                     if ($data['delegate_code'] != '' && $data['delegate_code'] != null) {
                         if ($data['commission_type'] == 1) { // نسبة
@@ -274,7 +271,7 @@ class SalesOrderHeaderOriginalReturnController extends Controller
 
                     if ($request->what_paid > 0) {
 
-                        $max_transaction_code = TreasuryTransaction::where('com_code', $com_code)->max('transaction_code');
+                        $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 1,'com_code' => $com_code])->max('transaction_code');
                         if (empty($max_transaction_code)) {
                             $insertTransaction['transaction_code'] = 1;
                         }
@@ -287,13 +284,13 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                             return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
                         }
                         else {
-                            $insertTransaction['shift_code'] = $check_shift['shift_code'];
+                            $insertTransaction['shift_code'] = $check_shift['id'];
                         }
 
                         $last_exchange_arrive = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('last_exchange_arrive');
 
 
-                        if (empty($last_exchange_arrive)) {
+                        if (empty($last_exchange_arrive) && $last_exchange_arrive != 0) {
                             return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
                         }
                         else {
@@ -305,7 +302,7 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                         // Account number will be like the account number for the customer in the salesHeader
                         $insertTransaction['account_number'] = $data['account_number'];
                         $insertTransaction['transaction_type'] = 1;
-                        $insertTransaction['money'] = $request->total_pill * (-1);
+                        $insertTransaction['money'] = $request->what_paid * (-1);
                         $insertTransaction['is_approved'] = 1;
                         $insertTransaction['invoice_id'] = $id;
                         $insertTransaction['treasuries_id'] = $check_shift['treasuries_id'];
@@ -313,9 +310,9 @@ class SalesOrderHeaderOriginalReturnController extends Controller
 
 
                         if ($data['customer_code'] != '' && $data['customer_code'] != null) {
-                            $insertTransaction['byan'] = 'صرف نظير مرتجع مبيعات من العميل' . ' ' . $data['customer_name'];
+                            $insertTransaction['byan'] = 'صرف نظير مرتجع مبيعات من العميل' . ' ' . $data['customer_name'] . ' ' . 'فاتورة رقم ' . $id;
                             $insertTransaction['is_account'] = 1;
-                            $insertTransaction['money_for_account'] = $request->total_pill * (1);
+                            $insertTransaction['money_for_account'] = $request->what_paid * (1);
                         }
                         else {
                             $insertTransaction['byan'] = 'صرف نظير مرتجع مبيعات بدون عميل';
@@ -335,9 +332,113 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                             if ($data['customer_code'] != '' && $data['customer_code'] != null) {
                                 // change the customer current balance in accounts
                                 $get_current = Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->value('current_balance');
-                                $update_account['current_balance'] = $get_current + $request->total_pill;
+                                $update_account['current_balance'] = $get_current + $request->what_paid;
                                 Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
                             }
+                        }
+                    }
+
+                    if ($request->what_remain > 0) {
+                        $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 3,'com_code' => $com_code])->max('transaction_code');
+                        if (empty($max_transaction_code)) {
+                            $insertTransaction['transaction_code'] = 1;
+                        }
+                        else {
+                            $insertTransaction['transaction_code'] = $max_transaction_code + 1;
+                        }
+
+                        $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'treasuries_id' => $request->treasuries_id, 'com_code' => $com_code, 'is_finished' => 0])->first();
+                        if (empty($check_shift)) {
+                            return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
+                        }
+                        else {
+                            $insertTransaction['shift_code'] = $request->shift_code;
+                        }
+
+                        $last_unpaid_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_unpaid_arrive');
+
+
+                        if (empty($last_unpaid_arrive) && $last_unpaid_arrive != 0) {
+                            return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                        }
+                        else {
+                            $insertTransaction['last_arrive'] = $last_unpaid_arrive + 1;
+                        }
+
+                        // Move type will number 6 صرف نظير مرتجع مبيعات
+                        $insertTransaction['move_type'] = 6;
+                        // Account number will be like the account number for the customer in the purchaseHeader
+                        $insertTransaction['account_number'] = $data['account_number'];
+                        $insertTransaction['transaction_type'] = 3;
+                        $insertTransaction['money'] = 0;
+                        $insertTransaction['is_approved'] = 1;
+                        $insertTransaction['invoice_id'] = $id;
+                        $insertTransaction['treasuries_id'] = $request->treasuries_id;
+                        $insertTransaction['move_date'] = date('Y-m-d');
+                        $insertTransaction['byan'] = ' صرف نظير مرتجع مبيعات للعميل' . ' ' . $data['customer_name'] . ' ' . 'فاتورة رقم ' . $id;
+                        $insertTransaction['is_account'] = 1;
+                        $insertTransaction['money_for_account'] = $insertReturnInvoice['what_remain'] * (-1);
+                        $insertTransaction['added_by'] = auth()->user()->id;
+                        $insertTransaction['com_code'] = $com_code;
+                        $insertTransaction['created_at'] = date('Y-m-d H:i:s');
+
+                        $flag = TreasuryTransaction::create($insertTransaction);
+
+                        if($flag) {
+                            $update_treasuries['last_unpaid_arrive'] = $last_unpaid_arrive + 1;
+                            Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
+                        }
+                    }
+
+                    if ($data['delegate_code'] != '' && $data['delegate_code'] != null) {
+                        $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 3,'com_code' => $com_code])->max('transaction_code');
+                        if (empty($max_transaction_code)) {
+                            $insertTransaction['transaction_code'] = 1;
+                        }
+                        else {
+                            $insertTransaction['transaction_code'] = $max_transaction_code + 1;
+                        }
+
+                        $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'treasuries_id' => $request->treasuries_id, 'com_code' => $com_code, 'is_finished' => 0])->first();
+                        if (empty($check_shift)) {
+                            return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
+                        }
+                        else {
+                            $insertTransaction['shift_code'] = $request->shift_code;
+                        }
+
+                        $last_unpaid_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_unpaid_arrive');
+
+
+                        if (empty($last_unpaid_arrive) && $last_unpaid_arrive != 0) {
+                            return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                        }
+                        else {
+                            $insertTransaction['last_arrive'] = $last_unpaid_arrive + 1;
+                        }
+
+                        // Move type will number 28 تحصيل عمولة مرتجع مبيعات من مندوب
+                        $insertTransaction['move_type'] = 28;
+                        // Account number will be like the account number for the customer in the purchaseHeader
+                        $insertTransaction['account_number'] = $data['delegate_account_number'];
+                        $insertTransaction['transaction_type'] = 3;
+                        $insertTransaction['money'] = 0;
+                        $insertTransaction['is_approved'] = 1;
+                        $insertTransaction['invoice_id'] = $id;
+                        $insertTransaction['treasuries_id'] = $request->treasuries_id;
+                        $insertTransaction['move_date'] = date('Y-m-d');
+                        $insertTransaction['byan'] = ' تحصيل عمولة مرتجع مبيعات من المندوب' . ' ' . $data['delegate_name'] . ' ' . 'فاتورة رقم ' . $id;
+                        $insertTransaction['is_account'] = 1;
+                        $insertTransaction['money_for_account'] = $data['money_for_delegate'] * (1);
+                        $insertTransaction['added_by'] = auth()->user()->id;
+                        $insertTransaction['com_code'] = $com_code;
+                        $insertTransaction['created_at'] = date('Y-m-d H:i:s');
+
+                        $flag = TreasuryTransaction::create($insertTransaction);
+
+                        if($flag) {
+                            $update_treasuries['last_unpaid_arrive'] = $last_unpaid_arrive + 1;
+                            Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
                         }
                     }
 
@@ -431,7 +532,7 @@ class SalesOrderHeaderOriginalReturnController extends Controller
                         $i++;
                     }
 
-                    return redirect()->back()->with('success', 'تم اعتماد واضافة الفاتورة بنجاح');
+                    return redirect()->route('admin.sales_order_header_original_return.index')->with('success', 'تم اعتماد واضافة الفاتورة بنجاح');
                 }
 
             }

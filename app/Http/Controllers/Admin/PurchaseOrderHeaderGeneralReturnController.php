@@ -7,10 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Account;
 use App\Models\InvoiceOrderHeader;
 use App\Models\PurchaseOrderHeader;
-use App\Models\Admin;
 use App\Models\Person;
 use App\Models\Supplier;
-use App\Http\Requests\PurchaseOrderHeaderRequest;
 use App\Models\AdminPanelSetting;
 use App\Models\AdminShift;
 use App\Models\InvItemCard;
@@ -50,14 +48,15 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
 
 
                 $com_code = auth()->user()->com_code;
-                $suppliers = Person::where(['person_type' => 2, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
-                foreach ($suppliers as $sup) {
-                    $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('supplier_code');
-                    $sup['supplier_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
+                $suppliers = Person::where(['person_type' => 2, 'com_code' => auth()->user()->com_code, 'active' => 1])->get(['id', 'first_name', 'last_name']);
+                $stores = Store::where(['com_code' => $com_code, 'active' => 1])->get(['id', 'name']);
+                if (!empty($suppliers)) {
+                    foreach ($suppliers as $sup) {
+                        $sup['supplier_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
+                        $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id']])->value('supplier_code');
+                    }
                 }
-
-                $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
-
+                
                 return view('admin.purchase_order_header_general_return.index', ['data' => $data, 'suppliers' => $suppliers, 'stores' => $stores]);
             }
             catch (Exception $e) {
@@ -77,25 +76,23 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                 try {
                     $com_code = auth()->user()->com_code;
 
-                    $suppliers = Person::where(['person_type' => 2, 'com_code' => $com_code])->get(['first_name', 'last_name', 'id']);
+                    $suppliers = Person::where(['person_type' => 2, 'com_code' => $com_code, 'active' => 1])->get(['first_name', 'last_name', 'id']);
                     foreach ($suppliers as $sup) {
                         $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id'], 'com_code' => $com_code])->value('supplier_code');
                         $sup['supplier_name'] = $sup['first_name'] . ' ' . $sup['last_name'];
                     }
 
+                    $stores = Store::where(['com_code' => $com_code, 'active' => 1])->get(['name', 'id']);
 
-                    $stores = Store::where(['com_code' => $com_code])->get(['name', 'id']);
-                    $items_card = InvItemCard::where(['active' => 1, 'com_code' => $com_code])->get(['item_code', 'name', 'item_type', 'has_fixed_price']);
-
-                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
                     if (empty($check_shift)) {
                         return Response()->json(['error' => 'انت لاتملك شفت حالي لعمل اضافة'], 404);
                     }
                     $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => $com_code])->sum('money');
 
 
-                    return view('admin.purchase_order_header_general_return.create_pill', ['items_card' => $items_card, 'suppliers' => $suppliers, 'stores' => $stores, 'check_shift' => $check_shift]);
+                    return view('admin.purchase_order_header_general_return.create_pill', ['suppliers' => $suppliers, 'stores' => $stores, 'check_shift' => $check_shift]);
                 }
                 catch (Exception $e) {
                     return redirect()->back()->with('error', $e->getMessage());
@@ -257,12 +254,12 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
 
                 $check_shift = array();
                 if ($sales_data['is_approved'] == 0) {
-                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
                     if (empty($check_shift)) {
                         return Response()->json(['error' => ''], 404);
                     }
                     $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => $com_code])->sum('money');
                 }
 
                 return view('admin.purchase_order_header_general_return.pill_adding_items', ['items_card' => $items_card, 'check_shift' => $check_shift, 'sales_data' => $sales_data, 'items' => $items]);
@@ -362,7 +359,6 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
         if ($request->ajax()) {
             $com_code = auth()->user()->com_code;
             $item_code = $request->item_code;
-            $sales_type = $request->sales_type;
             $unit_id = $request->unit_id;
 
             $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get()->first();
@@ -370,10 +366,10 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
             $unit_price = 0;
             if (!empty($item_card_data)) {
                 if ($unit_id == $item_card_data['unit_id'] || $unit_id == null) {
-                    $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_master_unit');
+                    $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('cost_price_in_master');
                 }
                 else if ($unit_id == $item_card_data['retail_unit_id']) {
-                    $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_retail_unit');
+                    $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('cost_price_in_retail');
                 }
             }
 
@@ -701,12 +697,12 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
         if ($request->ajax()) {
             try {
                //Check if has shift
-               $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => auth()->user()->com_code, 'is_finished' => 0])->get(['treasuries_id', 'shift_code'])->first();
+               $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => auth()->user()->com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
                if (empty($check_shift)) {
                    return Response()->json(['error' => ''], 404);
                }
                $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => auth()->user()->com_code])->value('name');
-               $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['shift_code'], 'com_code' => auth()->user()->com_code])->sum('money');
+               $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => auth()->user()->com_code])->sum('money');
 
                return view('admin.purchase_order_header_general_return.check_shift_and_reload_money', ['check_shift' => $check_shift]);
             }
@@ -725,6 +721,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                 $com_code = auth()->user()->com_code;
                 $data = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 1])->get()->first();
                 $data['supplier_code'] = PurchaseOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('supplier_code');
+                $data['total_cost'] = $request->total_cost;
 
                 $items = InvoiceOrderDetail::where(['invoice_order_id' => $auto_serial, 'com_code' => $com_code])->first();
                 if (empty($items)) {
@@ -774,7 +771,6 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
 
                 $flag = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 3, 'invoice_type' => 1])->update($updateInvoice);
 
-
                 if ($flag) {
                     // get the account number and name from the supplier_code
                     // 1- get the person id from the supplier model
@@ -801,7 +797,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                     // first if the what_paid > 0, we will make transaction action and will be in minus,
                     // because we make exchange
                     if ($request->what_paid > 0) {
-                        $max_transaction_code = TreasuryTransaction::where('com_code', $com_code)->max('transaction_code');
+                        $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 2,'com_code' => $com_code])->max('transaction_code');
                         if (empty($max_transaction_code)) {
                             $insertTransaction['transaction_code'] = 1;
                         }
@@ -821,7 +817,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                         $last_collection_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_collection_arrive');
 
 
-                        if (empty($last_collection_arrive)) {
+                        if (empty($last_collection_arrive) && $last_collection_arrive != 0) {
                             return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
                         }
                         else {
@@ -860,6 +856,63 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                             Account::where(['account_number' => $data['account_number'], 'com_code' => $com_code])->update($update_account);
                         }
                     }
+
+                    if ($request->what_remain > 0) {
+                        $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 3,'com_code' => $com_code])->max('transaction_code');
+                        if (empty($max_transaction_code)) {
+                            $insertTransaction['transaction_code'] = 1;
+                        }
+                        else {
+                            $insertTransaction['transaction_code'] = $max_transaction_code + 1;
+                        }
+
+
+                        $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'treasuries_id' => $request->treasuries_id, 'com_code' => $com_code, 'is_finished' => 0])->first();
+                        if (empty($check_shift)) {
+                            return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
+                        }
+                        else {
+                            $insertTransaction['shift_code'] = $request->shift_code;
+                        }
+
+                        $last_unpaid_arrive = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_unpaid_arrive');
+
+
+                        if (empty($last_unpaid_arrive) && $last_unpaid_arrive != 0) {
+                            return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                        }
+                        else {
+                            $insertTransaction['last_arrive'] = $last_unpaid_arrive + 1;
+                        }
+
+                        //تحصيل نظير مرتجع مشتريات من مورد
+                        $insertTransaction['move_type'] = 10;
+                        // Account number will be like the account number for the supplier in the purchaseHeader
+                        $insertTransaction['account_number'] = $data['account_number'];
+                        $insertTransaction['transaction_type'] = 3;
+                        $insertTransaction['money'] = 0;
+                        $insertTransaction['is_approved'] = 1;
+                        $insertTransaction['invoice_id'] = $auto_serial;
+                        $insertTransaction['treasuries_id'] = $request->treasuries_id;
+                        $insertTransaction['move_date'] = date('Y-m-d');
+
+
+                        $insertTransaction['byan'] = ' تحصيل نظير مرتجع مشتريات من مورد' . ' ' . $data['supplier_name'];
+                        $insertTransaction['is_account'] = 1;
+                        $insertTransaction['money_for_account'] = $updateInvoice['what_remain'] * (1);
+
+                        $insertTransaction['added_by'] = auth()->user()->id;
+                        $insertTransaction['com_code'] = $com_code;
+                        $insertTransaction['created_at'] = date('Y-m-d H:i:s');
+
+                        $flag = TreasuryTransaction::create($insertTransaction);
+
+                        if($flag) {
+                            $update_treasuries['last_unpaid_arrive'] = $last_unpaid_arrive + 1;
+                            Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
+                        }
+                    }
+
                     return redirect()->back()->with('success', 'تم اعتماد واضافة الفاتورة بنجاح');
 
                 }

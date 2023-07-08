@@ -87,6 +87,7 @@
                             @if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'تعديل') == true)
                                 <th>تعديل</th>
                             @endif
+                            <th>كود الجرد</th>
                             <th>تاريخ الجرد</th>
                             <th>نوع الجرد</th>
                             <th>مخزن الجرد</th>
@@ -105,6 +106,7 @@
                                         </a>
                                     </td>
                                 @endif
+                                <td>{{ $datum->inventory_code }}</td>
                                 <td>{{ $datum->inventory_date }}</td>
                                 <td>
                                     @if ($datum->inventory_type == 1)

@@ -32,10 +32,6 @@ class StoreController extends Controller
                         if ($d['updated_by'] != null) {
                             $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
                         }
-
-                        // if ($d['com_code'] != null) {
-                        //     $d['com_code_name'] = AdminPanelSetting::where('id', $d['com_code'])->value('system_name');
-                        // }
                     }
                 }
 
@@ -77,13 +73,28 @@ class StoreController extends Controller
         //
         if (check_control_menu_role('المخازن', 'المخازن' , 'اضافة') == true) {
             try {
+                $com_code = auth()->user()->com_code;
+
+                $check = Store::where(['name' => $request->name , 'com_code' => $com_code])->count();
+                if ($check > 0) {
+                    return redirect()->back()->with('error', 'اسم المخزن مسجل مسبقاً')->withInput();
+                }
+
+                $store_code = Store::where(['com_code' => $com_code])->max('store_code');
+                if (empty($store_code)) {
+                    $inserted['store_code'] = 1;
+                }
+                else {
+                    $inserted['store_code'] = $store_code + 1;
+                }
+
                 $inserted['name'] = $request->name;
                 $inserted['active'] = $request->active;
                 $inserted['phone'] = $request->phone;
                 $inserted['address'] = $request->address;
                 $inserted['added_by'] = auth()->user()->id;
                 $inserted['created_at'] = date('Y-m-d H:i:s');
-                $inserted['com_code'] = auth()->user()->com_code;
+                $inserted['com_code'] = $com_code;
 
                 Store::create($inserted);
 
@@ -142,7 +153,7 @@ class StoreController extends Controller
     {
         //
         $request->validate([
-            'name' => 'required|unique:stores,name,'.$id,
+            'name' => 'required',
             'active' =>'required',
             'phone' =>'required',
             'address' =>'required'
@@ -150,13 +161,19 @@ class StoreController extends Controller
 
         if (check_control_menu_role('المخازن', 'المخازن' , 'تعديل') == true) {
             try {
+                $com_code = auth()->user()->com_code;
+                $check = Store::where(['name' => $request->name, 'com_code' => $com_code])->where('id', '!=', $id)->count();
+                if ($check > 0) {
+                    return redirect()->back()->with('error', 'اسم المخزن مسجل مسبقاً')->withInput();
+                }
+
                 $updated['name'] = $request->name;
                 $updated['phone'] = $request->phone;
                 $updated['address'] = $request->address;
                 $updated['active'] = $request->active;
                 $updated['updated_by'] = auth()->user()->id;
                 $updated['updated_at'] = date('Y-m-d H:i:s');
-                $updated['com_code'] = auth()->user()->com_code;
+                $updated['com_code'] = $com_code;
 
                 Store::where('id', $id)->update($updated);
 
@@ -215,7 +232,18 @@ class StoreController extends Controller
     public function ajax_search(Request $request) {
         if ($request->ajax()) {
             $value = $request->search_value;
-            $data = Store::where('name', 'like', "%$value%")->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
+            $data = Store::where('name', 'like', "%$value%")->where(['com_code' => auth()->user()->com_code])->orderby('id', 'DESC')->paginate(PAGINATION_COUNT);
+            if (!empty($data)) {
+                foreach ($data as $d) {
+                    if ($d['added_by'] != null) {
+                        $d['added_by_name'] = Admin::where('id', $d['added_by'])->value('name');
+                    }
+
+                    if ($d['updated_by'] != null) {
+                        $d['updated_by_name'] = Admin::where('id', $d['updated_by'])->value('name');
+                    }
+                }
+            }
             return view('admin.stores.ajax_search', ['data' => $data]);
         }
     }

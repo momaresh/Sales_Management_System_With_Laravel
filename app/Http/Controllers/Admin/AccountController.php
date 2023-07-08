@@ -10,7 +10,7 @@ use App\Models\Admin;
 use App\Http\Requests\CreateAccountRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Person;
-
+use App\Models\Treasury;
 use Exception;
 
 class AccountController extends Controller
@@ -30,13 +30,22 @@ class AccountController extends Controller
                 if (!empty($data)) {
                     foreach ($data as $d) {
                         $d['account_type_name'] = AccountType::where(['id' => $d['account_type']])->value('name');
-                        $person = Person::where(['account_number' => $d['account_number']])->get(['first_name', 'last_name'])->first();
-                        if ($person != null) {
-                            $d['account_person_name'] = $person->first_name . ' ' . $person->last_name;
+
+                        if ($d['account_type'] ==  14) {
+                            $d['account_name'] =  Treasury::where(['account_number' => $d['account_number']])->value('name');
+                        }
+                        else if ($d['account_type'] == 2 || $d['account_type'] == 3 || $d['account_type'] == 4 || $d['account_type'] == 5) {
+                            $person = Person::where(['account_number' => $d['account_number']])->get(['first_name', 'last_name'])->first();
+                            if ($person != null) {
+                                $d['account_name'] = $person->first_name . ' ' . $person->last_name;
+                            }
+                        }
+                        else {
+                            $d['account_name'] = $d['notes'];
                         }
 
                         if (empty($d['parent_account_number'])) {
-                            $d['parent_account_name'] = "لا يوجد";
+                            $d['parent_account_name'] = "هو اب";
                         }
                         else {
                             $d['parent_account_name'] = Account::where(['account_number' => $d['parent_account_number']])->value('notes');
@@ -90,8 +99,12 @@ class AccountController extends Controller
             try {
                 //set account number
                 // get the max account that is not parent account
-                $max = Account::max('account_number');
+                $check = Account::where(['com_code' => auth()->user()->com_code, 'notes' => $request->notes])->count();
+                if ($check > 0) {
+                    return redirect()->back()->with('error', 'الوصف للحساب موجود مسبقاً')->withInput();
+                }
 
+                $max = Account::max('account_number');
                 if (!empty($max)) {
                     $inserted['account_number'] = $max + 1;
                 } else {
@@ -210,6 +223,11 @@ class AccountController extends Controller
         //
         if (check_control_menu_role('الحسابات', 'الحسابات' , 'تعديل') == true) {
             try {
+                $check = Account::where(['com_code' => auth()->user()->com_code, 'notes' => $request->notes])->count();
+                if ($check > 0) {
+                    return redirect()->back()->with('error', 'الوصف للحساب موجود مسبقاً')->withInput();
+                }
+
                 $related_internal_accounts = AccountType::where('id', $request->account_type)->value('related_internal_accounts');
 
                 if ($related_internal_accounts == 1) {
@@ -272,17 +290,16 @@ class AccountController extends Controller
     {
         if (check_control_menu_role('الحسابات', 'الحسابات' , 'اضافة') == true) {
             try {
-                $com_code = auth()->user()->com_code;
                 $item_row = Account::find($id);
 
                 if (!empty($item_row)) {
                     $flag = Account::where('id', $id)->delete();
-                if ($flag) {
-                    return redirect()->back()->with(['success' => 'تم حذف البيانات بنجاح']);
-                }
-                else {
-                    return redirect()->back()->with(['error' => 'عفوا حدث خطأ ما']);
-                }
+                    if ($flag) {
+                        return redirect()->back()->with(['success' => 'تم حذف البيانات بنجاح']);
+                    }
+                    else {
+                        return redirect()->back()->with(['error' => 'عفوا حدث خطأ ما']);
+                    }
                 }
                 else {
                     return redirect()->back()->with(['error' => 'عفوا غير قادر الي الوصول للبيانات المطلوبة']);
@@ -355,13 +372,21 @@ class AccountController extends Controller
             if (!empty($data)) {
                 foreach ($data as $d) {
                     $d['account_type_name'] = AccountType::where(['id' => $d['account_type']])->value('name');
-                    $person = Person::where(['account_number' => $d['account_number']])->get(['first_name', 'last_name'])->first();
-                    if ($person != null) {
-                        $d['account_person_name'] = $person->first_name . ' ' . $person->last_name;
+                    if ($d['account_type'] ==  14) {
+                        $d['account_name'] =  Treasury::where(['account_number' => $d['account_number']])->value('name');
+                    }
+                    else if ($d['account_type'] == 2 || $d['account_type'] == 3 || $d['account_type'] == 4 || $d['account_type'] == 5) {
+                        $person = Person::where(['account_number' => $d['account_number']])->get(['first_name', 'last_name'])->first();
+                        if ($person != null) {
+                            $d['account_name'] = $person->first_name . ' ' . $person->last_name;
+                        }
+                    }
+                    else {
+                        $d['account_name'] = $d['notes'];
                     }
 
                     if (empty($d['parent_account_number'])) {
-                        $d['parent_account_name'] = "لا يوجد";
+                        $d['parent_account_name'] = "هو اب";
                     }
                     else {
                         $d['parent_account_name'] = Account::where(['account_number' => $d['parent_account_number']])->value('notes');

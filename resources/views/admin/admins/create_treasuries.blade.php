@@ -33,7 +33,7 @@
             <div class="form-group row">
                 <label class="col-sm-2 control-label">اسم الخزنة</label>
                 <div class="col-sm-10">
-                    <select name="treasuries_id" class="form-control">
+                    <select name="treasuries_id" class="form-control select2">
                         @if (!@empty($data))
                             <option value="">اختر خزينة...</option>
                             @foreach ($data as $datum)
@@ -51,7 +51,7 @@
             <div class="form-group row">
                 <label class="col-sm-2 control-label">مفعلة</label>
                 <div class="col-sm-10">
-                    <select name="active" class="form-control">
+                    <select name="active" class="form-control select2">
                         <option value="">اختر الحالة...</option>
                         <option @if (old('active') == 1) selected @endif value="1">نعم</option>
                         <option @if (old('active') == 0 && old('active') != '') selected @endif value="0">لا</option>

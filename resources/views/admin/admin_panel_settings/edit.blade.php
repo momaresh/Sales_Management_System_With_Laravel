@@ -8,7 +8,7 @@
 
 
 @section('title')
-    Edit panel settings
+    تعديل بيانات الضبط العام
 @endsection
 
 @section('content')
@@ -68,7 +68,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>الحساب الاب للعملاء</label>
-                        <select name="customer_parent_account" id="customer_parent_account" class="form-control ">
+                        <select name="customer_parent_account" id="customer_parent_account" class="form-control select2">
                             <option value="">اختر الحساب الاب</option>
                             @if (@isset($accounts) && !@empty($accounts))
                                 @foreach ($accounts as $info )
@@ -85,7 +85,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>الحساب الاب للموردين</label>
-                        <select name="supplier_parent_account" id="supplier_parent_account" class="form-control ">
+                        <select name="supplier_parent_account" id="supplier_parent_account" class="form-control select2">
                             <option value="">اختر الحساب الاب</option>
                             @if (@isset($accounts) && !@empty($accounts))
                                 @foreach ($accounts as $info )
@@ -102,7 +102,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>الحساب الاب للمناديب</label>
-                        <select name="delegate_parent_account" id="delegate_parent_account" class="form-control ">
+                        <select name="delegate_parent_account" id="delegate_parent_account" class="form-control select2">
                             <option value="">اختر الحساب الاب</option>
                             @if (@isset($accounts) && !@empty($accounts))
                                 @foreach ($accounts as $info )
@@ -119,7 +119,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>الحساب الاب للموظفين</label>
-                        <select name="employee_parent_account" id="employee_parent_account" class="form-control ">
+                        <select name="employee_parent_account" id="employee_parent_account" class="form-control select2">
                             <option value="">اختر الحساب الاب</option>
                             @if (@isset($accounts) && !@empty($accounts))
                                 @foreach ($accounts as $info )
@@ -128,6 +128,23 @@
                             @endif
                         </select>
                         @error('employee_parent_account')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>الحساب الاب للخزن</label>
+                        <select name="treasury_parent_account" id="treasury_parent_account" class="form-control select2">
+                            <option value="">اختر الحساب الاب</option>
+                            @if (@isset($accounts) && !@empty($accounts))
+                                @foreach ($accounts as $info )
+                                    <option @if (old('treasury_parent_account', $data->treasury_parent_account) == $info->account_number) selected @endif value="{{ $info->account_number }}"> {{ $info->notes }} </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        @error('treasury_parent_account')
                             <p class="text-danger">{{ $message }}</p>
                         @enderror
                     </div>
@@ -170,13 +187,6 @@
                         @error('employee_first_code')
                             <p class="text-danger">{{ $message }}</p>
                         @enderror
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>رسالة التنبيه اعلى الشركة</label>
-                        <textarea name="general_alert" class="form-control">{{ old('general_alert', $data->general_alert) }}</textarea>
                     </div>
                 </div>
 

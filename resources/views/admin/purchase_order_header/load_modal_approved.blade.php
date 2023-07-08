@@ -1,4 +1,10 @@
 @if (@isset($data) && !@empty($data))
+<html lang="en">
+    <head>
+    <link rel="stylesheet" href="{{ asset('assets/admin/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
+    </head>
+    <body>
 
     @if ($data['is_approved'] == 0)
         <div class="row">
@@ -97,7 +103,7 @@
 
                 </div>
 
-                <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['shift_code'] }}">
+                <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['id'] }}">
                 <input type="hidden" class="form-control" name="treasuries_id" value="{{ $check_shift['treasuries_id'] }}">
 
                 <div class="col-md-6">
@@ -137,27 +143,32 @@
             </div>
         </div>
         <button type="submit" class="btn btn-primary" id="do_approve">اعتماد وترحيل</button>
-
-    @else
-
     @endif
-@else
 
+    <script>
+        if ($('#pill-type').val() == 1) {
+            var total_cost = $("#total-cost").val();
+            $('#what-paid').val(total_cost);
+            $('#what-paid').prop('readonly', true);;
+            $('#what-remain').val(0);
+        }
+
+        else if ($('#pill-type').val() == 2) {
+            var total_cost = $("#total-cost").val();
+            $('#what-remain').val(total_cost);
+            $('#what-paid').prop('readonly', false);
+            $('#what-paid').val(0);
+        }
+    </script>
+    <script src="{{ asset('assets/admin/plugins/select2/js/select2.full.min.js') }}"></script>
+            <script>
+                $(function () {
+                    //Initialize Select2 Elements
+                    $('.select2').select2({
+                    theme: 'bootstrap4'
+                    })
+                });
+            </script>
+        </body>
+    </html>
 @endif
-
-
-<script>
-    if ($('#pill-type').val() == 1) {
-        var total_cost = $("#total-cost").val();
-        $('#what-paid').val(total_cost);
-        $('#what-paid').prop('readonly', true);;
-        $('#what-remain').val(0);
-    }
-
-    else if ($('#pill-type').val() == 2) {
-        var total_cost = $("#total-cost").val();
-        $('#what-remain').val(total_cost);
-        $('#what-paid').prop('readonly', false);
-        $('#what-paid').val(0);
-    }
-</script>

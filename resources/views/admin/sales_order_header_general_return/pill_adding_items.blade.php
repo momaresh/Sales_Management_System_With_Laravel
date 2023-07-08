@@ -245,16 +245,18 @@
                         </div>
                     </div>
 
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>نوع الفاتورة</label>
-                            <select id="pill-type" name="pill_type" class="form-control select2">
-                                <option value="">نوع الفاتورة</option>
-                                <option @if($sales_data->pill_type == 1) selected @endif value="1">كاش</option>
-                                <option @if($sales_data->pill_type == 2) selected @endif value="2">آجل</option>
-                            </select>
+                    @if (!@empty($sales_data->customer_code))
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>نوع الفاتورة</label>
+                                <select id="pill-type" name="pill_type" class="form-control select2">
+                                    <option value="">نوع الفاتورة</option>
+                                    <option @if($sales_data->pill_type == 1) selected @endif value="1">كاش</option>
+                                    <option @if($sales_data->pill_type == 2) selected @endif value="2">آجل</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
                     <div class="col-md-3" id="what-paid-div">
                         <div class="form-group">
@@ -279,7 +281,7 @@
 
                         </div>
 
-                        <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['shift_code'] }}">
+                        <input type="hidden" class="form-control" id="shift-code" name="shift_code" value="{{ $check_shift['id'] }}">
                         <input type="hidden" class="form-control" name="treasuries_id" value="{{ $check_shift['treasuries_id'] }}">
 
                         <div class="col-md-6">

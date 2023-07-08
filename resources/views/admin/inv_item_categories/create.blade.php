@@ -21,9 +21,6 @@
     </div>
 @endif
 
-
-
-
 <div class="card">
     <div class="card-header">
       <h3 class="card-title">اضافة فئة صنف</h3>
@@ -48,9 +45,9 @@
             <div class="form-group row">
                 <label class="col-sm-2 control-label">مفعلة</label>
                 <div class="col-sm-10">
-                    <select name="active" class="form-control">
-                        <option @if (old('active') == 0) selected @endif value="0">No</option>
-                        <option @if (old('active') == 1) selected @endif value="1">Yes</option>
+                    <select name="active" class="form-control select2">
+                        <option @if (old('active') == 1) selected @endif value="1">نعم</option>
+                        <option @if (old('active') == 0 && old('active') != '') selected @endif value="0">لا</option>
                     </select>
 
                     @error('active')
@@ -75,7 +72,7 @@
 @endsection
 
 @section('contentheader')
-    الضبط العام
+  المخازن
 @endsection
 
 @section('contentheaderlink')

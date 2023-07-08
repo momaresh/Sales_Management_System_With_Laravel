@@ -69,7 +69,7 @@
                                     </td>
                                 @endif
 
-                                <td>{{ $datum->id }}</td>
+                                <td>{{ $datum->store_code }}</td>
                                 <td>{{ $datum->name }}</td>
                                 <td>{{ $datum->phone }}</td>
                                 <td>{{ $datum->address }}</td>
@@ -145,7 +145,7 @@
 @endsection
 
 @section('contentheader')
-    الضبط العام
+    المخازن
 @endsection
 
 @section('contentheaderlink')

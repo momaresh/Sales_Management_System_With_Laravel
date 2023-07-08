@@ -25,7 +25,7 @@ class InvItemCategoryRequest extends FormRequest
     {
         return [
             //
-            'name' => 'required|unique:inv_item_categories',
+            'name' => 'required',
             'active' => 'required',
         ];
     }
@@ -36,7 +36,6 @@ class InvItemCategoryRequest extends FormRequest
         return [
             //
             'name.required' => 'يجب ادخال اسم الصنف',
-            'name.unique' => 'اسم الصنف مضاف من قبل',
             'active.required' => 'يجب ادخال حالة التفعيل',
         ];
     }

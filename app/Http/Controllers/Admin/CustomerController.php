@@ -108,9 +108,7 @@ class CustomerController extends Controller
                 $account_insert['created_at'] = date('Y-m-d H:i:s');
                 $account_insert['com_code'] = auth()->user()->com_code;
                 $account_insert['date'] = date('Y-m-d');
-
                 Account::create($account_insert);
-
 
                 $person_insert['id'] = $person_id + 1;
                 $person_insert['first_name'] = $request->first_name;

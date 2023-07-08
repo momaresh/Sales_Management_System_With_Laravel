@@ -12,7 +12,7 @@
             <option value="">اختر الفاتورة</option>
             @if (@isset($pills) && !@empty($pills))
                 @foreach ($pills as $info )
-                    <option value="{{ $info->id }}"> فاتورة رقم {{ $info->pill_code }}  بتاريخ {{ $info->order_date }} </option>
+                    <option value="{{ $info->pill_code }}"> فاتورة رقم {{ $info->pill_code }}  بتاريخ {{ $info->order_date }} </option>
                 @endforeach
             @endif
         </select>

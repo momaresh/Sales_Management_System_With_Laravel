@@ -31,7 +31,7 @@
                 <form  action="{{ route('admin.treasuries_transactions.store') }}" method="post" enctype="multipart/form-data" >
                 @csrf
 
-                    <input value="{{ $check_has_shift['shift_code'] }}" type="hidden" name='shift_code'>
+                    <input value="{{ $check_has_shift['shift_id'] }}" type="hidden" name='shift_id'>
 
                     <div class="row">
                         <div class="col-md-4">
@@ -147,7 +147,7 @@
         <div class="col-12">
         <div class="card">
             <div class="card-header">
-            <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات شفتات الخزن</h3>
+            <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات تحصيل النقدية</h3>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
@@ -262,6 +262,12 @@
                         @endif
 
                     </table>
+
+                    <br>
+                    <div style="width: fit-content; margin:auto;" id="ajax_search_pagination">
+                        {{ $data->links() }}
+                    </div>
+
                 </div>
 
             </div>
@@ -319,6 +325,9 @@
                 var account_type = $('#account_number option:selected').data('account_type');
                 if (account_type == "") {
                     $('#move_type').val('');
+                }
+                else if (account_type == 14) {
+                    $('#move_type').val(1);
                 }
                 else if (account_type == 2) {
                     $('#move_type').val(10);
@@ -397,6 +406,37 @@
                     }
                 });
             }
+
+            $(document).on('click', '#ajax_search_pagination a', function(e) {
+                e.preventDefault();
+                var radio_search = $('input[type=radio][name=search_by_radio]:checked').val();
+                var account_number_search = $('#account_number_search').val();
+                var move_type_search = $('#move_type_search').val();
+                var treasuries_search = $('#treasuries_search').val();
+                var text_search = $('#text_search').val();
+                var admin_search = $('#admin_search').val();
+                jQuery.ajax({
+                    url:$(this).attr('href'),
+                    type:'post',
+                    datatype:'html',
+                    cache:false,
+                    data:{
+                        text_search:text_search,
+                        radio_search:radio_search,
+                        account_number_search:account_number_search,
+                        move_type_search:move_type_search,
+                        treasuries_search:treasuries_search,
+                        admin_search:admin_search,
+                        '_token':"{{ csrf_token() }}"
+                        },
+                    success:function(data){
+                        $('#ajax_search_result').html(data);
+                    },
+                    error:function() {
+                        alert('حدث خطأ');
+                    }
+                });
+            });
 
             $(document).on('change', '#account_number_search', function() {
                 make_search();

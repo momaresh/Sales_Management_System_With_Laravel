@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\RoleSubMenuController;
 use App\Http\Controllers\Admin\SalesOrderHeaderController;
 use App\Http\Controllers\Admin\SalesOrderHeaderGeneralReturnController;
 use App\Http\Controllers\Admin\SalesOrderHeaderOriginalReturnController;
+use App\Http\Controllers\Admin\UnpaidTransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -255,6 +256,11 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     Route::post('exchange_transactions/get_status', [ExchangeTransactionController::class, 'get_status'])->name('admin.exchange_transactions.get_status');
     Route::post('exchange_transactions/ajax_search', [ExchangeTransactionController::class, 'ajax_search'])->name('admin.exchange_transactions.ajax_search');
     /* end exchange_transactions */
+
+    /* begin unpaid_transactions */
+    Route::get('unpaid_transactions/index', [UnpaidTransactionController::class, 'index'])->name('admin.unpaid_transactions.index');
+    Route::post('unpaid_transactions/ajax_search', [UnpaidTransactionController::class, 'ajax_search'])->name('admin.unpaid_transactions.ajax_search');
+    /* end unpaid_transactions */
 
 
     /* begin sales_header */

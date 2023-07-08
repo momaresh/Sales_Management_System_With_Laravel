@@ -37,12 +37,12 @@
 
             <div class="mb-3" style="display: flex">
                 <div class="col-md-6">
-                    <label class="control-label" for="cus_code">بحث برقم العميل</label>
                     <input type="radio" checked name="search_by_radio" id="cus_code" value="cus_code">
-                    <label class="control-label" for="acc_number">بحث برقم الحساب</label>
+                    <label class="control-label" for="cus_code">بحث برقم العميل</label>
                     <input type="radio" name="search_by_radio" id="acc_number" value="acc_number">
-                    <label class="control-label" for="name">بحث بالاسم الاخير</label>
+                    <label class="control-label" for="acc_number">بحث برقم الحساب</label>
                     <input type="radio" name="search_by_radio" id="name" value="name">
+                    <label class="control-label" for="name">بحث بالاسم الاخير</label>
 
                     <input class="form-control" type="search" placeholder="رقم العميل - رقم الحساب - الاسم الاخير" id="ajax_search">
                 </div>
@@ -83,6 +83,7 @@
                             <th>رقم حساب العميل</th>
                             <th>الرصيد</th>
                             <th>رصيد اول المدة</th>
+                            <th>حالة التفعيل</th>
                             @if (check_control_menu_role('الحسابات', 'العملاء' , 'التفاصيل') == true)
                                 <th>التفاصيل</th>
                             @endif
@@ -122,6 +123,15 @@
                                         دائن ({{ $datum->start_balance * (-1) }})
                                     @endif
                                 </td>
+                                @if ($datum->active == 1)
+                                <td style="background-color: #5ab6a0a1;">
+                                    مفعل
+                                </td>
+                                @elseif ($datum->active == 0)
+                                <td style="background-color: #c15670a1;;">
+                                    غير مفعل
+                                </td>
+                                @endif
                                 @if (check_control_menu_role('الحسابات', 'العملاء' , 'التفاصيل') == true)
                                     <td>
                                         <button data-id="{{ $datum->id }}" class="details_button btn" style="color: rgb(38, 123, 29); font-size: 25px;">

@@ -13,6 +13,11 @@
     <body style="padding-top: 10px;font-family: tahoma;">
         <table class="mb-3" cellspacing="0" style="width: 30%; margin-right: 5px; float: right;  border: 1px dashed black "  dir="rtl">
             <tr>
+                <td style="padding: 5px; text-align: right;font-weight: bold;"> كود الجرد
+                    <span style="margin-right: 10px;">/ {{ $data["inventory_code"] }}</span>
+                </td>
+            </tr>
+            <tr>
                 <td style="padding: 5px; text-align: right;font-weight: bold;"> تاريخ الجرد
                     <span style="margin-right: 10px;">/ {{ $data["inventory_date"] }}</span>
                 </td>

@@ -43,7 +43,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="control-label">نوع الوحدة</label>
-                    <select class="form-control" id="master_search">
+                    <select class="form-control select2" id="master_search">
                         <option value="all">بحث بالكل</option>
                         <option value="0">وحدة جزئية</option>
                         <option value="1">وحدة اب</option>
@@ -81,7 +81,7 @@
                                         </a>
                                     </td>
                                 @endif
-                                <td>{{ $datum->id }}</td>
+                                <td>{{ $datum->unit_code }}</td>
                                 <td>{{ $datum->name }}</td>
                                 <td>
                                     @if ($datum->master == 1)
@@ -162,7 +162,7 @@
 @endsection
 
 @section('contentheader')
-    الضبط العام
+    المخازن
 @endsection
 
 @section('contentheaderlink')

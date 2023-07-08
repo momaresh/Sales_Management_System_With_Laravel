@@ -11,6 +11,6 @@ class Store extends Model
 
     protected $table = 'stores';
 
-    protected $fillable = ['name', 'active', 'phone', 'address', 'added_by', 'updated_by', 'date', 'com_code'];
+    protected $fillable = ['store_code', 'name', 'active', 'phone', 'address', 'added_by', 'updated_by', 'date', 'com_code'];
 
 }

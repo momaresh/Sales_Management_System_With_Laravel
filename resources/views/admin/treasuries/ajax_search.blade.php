@@ -3,27 +3,44 @@
     @if (!@empty($data[0]))
 
         <tr style="background-color: #007bff; color:white;">
-            <th>تعديل</th>
+            @if (check_control_menu_role('الحسابات', 'الخزن' , 'تعديل') == true)
+                <th>تعديل</th>
+            @endif
             <th>كود الخرينة</th>
             <th>اسم الخرينة</th>
+            <th>رقم الحساب</th>
+            <th>الرصيد الحالي</th>
             <th>خزنة رئيسية</th>
             <th>اخر ايصال صرف</th>
             <th>اخر ايصال تحصيل</th>
+            <th>اخر ايصال آجل</th>
             <th>حالة التفعيل</th>
-            <th>تاريخ الاضافة</th>
-            <th>تاريخ التحديث</th>
-            <th>الخزن التي يتم الاستلام منها</th>
+            @if (check_control_menu_role('الحسابات', 'الخزن' , 'التفاصيل') == true)
+                <th>الخزن التي يتم الاستلام منها</th>
+            @endif
         </tr>
 
         @foreach ($data as $datum)
             <tr>
-                <td>
-                    <a href="{{ route('admin.treasuries.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                </td>
-                <td>{{ $datum->id }}</td>
+                @if (check_control_menu_role('الحسابات', 'الخزن' , 'تعديل') == true)
+                    <td>
+                        <a href="{{ route('admin.treasuries.edit', $datum->id) }}" style="color: rgb(149, 35, 35); font-size: 25px;">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                @endif
+                <td>{{ $datum->treasury_code }}</td>
                 <td>{{ $datum->name }}</td>
+                <td>{{ $datum->account_number }}</td>
+                <td>
+                    @if($datum->current_balance == 0)
+                    متزن
+                    @elseif ($datum->current_balance > 0)
+                        مدين ({{ $datum->current_balance }})
+                    @else
+                        دائن ({{ $datum->current_balance * (-1) }})
+                    @endif
+                </td>
                 <td>
                     @if ($datum->master == 1)
                         رئيسية
@@ -33,6 +50,7 @@
                 </td>
                 <td>{{ $datum->last_exchange_arrive }}</td>
                 <td>{{ $datum->last_collection_arrive }}</td>
+                <td>{{ $datum->last_unpaid_arrive }}</td>
                 @if ($datum->active == 1)
                 <td style="background-color: #5ab6a0a1;">
                     مفعل
@@ -42,39 +60,13 @@
                     غير مفعل
                 </td>
                 @endif
-                <td>
-                    @if ($datum['added_by'] != null)
-                        @php
-                            $d = new DateTime($datum['created_at']);
-                            $date = $d->format('d/m/Y الساعة h:i:sA');
-                        @endphp
-
-                        {{ $date }}
-                        بواسطة
-                        {{ $datum['added_by_name'] }}
-                    @else
-                        لم يتم تسجيل بيانات المضاف
-                    @endif
-                </td>
-                <td>
-                    @if ($datum['updated_by'] != null)
-                        @php
-                            $d = new DateTime($datum['updated_at']);
-                            $date = $d->format('d/m/Y الساعة h:i:sA');
-                        @endphp
-
-                        {{ $date }}
-                        بواسطة
-                        {{ $datum['updated_by_name'] }}
-                    @else
-                        لا يوجد اي تحديث
-                    @endif
-                </td>
-                <td>
-                    <a href="{{ route('admin.treasuries.details', $datum->id) }}" class="btn btn-primary">
-                        عرض
-                    </a>
-                </td>
+                @if (check_control_menu_role('الحسابات', 'الخزن' , 'التفاصيل') == true)
+                    <td>
+                        <a href="{{ route('admin.treasuries.details', $datum->id) }}" class="btn btn-info">
+                            عرض
+                        </a>
+                    </td>
+                @endif
             </tr>
         @endforeach
 
@@ -83,7 +75,9 @@
             لا يوجد بيانات لعرضها
         </div>
     @endif
+
 </table>
+
 <br>
 
 <div style="width: fit-content; margin:auto;" id="ajax_search_pagination">

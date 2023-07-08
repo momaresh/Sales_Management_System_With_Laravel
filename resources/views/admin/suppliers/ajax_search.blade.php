@@ -11,6 +11,7 @@
             <th>رقم حساب المورد</th>
             <th>الرصيد</th>
             <th>رصيد اول المدة</th>
+            <th>حالة التفعيل</th>
             @if (check_control_menu_role('الحسابات', 'الموردين' , 'التفاصيل') == true)
                 <th>التفاصيل</th>
             @endif
@@ -51,6 +52,15 @@
                         دائن ({{ $datum->start_balance * (-1) }})
                     @endif
                 </td>
+                @if ($datum->active == 1)
+                <td style="background-color: #5ab6a0a1;">
+                    مفعل
+                </td>
+                @elseif ($datum->active == 0)
+                <td style="background-color: #c15670a1;;">
+                    غير مفعل
+                </td>
+                @endif
                 @if (check_control_menu_role('الحسابات', 'الموردين' , 'التفاصيل') == true)
                     <td>
                         <button data-id="{{ $datum->id }}" class="details_button btn" style="color: rgb(38, 123, 29); font-size: 25px;">

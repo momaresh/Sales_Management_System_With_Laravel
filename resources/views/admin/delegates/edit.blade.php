@@ -78,8 +78,8 @@
                     <div class="form-group">
                         <label>نوع التحصيل على الفاتورة</label>
                         <select name="percent_type" id="percent_type" class="form-control">
-                            <option value="1">قيمة</option>
-                            <option value="2" selected>نسبة</option>
+                            <option @if($data->percent_type == 2) selected @endif value="2">قيمة</option>
+                            <option @if($data->percent_type == 1) selected @endif value="1">نسبة</option>
                         </select>
                         @error('percent_type')
                             <span class="text-danger">{{ $message }}</span>
@@ -148,9 +148,9 @@
                 <div class="col-md-6">
                     <label>مفعل</label>
                     <div class="form-group">
-                        <select name="active" class="form-control">
-                            <option @if (old('active', $data->active) == 0) selected @endif value="0">No</option>
-                            <option @if (old('active', $data->active) == 1) selected @endif value="1">Yes</option>
+                        <select name="active" class="form-control select2">
+                            <option @if (old('active', $data->active) == 0) selected @endif value="0">لا</option>
+                            <option @if (old('active', $data->active) == 1) selected @endif value="1">نعم</option>
                         </select>
 
                         @error('active')
@@ -187,7 +187,7 @@
 
 @section('script')
     <script src="{{ asset('assets/admin/js/accounts.js') }}"></script>
-    
+
     <script>
         $(function() {
             if($("#percent_type").val() == '1') {

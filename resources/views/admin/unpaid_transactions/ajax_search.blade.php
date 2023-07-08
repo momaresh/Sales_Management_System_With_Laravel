@@ -9,8 +9,8 @@
             <th>اسم المستخدم</th>
             <th>اسم الخزنة</th>
             <th>اسم صاحب الحساب</th>
-            <th>رقم آخر تحصيل من الخزنة</th>
-            <th>المبلغ المحصل</th>
+            <th>رقم آخر ايصال آجل من الخزنة</th>
+            <th>المبلغ المستحق للحساب او عليه</th>
             <th>تم الاعتماد</th>
         </tr>
 
@@ -23,7 +23,7 @@
                 <td>{{ $datum->treasuries_name }}</td>
                 <td>{{ $datum->account_name }} <span class="my-col-main">({{ $datum->account_type }})</span></td>
                 <td>{{ $datum->last_arrive }}</td>
-                <td>{{ $datum->money }}</td>
+                <td>{{ $datum->money_for_account }}</td>
                 @if ($datum->is_approved == 1)
                     <td style="background-color: #5ab6a0a1">نعم</td>
                 @else

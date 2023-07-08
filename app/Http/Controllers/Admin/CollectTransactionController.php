@@ -22,38 +22,45 @@ class CollectTransactionController extends Controller
         # code...
         if (check_control_menu_role('الحسابات', 'شاشة تحصيل النقدية' , 'عرض') == true || check_control_menu_role('الحسابات', 'شاشة تحصيل النقدية' , 'اضافة') == true) {
             $com_code = auth()->user()->com_code;
-            $data = TreasuryTransaction::where(['com_code' => $com_code, 'transaction_type' => 2])->orderBy('id', 'Desc')->get();
-            foreach($data as $d) {
-                $d['move_type_name'] = MoveType::where('id', $d['move_type'])->value('name');
-                $admin_id = AdminShift::where(['shift_code' => $d['shift_code'],'com_code' => $com_code])->value('admin_id');
-                $d['admin_name'] = Admin::where(['id' => $admin_id, 'com_code' => $com_code])->value('name');
-                $d['treasuries_name'] = Treasury::where(['id' => $d['treasuries_id'], 'com_code' => $com_code])->value('name');
+            $data = TreasuryTransaction::where(['com_code' => $com_code, 'transaction_type' => 2])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
+            if (!empty($data)) {
+                foreach($data as $d) {
+                    $d['move_type_name'] = MoveType::where('id', $d['move_type'])->value('name');
+                    $admin_id = AdminShift::where(['id' => $d['shift_code'],'com_code' => $com_code])->value('admin_id');
+                    $d['admin_name'] = Admin::where(['id' => $admin_id, 'com_code' => $com_code])->value('name');
+                    $d['treasuries_name'] = Treasury::where(['id' => $d['treasuries_id'], 'com_code' => $com_code])->value('name');
+                    $d['shift_code'] = AdminShift::where(['id' => $d['shift_code']])->value('shift_code');
 
-                if (!empty($d['account_number'])) {
-                    $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
-                    $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
-                    if (in_array($acc['account_type'], [2, 3, 4, 5])) {
-                        $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
-                        $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
-                        $d['account_name'] = $first_name . ' ' . $last_name;
+                    if (!empty($d['account_number'])) {
+                        $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
+                        $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
+
+                        if ($acc['account_type'] == 14) {
+                            $d['account_name'] = Treasury::where(['account_number' => $d['account_number']])->value('name');
+                        }
+                        else if (in_array($acc['account_type'], [2, 3, 4, 5])) {
+                            $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
+                            $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
+                            $d['account_name'] = $first_name . ' ' . $last_name;
+                        }
+                        else {
+                            $d['account_name'] = $acc['notes'];
+                        }
                     }
                     else {
-                        $d['account_name'] = $acc['notes'];
+                        $d['account_name'] = 'لا يوجد';
                     }
-                }
-                else {
-                    $d['account_name'] = 'لا يوجد';
                 }
             }
 
 
 
-            $check_has_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'is_finished' => 0, 'com_code' => $com_code])->get(['treasuries_id', 'shift_code'])->first();
+            $check_has_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'is_finished' => 0, 'com_code' => $com_code])->get(['id', 'treasuries_id'])->first();
 
             if (!empty($check_has_shift)) {
                 $check_has_shift['treasuries_name'] = Treasury::where(['id' => $check_has_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                $check_has_shift['shift_code'] = AdminShift::where(['admin_id' => auth()->user()->id, 'is_finished' => 0, 'com_code' => $com_code, 'treasuries_id' => $check_has_shift['treasuries_id']])->value('shift_code');
-                $check_has_shift['money_in_treasury'] = TreasuryTransaction::where(['shift_code' =>  $check_has_shift['shift_code'], 'com_code' => $com_code])->sum('money');
+                $check_has_shift['shift_id'] = AdminShift::where(['admin_id' => auth()->user()->id, 'is_finished' => 0, 'com_code' => $com_code, 'treasuries_id' => $check_has_shift['treasuries_id']])->value('id');
+                $check_has_shift['money_in_treasury'] = TreasuryTransaction::where(['shift_code' =>  $check_has_shift['id'], 'com_code' => $com_code])->sum('money');
             }
 
             $moves_types = MoveType::where(['active' => 1, 'in_screen' => 2, 'is_private_internal' => 0])->get(['id', 'name']);
@@ -63,7 +70,10 @@ class CollectTransactionController extends Controller
             $accounts = Account::where(['active' => 1, 'com_code' => $com_code, 'is_parent' => 0])->get();
             if (!empty($accounts)) {
                 foreach($accounts as $ac) {
-                    if (in_array($ac['account_type'], [2, 3, 4, 5]) ) {
+                    if ($ac['account_type'] == 14) {
+                        $ac['name'] = Treasury::where(['account_number' => $ac['account_number']])->value('name');
+                    }
+                    else if (in_array($ac['account_type'], [2, 3, 4, 5]) ) {
                         $ac['first_name'] = Person::where(['com_code' => $com_code, 'account_number' => $ac['account_number']])->value('first_name');
                         $ac['last_name'] = Person::where(['com_code' => $com_code,  'account_number' => $ac['account_number']])->value('last_name');
                         $ac['name'] = $ac['first_name'] . ' ' . $ac['last_name'];
@@ -112,59 +122,110 @@ class CollectTransactionController extends Controller
         if (check_control_menu_role('الحسابات', 'شاشة تحصيل النقدية' , 'اضافة') == true) {
             try {
                 $com_code = auth()->user()->com_code;
-                $inserted = array();
+                $inserted_collection = array();
 
-                $max_transaction_code = TreasuryTransaction::where('com_code', $com_code)->max('transaction_code');
+                $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 2,'com_code' => $com_code])->max('transaction_code');
                 if (empty($max_transaction_code)) {
-                    $inserted['transaction_code'] = 1;
+                    $inserted_collection['transaction_code'] = 1;
                 }
                 else {
-                    $inserted['transaction_code'] = $max_transaction_code + 1;
+                    $inserted_collection['transaction_code'] = $max_transaction_code + 1;
                 }
 
 
-                $check_shift = AdminShift::where(['shift_code' => $request->shift_code, 'com_code' => $com_code, 'is_finished' => 0])->first();
+                $check_shift = AdminShift::where(['id' => $request->shift_id, 'com_code' => $com_code, 'is_finished' => 0])->first();
                 if (empty($check_shift)) {
                     return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
                 }
                 else {
-                    $inserted['shift_code'] = $request->shift_code;
+                    $inserted_collection['shift_code'] = $request->shift_id;
                 }
 
-                $last_collect_arrive  =Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_collection_arrive');
+                $last_collect_arrive  = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_collection_arrive');
 
-                if (empty($last_collect_arrive)) {
+                if (empty($last_collect_arrive) && $last_collect_arrive != 0) {
                     return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
                 }
                 else {
-                    $inserted['last_arrive'] = $last_collect_arrive + 1;
+                    $inserted_collection['last_arrive'] = $last_collect_arrive + 1;
                 }
 
-                $inserted['move_type'] = $request->move_type;
-                $inserted['account_number'] = $request->account_number;
-                $inserted['transaction_type'] = 2;
-                $inserted['is_account'] = 1;
-                $inserted['is_approved'] = 1;
-                $inserted['treasuries_id'] = $request->treasuries_id;
-                $inserted['money'] = $request->money;
-                $inserted['money_for_account'] = $request->money * (-1);
-                $inserted['move_date'] = $request->move_date;
-                $inserted['byan'] = $request->byan;
-                $inserted['added_by'] = auth()->user()->id;
-                $inserted['com_code'] = $com_code;
-                $inserted['created_at'] = date('Y-m-d H:i:s');
+                $inserted_collection['move_type'] = $request->move_type;
+                $inserted_collection['account_number'] = $request->account_number;
+                $inserted_collection['transaction_type'] = 2;
+                $inserted_collection['is_account'] = 1;
+                $inserted_collection['is_approved'] = 1;
+                $inserted_collection['treasuries_id'] = $request->treasuries_id;
+                $inserted_collection['money'] = $request->money;
+                $inserted_collection['money_for_account'] = $request->money * (-1);
+                $inserted_collection['move_date'] = $request->move_date;
+                $inserted_collection['byan'] = $request->byan;
+                $inserted_collection['added_by'] = auth()->user()->id;
+                $inserted_collection['com_code'] = $com_code;
+                $inserted_collection['created_at'] = date('Y-m-d H:i:s');
 
-                $flag = TreasuryTransaction::create($inserted);
+                $flag = TreasuryTransaction::create($inserted_collection);
 
                 if($flag) {
                     $update_treasuries['last_collection_arrive'] = $last_collect_arrive + 1;
                     Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
 
-                    $get_current = Account::where(['account_number' => $request->account_number, 'com_code' => $com_code])->value('current_balance');
-                    $update_account['current_balance'] = $get_current - $request->money;
-                    Account::where(['account_number' => $request->account_number, 'com_code' => $com_code])->update($update_account);
 
-                    return redirect()->back()->with('success', 'تم تحصيل النقدية');
+                    $max_transaction_code = TreasuryTransaction::where(['transaction_type' => 3,'com_code' => $com_code])->max('transaction_code');
+                    if (empty($max_transaction_code)) {
+                        $inserted_unpaid['transaction_code'] = 1;
+                    }
+                    else {
+                        $inserted_unpaid['transaction_code'] = $max_transaction_code + 1;
+                    }
+
+
+                    $check_shift = AdminShift::where(['id' => $request->shift_id, 'com_code' => $com_code, 'is_finished' => 0])->first();
+                    if (empty($check_shift)) {
+                        return redirect()->back()->with('error', 'تم اغلاق الشفت الحالي')->withInput();
+                    }
+                    else {
+                        $inserted_unpaid['shift_code'] = $request->shift_id;
+                    }
+
+                    $last_unpaid_arrive  = Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->value('last_unpaid_arrive');
+
+                    if (empty($last_unpaid_arrive) && $last_unpaid_arrive != 0) {
+                        return redirect()->back()->with('error', 'الخزنة ليست صحيحة')->withInput();
+                    }
+                    else {
+                        $inserted_unpaid['last_arrive'] = $last_unpaid_arrive + 1;
+                    }
+
+                    $inserted_unpaid['move_type'] = $request->move_type;
+                    $inserted_unpaid['account_number'] = $request->account_number;
+                    $inserted_unpaid['transaction_type'] = 3;
+                    $inserted_unpaid['is_account'] = 1;
+                    $inserted_unpaid['is_approved'] = 1;
+                    $inserted_unpaid['treasuries_id'] = $request->treasuries_id;
+                    $inserted_unpaid['money'] = 0;
+                    $inserted_unpaid['money_for_account'] = $request->money * (-1);
+                    $inserted_unpaid['move_date'] = $request->move_date;
+                    $inserted_unpaid['byan'] = $request->byan;
+                    $inserted_unpaid['added_by'] = auth()->user()->id;
+                    $inserted_unpaid['com_code'] = $com_code;
+                    $inserted_unpaid['created_at'] = date('Y-m-d H:i:s');
+
+                    $flag = TreasuryTransaction::create($inserted_unpaid);
+
+                    if($flag) {
+                        $update_treasuries['last_unpaid_arrive'] = $last_unpaid_arrive + 1;
+                        Treasury::where(['id' => $request->treasuries_id, 'com_code' => $com_code])->update($update_treasuries);
+
+                        $get_current = Account::where(['account_number' => $request->account_number, 'com_code' => $com_code])->value('current_balance');
+                        $update_account['current_balance'] = $get_current - $request->money;
+                        Account::where(['account_number' => $request->account_number, 'com_code' => $com_code])->update($update_account);
+
+                        return redirect()->back()->with('success', 'تم تحصيل النقدية');
+                    }
+                    else {
+                        return redirect()->back()->with('error', 'حدث خطأ ما');
+                    }
                 }
                 else {
                     return redirect()->back()->with('error', 'حدث خطأ ما');
@@ -297,29 +358,36 @@ class CollectTransactionController extends Controller
             $com_code = auth()->user()->com_code;
 
 
-            $shift_in = AdminShift::where($filed5, $operator5, $value5)->where(['com_code' => $com_code])->get(['shift_code']);
+            $shift_in = AdminShift::where($filed5, $operator5, $value5)->where(['com_code' => $com_code])->get('id');
+            $data = TreasuryTransaction::whereIn('shift_code', $shift_in)->where($filed1, $operator1, $value1)->where($filed2, $operator2, $value2)->where($filed3, $operator3, $value3)->where($filed4, $operator4, $value4)->where(['com_code' => $com_code, 'transaction_type' => 2])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
 
-            $data = TreasuryTransaction::whereIn('shift_code', $shift_in)->where($filed1, $operator1, $value1)->where($filed2, $operator2, $value2)->where($filed3, $operator3, $value3)->where($filed4, $operator4, $value4)->where(['com_code' => $com_code, 'transaction_type' => 2])->orderBy('id', 'Desc')->get();
-            foreach($data as $d) {
-                $d['move_type_name'] = MoveType::where('id', $d['move_type'])->value('name');
-                $admin_id = AdminShift::where(['shift_code' => $d['shift_code'],'com_code' => $com_code])->value('admin_id');
-                $d['admin_name'] = Admin::where(['id' => $admin_id, 'com_code' => $com_code])->value('name');
-                $d['treasuries_name'] = Treasury::where(['id' => $d['treasuries_id'], 'com_code' => $com_code])->value('name');
+            if (!empty($data)) {
+                foreach($data as $d) {
+                    $d['move_type_name'] = MoveType::where('id', $d['move_type'])->value('name');
+                    $admin_id = AdminShift::where(['id' => $d['shift_code'],'com_code' => $com_code])->value('admin_id');
+                    $d['admin_name'] = Admin::where(['id' => $admin_id, 'com_code' => $com_code])->value('name');
+                    $d['treasuries_name'] = Treasury::where(['id' => $d['treasuries_id'], 'com_code' => $com_code])->value('name');
+                    $d['shift_code'] = AdminShift::where(['id' => $d['shift_code']])->value('shift_code');
 
-                if (!empty($d['account_number'])) {
-                    $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
-                    $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
-                    if (in_array($acc['account_type'], [2, 3, 4, 5])) {
-                        $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
-                        $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
-                        $d['account_name'] = $first_name . ' ' . $last_name;
+                    if (!empty($d['account_number'])) {
+                        $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
+                        $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
+
+                        if ($acc['account_type'] == 14) {
+                            $d['account_name'] = Treasury::where(['account_number' => $d['account_number']])->value('name');
+                        }
+                        else if (in_array($acc['account_type'], [2, 3, 4, 5])) {
+                            $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
+                            $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
+                            $d['account_name'] = $first_name . ' ' . $last_name;
+                        }
+                        else {
+                            $d['account_name'] = $acc['notes'];
+                        }
                     }
                     else {
-                        $d['account_name'] = $acc['notes'];
+                        $d['account_name'] = 'لا يوجد';
                     }
-                }
-                else {
-                    $d['account_name'] = 'لا يوجد';
                 }
             }
             return view('admin.treasuries_transactions.ajax_search', ['data' => $data]);

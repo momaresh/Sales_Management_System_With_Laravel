@@ -1,11 +1,11 @@
 @extends('layout.admin')
 
 @section('title')
-    تعديل حساب مالي
+    تعديل حساب
 @endsection
 
 @section('contentheader')
-    الحسابات المالية
+    الحسابات
 @endsection
 
 @section('contentheaderlink')
@@ -126,7 +126,7 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>اسم الحساب</label>
+                            <label>اسم او وصف الحساب</label>
                             <input name="notes" id="notes" class="form-control" value="{{ old('notes', $data['notes']) }}"    >
 
                             @error('notes')

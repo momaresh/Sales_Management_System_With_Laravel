@@ -25,7 +25,7 @@ class UpdateTreasuriesRequest extends FormRequest
     {
         return [
             //
-            'name' => 'required|unique:treasuries,name,'.$this->id,
+            'name' => 'required',
             'master' => 'required',
             'active' => 'required',
             'last_exchange_arrive' => 'required',
@@ -39,7 +39,6 @@ class UpdateTreasuriesRequest extends FormRequest
         return [
             //
             'name.required' => 'يجب ادخال اسم الخزينة',
-            'name.unique' => 'اسم الخزينة موجود مسبقا',
             'master.required' => 'يجب ادخال هل هي رئيسية',
             'active.required' => 'يجب ادخال حالة التفعيل',
             'last_exchange_arrive.required' => 'يجب ادخال اخر ايصال صرف',

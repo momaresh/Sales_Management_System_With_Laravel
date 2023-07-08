@@ -90,11 +90,10 @@
                             @if (check_control_menu_role('الحسابات', 'الحسابات' , 'تعديل') == true)
                                 <th>تعديل</th>
                             @endif
-                            <th>كود الحساب</th>
                             <th>رقم الحساب</th>
                             <th>اسم صاحب الحساب</th>
                             <th>نوع الحساب</th>
-                            <th>حساب الأب</th>
+                            <th>الحساب الأب</th>
                             <th>الرصيد</th>
                             <th>رصيد اول المدة</th>
                             <th>حالة التفعيل</th>
@@ -112,17 +111,8 @@
                                         </a>
                                     </td>
                                 @endif
-                                <td>{{ $datum->id }}</td>
                                 <td>{{ $datum->account_number }}</td>
-                                <td>
-                                @php
-                                if (in_array($datum->account_type, [2, 3, 4, 5])):
-                                    echo "$datum->account_person_name";
-                                else:
-                                    echo "$datum->notes";
-                                endif;
-                                @endphp
-                                </td>
+                                <td>{{ $datum->account_name }}</td>
                                 <td>{{ $datum->account_type_name }}</td>
                                 <td>{{ $datum->parent_account_name }}</td>
                                 <td>

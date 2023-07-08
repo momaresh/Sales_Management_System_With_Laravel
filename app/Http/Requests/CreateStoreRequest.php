@@ -25,7 +25,7 @@ class CreateStoreRequest extends FormRequest
     {
         return [
             //
-            'name' => 'required|unique:stores',
+            'name' => 'required',
             'active' => 'required',
             'phone' => 'required',
             'address' => 'required',
@@ -38,7 +38,6 @@ class CreateStoreRequest extends FormRequest
         return [
             //
             'name.required' => 'يجب ادخال اسم المخزن',
-            'name.unique' => 'اسم المخزن مضاف من قبل',
             'active.required' => 'يجب ادخال حالة التفعيل',
             'phone.required' => 'يجب ادخال الهاتف',
             'address.required' => 'يجب ادخال العنوان',

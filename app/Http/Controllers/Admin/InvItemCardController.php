@@ -41,9 +41,15 @@ class InvItemCardController extends Controller
                         if ($d['parent_inv_itemcard_id'] != null) {
                             $d['parent_inv_itemcard_name'] = InvItemCard::where('id', $d['parent_inv_itemcard_id'])->value('name');
                         }
+                        else {
+                            $d['parent_inv_itemcard_name'] = 'لا يوجد';
+                        }
 
                         if ($d['retail_unit_id'] != null) {
                             $d['retail_unit_name'] = InvUnit::where('id', $d['retail_unit_id'])->value('name');
+                        }
+                        else {
+                            $d['retail_unit_name'] = 'لا يوجد';
                         }
 
                         if ($d['unit_id'] != null) {
@@ -98,9 +104,9 @@ class InvItemCardController extends Controller
     {
         if (check_control_menu_role('المخازن', 'الاصناف' , 'اضافة') == true) {
             try {
-                $max_id = InvItemCard::where('com_code', auth()->user()->com_code)->max('item_code');
-                if (!empty($max_id)) {
-                    $inserted['item_code'] = $max_id + 1;
+                $item_code = InvItemCard::where('com_code', auth()->user()->com_code)->max('item_code');
+                if (!empty($item_code)) {
+                    $inserted['item_code'] = $item_code + 1;
                 }
                 else {
                     $inserted['item_code'] = 1;
@@ -124,7 +130,7 @@ class InvItemCardController extends Controller
                 if ($request->name != '') {
                     $check_name = InvItemCard::where(['name' => $request->name, 'com_code' => auth()->user()->com_code])->first();
                     if (!empty($check_name)) {
-                        return redirect()->back()->with(['error' => 'اسم الباركود موجود مسبقا'])->withInput();
+                        return redirect()->back()->with(['error' => 'اسم الصنف موجود مسبقا'])->withInput();
                     }
                     else {
                         $inserted['name'] = $request->name;
@@ -160,7 +166,7 @@ class InvItemCardController extends Controller
                     $extension = strtolower($image->extension());
                     $file_name = time() . rand(1, 1000) . '.' . $extension;
                     $image->move('assets\admin\uploads\item_card_images\\', $file_name);
-                    $updated['item_img'] = $file_name;
+                    $inserted['item_img'] = $file_name;
                 }
 
                 InvItemCard::create($inserted);
@@ -178,23 +184,6 @@ class InvItemCardController extends Controller
 
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
         //
@@ -243,6 +232,7 @@ class InvItemCardController extends Controller
                     }
                 }
 
+
                 $updated['item_type'] = $request->item_type;
                 $updated['inv_itemcard_categories_id'] = $request->inv_itemcard_categories_id;
                 if (!empty($request->parent_inv_itemcard_id)) {
@@ -279,9 +269,11 @@ class InvItemCardController extends Controller
                     $image->move('assets\admin\uploads\item_card_images\\', $file_name);
                     $updated['item_img'] = $file_name;
 
-                    // deleting the old image from the folder
-                    if(file_exists("assets/admin/uploads/item_card_images/".$old_image)) {
-                        unlink("assets/admin/uploads/item_card_images/".$old_image);
+                    if (!empty($old_image)) {
+                        // deleting the old image from the folder
+                        if(file_exists("assets/admin/uploads/item_card_images/".$old_image)) {
+                            unlink("assets/admin/uploads/item_card_images/".$old_image);
+                        }
                     }
                 }
 
@@ -386,14 +378,10 @@ class InvItemCardController extends Controller
 
     public function ajax_search(Request $request) {
         if ($request->ajax()) {
-
-
             $search_by_name = $request->search_by_name;
             $search_by_type = $request->search_by_type;
             $search_by_category = $request->search_by_category;
             $search_by_radio = $request->search_by_radio;
-
-
 
             if ($search_by_radio == 'barcode') {
                 if ($search_by_name == '') {
@@ -465,9 +453,15 @@ class InvItemCardController extends Controller
                     if ($d['parent_inv_itemcard_id'] != null) {
                         $d['parent_inv_itemcard_name'] = InvItemCard::where('id', $d['parent_inv_itemcard_id'])->value('name');
                     }
+                    else {
+                        $d['parent_inv_itemcard_name'] = 'لا يوجد';
+                    }
 
                     if ($d['retail_unit_id'] != null) {
                         $d['retail_unit_name'] = InvUnit::where('id', $d['retail_unit_id'])->value('name');
+                    }
+                    else {
+                        $d['retail_unit_name'] = 'لا يوجد';
                     }
 
                     if ($d['unit_id'] != null) {
@@ -488,7 +482,7 @@ class InvItemCardController extends Controller
             $from_date_search = $request->from_date_search;
             $to_date_search = $request->to_date_search;
             $order_search = $request->order_search;
-            $item_code_search = $request->item_code_search;
+            $item_id_search = $request->item_id_search;
 
             if ($store_search == 'all') {
                 $filed1 = 'id';
@@ -545,7 +539,7 @@ class InvItemCardController extends Controller
                 $value5 = $to_date_search;
             }
 
-            if ($item_code_search == '') {
+            if ($item_id_search == '') {
                 $filed6 = 'id';
                 $operator6 = '>';
                 $value6 = 0;
@@ -553,7 +547,7 @@ class InvItemCardController extends Controller
             else {
                 $filed6 = 'item_code';
                 $operator6 = '=';
-                $value6 = $item_code_search;
+                $value6 = $item_id_search;
             }
 
             if ($order_search == 'all') {

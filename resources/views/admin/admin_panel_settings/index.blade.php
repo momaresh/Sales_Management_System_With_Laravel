@@ -84,6 +84,11 @@
                     </tr>
 
                     <tr>
+                        <th>الحساب الاب للخزن</th>
+                        <td>{{ $data->treasury_parent_account_name }} ({{ $data->treasury_parent_account }})</td>
+                    </tr>
+
+                    <tr>
                         <th>صيغة كود العملاء</th>
                         <td>{{ $data->customer_first_code }}</td>
                     </tr>
@@ -120,16 +125,11 @@
 
                                 {{ $date }}
                                 بواسطة
-                                {{ $data['updated_by_admin'] }}
+                                {{ $data['updated_by_name'] }}
                             @else
                                 لا يوجد اي تحديث
                             @endif
                         </td>
-                    </tr>
-
-                    <tr>
-                        <th>رسالة التنبيه اعلى الشركة</th>
-                        <td>{{ $data->general_alert }}</td>
                     </tr>
 
                     <tr>

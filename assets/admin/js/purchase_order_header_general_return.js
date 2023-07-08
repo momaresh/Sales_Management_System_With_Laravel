@@ -412,6 +412,7 @@ $(document).ready(function() {
             },
             success: function(data) {
                 load_pill_adding_items_modal(data);
+                make_search();
             },
             error: function() {
             }

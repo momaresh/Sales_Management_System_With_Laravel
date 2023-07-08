@@ -77,7 +77,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>حالة رصيد اول المدة</label>
-                        <select name="start_balance_status" id="start_balance_status" class="form-control">
+                        <select name="start_balance_status" id="start_balance_status" class="form-control select2">
                             <option value="">اختر الحالة</option>
                             <option   @if (old('start_balance_status') == 1) selected  @endif value="1">دائن</option>
                             <option   @if (old('start_balance_status') == 2) selected  @endif value="2">مدين</option>
@@ -104,7 +104,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>نوع التحصيل على الفاتورة</label>
-                        <select name="percent_type" id="percent_type" class="form-control">
+                        <select name="percent_type" id="percent_type" class="form-control select2">
                             <option value="1" selected>نسبة</option>
                             <option value="2">قيمة</option>
                         </select>
@@ -158,9 +158,9 @@
                 <div class="col-md-6">
                     <label>مفعلة</label>
                     <div class="form-group">
-                        <select name="active" class="form-control">
-                            <option @if (old('active') == 0) selected @endif value="0">No</option>
-                            <option @if (old('active') == 1) selected @endif value="1">Yes</option>
+                        <select name="active" class="form-control select2">
+                            <option @if (old('active') == 1) selected @endif value="1">نعم</option>
+                            <option @if (old('active') == 0 && old('active') != '') selected @endif value="0">لا</option>
                         </select>
 
                         @error('active')
