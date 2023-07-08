@@ -28,12 +28,14 @@
         * collection transactions.
     * Store Movements.
         * purchase pills.
-        * purchase returns pills.
+        * purchase general returns pills.
+        * purchase original returns pills.
         * batches in the stores.
         * stores inventory.
     * Sales.
         * sales pills.
-        * sales returns pills.
+        * sales general returns pills.
+        * sales original returns pills.
     * Permissions.
         * admins.
         * roles.
@@ -43,6 +45,7 @@
     * Reports.
         * report for supplier.
         * report for customer.
+        * daily report.
 
 ## How the system works.
     * Eche treasury can receive from another treasuries or from itself.
