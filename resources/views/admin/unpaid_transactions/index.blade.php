@@ -162,7 +162,7 @@
 @endsection
 
 @section('contentheaderlink')
-    <a href="{{ route('admin.unpaid_transactions.index') }}">شاشة الصرف</a>
+    <a href="{{ route('admin.unpaid_transactions.index') }}">شاشة الدفع الآجل</a>
 @endsection
 
 @section('contentheaderactive')

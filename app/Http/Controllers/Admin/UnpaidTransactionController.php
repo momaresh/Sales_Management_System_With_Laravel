@@ -34,7 +34,11 @@ class UnpaidTransactionController extends Controller
 
                         $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
                         $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
-                        if (in_array($acc['account_type'], [2, 3, 4, 5])) {
+
+                        if ($acc['account_type'] == 14) {
+                            $d['account_name'] = Treasury::where(['account_number' => $d['account_number']])->value('name');
+                        }
+                        else if (in_array($acc['account_type'], [2, 3, 4, 5])) {
                             $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
                             $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
                             $d['account_name'] = $first_name . ' ' . $last_name;
@@ -192,7 +196,11 @@ class UnpaidTransactionController extends Controller
 
                     $acc = Account::where(['account_number' => $d['account_number'],'com_code' => $com_code])->get(['account_type', 'notes'])->first();
                     $d['account_type'] = AccountType::where(['id' => $acc['account_type']])->value('name');
-                    if (in_array($acc['account_type'], [2, 3, 4, 5])) {
+
+                    if ($acc['account_type'] == 14) {
+                        $d['account_name'] = Treasury::where(['account_number' => $d['account_number']])->value('name');
+                    }
+                    else if (in_array($acc['account_type'], [2, 3, 4, 5])) {
                         $first_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('first_name');
                         $last_name = Person::where(['account_number' => $d['account_number'], 'com_code' => $com_code])->value('last_name');
                         $d['account_name'] = $first_name . ' ' . $last_name;

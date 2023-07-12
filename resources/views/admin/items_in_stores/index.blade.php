@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('title')
-    الاصناف في المخازن
+    الباتشات في المخازن
 @endsection
 
 @section('content')
@@ -22,7 +22,7 @@
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات الاصناف في المخازن</h3>
+          <h3 class="text-center" style="font-weight: 600; font-size: 20px;">بيانات الباتشات في المخازن</h3>
         </div>
         <!-- /.card-header -->
         <div class="card-body">
@@ -83,6 +83,7 @@
                     @if (!@empty($data[0]))
 
                         <tr style="background-color: #007bff; color:white;">
+                            <th>كود الباتش</th>
                             <th>اسم المخزن</th>
                             <th>اسم الصنف</th>
                             <th>نوع الوحدة</th>
@@ -95,6 +96,7 @@
 
                         @foreach ($data as $datum)
                             <tr>
+                                <td>{{ $datum->batch_code }}</td>
                                 <td>{{ $datum->store_name }}</td>
                                 <td>{{ $datum->item_name }}</td>
                                 <td>{{ $datum->unit_name }}</td>
