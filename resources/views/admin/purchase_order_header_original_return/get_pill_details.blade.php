@@ -1,5 +1,5 @@
 @if (!@empty($pill))
-    @if ($pill->is_original_return == 0)
+    @if ($pill->is_approved == 1)
         <form action="{{ route('admin.purchase_order_header_original_return.approve_pill', $pill['id']) }}" method="POST" class="col-md-12">
             @csrf
             <table class="table table-striped table-borderless" dir="rtl">
@@ -58,7 +58,9 @@
                     <th>اسم الصنف</th>
                     <th>الوحدة</th>
                     <th>الكمية</th>
-                    <th>الكمية المرتجعة</th>
+                    <th>الكمية المرتجعة مسبقاً</th>
+                    <th>الكمية المتبقية</th>
+                    <th>الكمية المرتجعة حالياً</th>
                     <th>الكمية في الباتش</th>
                     <th>سعر الوحدة</th>
                     <th>الاجمالي</th>
@@ -75,8 +77,10 @@
                         </td>
                         <td>{{ $detail['item_name'] }}</td>
                         <td>{{ $detail['unit_name'] }}</td>
-                        <td>{{ $detail['quantity'] *1 }}</td>
-                        <td><input data-unit_price="{{ $detail['unit_price'] }}" data-quantity="{{ $detail['quantity'] }}" data-batch_quantity="{{ $detail['batch_quantity'] }}" type="number" name="rejected_quantity[]" class="form-control rejected_quantity" value="0"></td>
+                        <td>{{ $detail['quantity'] * 1 }}</td>
+                        <td>{{ $detail['rejected_quantity'] * 1 }}</td>
+                        <td>{{ $detail['remain_quantity'] * 1 }}</td>
+                        <td><input data-unit_price="{{ $detail['unit_price'] }}" data-quantity="{{ $detail['quantity'] }}" data-remain_quantity="{{ $detail['remain_quantity'] }}" data-batch_quantity="{{ $detail['batch_quantity'] }}" type="number" name="rejected_quantity[]" class="form-control rejected_quantity" value="0"></td>
                         <td>{{ $detail['batch_quantity'] * 1}}</td>
                         <td>{{ $detail['unit_price'] * 1}}</td>
                         <td><input type="text" readonly name="total_price[]" class="form-control total_price" value="0"></td>
@@ -88,7 +92,7 @@
                 @endforeach
                 <tr>
                     <td for="">اجمالي الفاتورة</td>
-                    <td colspan="7"><input readonly type="text" name="total_pill" id="total_pill" value="0" class="form-control"></td>
+                    <td colspan="9"><input readonly type="text" name="total_pill" id="total_pill" value="0" class="form-control"></td>
                 </tr>
             </table>
 
@@ -141,7 +145,7 @@
         </form>
     @else
         <div class="alert alert-info col-md-12 text-center">
-            لقد تم ارجاع الفاتورة مسبقا
+            هذا الفاتورة ليست معتمدة بعد في المشتريات
         </div>
     @endif
 @else

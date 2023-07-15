@@ -89,7 +89,9 @@
 
 
         <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-            <h4>فواتير المبيعات</h4>
+            <div class="alert alert-danger">
+                <h4>فواتير المبيعات</h4>
+            </div>
             @if ($data['report_type'] == 3 && !@empty($sales_pill[0]))
                 @foreach ($sales_pill as $sales)
                     <table class="table table-striped table-borderless mytable mb-0">

@@ -192,6 +192,46 @@
 
                 <div class="col-md-4">
                     <div class="form-group">
+                        <label>نسبة البيع على الصنف في حالة البيع جملة</label>
+                        <input type="text" name="commission_for_group_sales" value="{{ old('commission_for_group_sales', $data->commission_for_group_sales) }}" class="form-control">
+                        @error('commission_for_group_sales')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>نسبة البيع على الصنف في حالة البيع نص جملة</label>
+                        <input type="text" name="commission_for_half_group_sales" value="{{ old('commission_for_half_group_sales', $data->commission_for_half_group_sales) }}" class="form-control">
+                        @error('commission_for_half_group_sales')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>نسبة البيع على الصنف في حالة البيع قطاعي</label>
+                        <input type="text" name="commission_for_one_sales" value="{{ old('commission_for_one_sales', $data->commission_for_one_sales) }}" class="form-control">
+                        @error('commission_for_one_sales')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>نسبة الضريبة على الفواتير</label>
+                        <input type="text" name="tax_percent_for_invoice" value="{{ old('tax_percent_for_invoice', $data->tax_percent_for_invoice) }}" class="form-control">
+                        @error('tax_percent_for_invoice')
+                            <p class="text-danger">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
                         <label>لوجو الشركة</label>
                         <img src="{{ asset("assets\admin\uploads\images\\$data->photo") }}" alt="Company logo" style="width:100px; height:100px;">
                         <input type="file" name="photo" class="form-control">

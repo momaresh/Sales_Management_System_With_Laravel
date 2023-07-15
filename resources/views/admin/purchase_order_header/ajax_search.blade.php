@@ -15,6 +15,7 @@
             <th>اجمالي الفاتورة</th>
             @if (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'حذف') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'التفاصيل') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'طباعة') == true)
                 <th>التحكم</th>
+                <th>طباعة بعد الارجاع</th>
             @endif
         </tr>
 
@@ -75,6 +76,14 @@
                             </a>
                         @endif
                     </td>
+
+                    @if (check_control_menu_role('الحركات المخزنية', 'فواتير المشتريات' , 'طباعة') == true && $datum->is_original_return == 1)
+                        <td>
+                            <a href="{{ route('admin.purchase_header.printA4', [$datum->id, 'currentA6']) }}" class="btn btn-success">
+                                A6 <i class="fa-solid fa-print"></i>
+                            </a>
+                        </td>
+                    @endif
                 @endif
             </tr>
         @endforeach

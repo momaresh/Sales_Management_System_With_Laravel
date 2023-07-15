@@ -21,6 +21,7 @@ use App\Models\Treasury;
 use App\Models\TreasuryTransaction;
 use App\Models\InvItemCardBatch;
 use App\Models\InvItemCardMovement;
+use App\Models\OriginalReturnDetails;
 use App\Models\OriginalReturnInvoice;
 use Exception;
 use Illuminate\Support\Arr;
@@ -33,24 +34,22 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
         //
         if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات بالاصل' , 'عرض') == true) {
             try {
-                $data = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_type' => 1, 'is_original_return' => 1])->orderBy('id' , 'desc')->paginate(PAGINATION_COUNT);
+                $invoice_in = InvoiceOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_type' => 1, 'order_type' => 1])->orderBy('id' , 'desc')->get('id');
+                $data = OriginalReturnInvoice::whereIn('invoice_order_id', $invoice_in)->orderBy('invoice_order_id' , 'desc')->paginate(PAGINATION_COUNT);
+
                 if (!empty($data)) {
                     foreach ($data as $d) {
-                        $d['supplier_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('supplier_code');
-                        $d['purchase_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('purchase_code');
-                        $d['auto_serial'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('auto_serial');
-                        $d['store_id'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('store_id');
+                        $d['parent_pill_code'] = InvoiceOrderHeader::where(['id' => $d['invoice_order_id']])->value('pill_code');
+                        $d['supplier_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['invoice_order_id']])->value('supplier_code');
+                        $d['store_id'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['invoice_order_id']])->value('store_id');
                         $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
                         if ($d['supplier_code'] != null) {
                             $person_id = Supplier::where(['supplier_code' => $d['supplier_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
                             $supplier = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
                             $d['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
                         }
-
-                        $d['total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $d['id'])->value('total_cost');
                     }
                 }
-
 
                 $com_code = auth()->user()->com_code;
                 $suppliers = Person::where(['person_type' => 2, 'com_code' => auth()->user()->com_code, 'active' => 1])->get(['id', 'first_name', 'last_name']);
@@ -130,43 +129,41 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
             $pill_details = array();
             $check_shift = array();
             if (!empty($pill)) {
-                if ($pill['is_original_return'] == 0) {
-                    if (!empty($pill)) {
-                        $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('store_id');
-                        $pill['store_name'] = Store::where('id', $pill['store_id'])->value('name');
-                        $pill['tax_value'] = $pill['total_before_discount'] * $pill['tax_percent'] / 100;
-                        $pill['total_after_tax'] = $pill['total_before_discount'] + $pill['tax_value'];
-                        $pill['discount_percent'] = $pill['discount_value'] / $pill['total_after_tax'];
-                        $pill['supplier_code'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('supplier_code');
-                        if ($pill['supplier_code'] != null) {
-                            $person_id = Supplier::where(['supplier_code' => $pill['supplier_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
-                            $supplier = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
-                            $pill['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
-                        }
+                if (!empty($pill)) {
+                    $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('store_id');
+                    $pill['store_name'] = Store::where('id', $pill['store_id'])->value('name');
+                    $pill['tax_value'] = $pill['total_before_discount'] * $pill['tax_percent'] / 100;
+                    $pill['total_after_tax'] = $pill['total_before_discount'] + $pill['tax_value'];
+                    $pill['discount_percent'] = $pill['discount_value'] / $pill['total_after_tax'];
+                    $pill['supplier_code'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('supplier_code');
+                    if ($pill['supplier_code'] != null) {
+                        $person_id = Supplier::where(['supplier_code' => $pill['supplier_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
+                        $supplier = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
+                        $pill['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
                     }
-
-                    $pill_details = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
-                    if (!empty($pill_details)) {
-                        foreach ($pill_details as $s) {
-                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
-                            $s['item_name'] = InvItemCard::where(['item_code' => $s['item_code'], 'com_code' => $com_code])->value('name');
-                            $s['remain_quantity'] = $s['quantity'] - $s['rejected_quantity'];
-                            $item_card_data = InvItemCard::where(['item_code' => $s['item_code'], 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent'])->first();
-                            $s['batch_quantity'] = InvItemCardBatch::where('id', $s['batch_id'])->value('quantity');
-
-                            if ($s['unit_id'] == $item_card_data['retail_unit_id']) {
-                                $quantity = $s['batch_quantity'] * $item_card_data['retail_uom_quntToParent'];
-                                $quantity = round($quantity, 0);
-                                $s['batch_quantity'] = $quantity;
-                            }
-                        }
-                    }
-
-                    $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
-                    $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
-                    $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => $com_code])->sum('money');
-
                 }
+
+                $pill_details = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                if (!empty($pill_details)) {
+                    foreach ($pill_details as $s) {
+                        $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
+                        $s['item_name'] = InvItemCard::where(['item_code' => $s['item_code'], 'com_code' => $com_code])->value('name');
+                        $s['rejected_quantity'] = OriginalReturnDetails::where(['invoice_order_details_id' => $s['id']])->sum('quantity');
+                        $s['remain_quantity'] = $s['quantity'] - $s['rejected_quantity'];
+                        $item_card_data = InvItemCard::where(['item_code' => $s['item_code'], 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent'])->first();
+                        $s['batch_quantity'] = InvItemCardBatch::where('id', $s['batch_id'])->value('quantity');
+
+                        if ($s['unit_id'] == $item_card_data['retail_unit_id']) {
+                            $quantity = $s['batch_quantity'] * $item_card_data['retail_uom_quntToParent'];
+                            $quantity = round($quantity, 0);
+                            $s['batch_quantity'] = $quantity;
+                        }
+                    }
+                }
+
+                $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
+                $check_shift['treasuries_name'] = Treasury::where(['id' => $check_shift['treasuries_id'], 'com_code' => $com_code])->value('name');
+                $check_shift['treasuries_money'] = TreasuryTransaction::where(['shift_code' => $check_shift['id'], 'com_code' => $com_code])->sum('money');
             }
 
             return view("admin.purchase_order_header_original_return.get_pill_details", ['pill' => $pill, 'pill_details' => $pill_details, 'check_shift' => $check_shift]);
@@ -186,14 +183,12 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
 
                 $data = InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code, 'order_type' => 1, 'invoice_type' => 1])->get()->first();
                 $data['supplier_code'] = PurchaseOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('supplier_code');
+                $data['pill_code'] = InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->value('pill_code');
                 $data['store_id'] = PurchaseOrderHeader::where(['invoice_id' => $id, 'com_code' => $com_code])->value('store_id');
                 $data['total_cost'] = $request->total_pill;
 
                 if (empty($data)) {
                     return redirect()->back()->with('error', 'لا توجد بيانات كهذه');
-                }
-                if ($data['is_original_return'] == 1) {
-                    return redirect()->back()->with('error', 'الفاتورة تم ارجاعها من قبل');
                 }
 
                 $updateInvoice['is_original_return'] = 1;
@@ -204,6 +199,13 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
 
                 if ($flag) {
                     $insertReturnInvoice['invoice_order_id'] = $data['id'];
+                    $pill_code = OriginalReturnInvoice::where(['invoice_order_id' => $data['id']])->max('pill_code');
+                    if (empty($pill_code)) {
+                        $insertReturnInvoice['pill_code'] = 1;
+                    }
+                    else {
+                        $insertReturnInvoice['pill_code'] = $pill_code + 1;
+                    }
                     $insertReturnInvoice['pill_type'] = $request->pill_type;
                     $insertReturnInvoice['what_paid'] = $request->what_paid;
                     $insertReturnInvoice['what_remain'] = $request->what_remain;
@@ -266,7 +268,7 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
                         $insertTransaction['invoice_id'] = $id;
                         $insertTransaction['treasuries_id'] = $check_shift['treasuries_id'];
                         $insertTransaction['move_date'] = date('Y-m-d');
-                        $insertTransaction['byan'] = ' تحصيل نظير مرتجع مشتريات من مورد' . ' ' . $data['supplier_name'];
+                        $insertTransaction['byan'] = ' تحصيل نظير مرتجع مشتريات من مورد' . ' ' . $data['supplier_name']. ' ' . 'فاتورة مرتجع مشتريات باصل الفاتورة رقم الاصل ' . $data['pill_code'] . ' رقم المرتجع ' . $insertReturnInvoice['pill_code'];
                         $insertTransaction['is_account'] = 1;
                         $insertTransaction['money_for_account'] = $request->what_paid * (-1);
                         $insertTransaction['added_by'] = auth()->user()->id;
@@ -324,7 +326,7 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
                         $insertTransaction['invoice_id'] = $id;
                         $insertTransaction['treasuries_id'] = $check_shift['treasuries_id'];
                         $insertTransaction['move_date'] = date('Y-m-d');
-                        $insertTransaction['byan'] = ' تحصيل نظير مرتجع مشتريات من مورد' . ' ' . $data['supplier_name'];
+                        $insertTransaction['byan'] = ' تحصيل نظير مرتجع مشتريات من مورد' . ' ' . $data['supplier_name'] . ' ' . 'فاتورة مرتجع مشتريات باصل الفاتورة رقم الاصل ' . $data['pill_code'] . ' رقم المرتجع ' . $insertReturnInvoice['pill_code'];
                         $insertTransaction['is_account'] = 1;
                         $insertTransaction['money_for_account'] = $request->what_remain * (1);
                         $insertTransaction['added_by'] = auth()->user()->id;
@@ -342,12 +344,14 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
 
                     $i = 0;
                     foreach ($request->id as $detail_id) {
-                        $update_detail['rejected_quantity'] = $request->rejected_quantity[$i];
-                        $update_detail['updated_by'] = auth()->user()->id;
-                        $update_detail['updated_at'] = date('Y-m-d H:i:s');
+                        if ($request->rejected_quantity[$i] > 0) {
+                            $insert_detail['invoice_order_id'] = $data['id'];
+                            $insert_detail['invoice_order_details_id'] = $detail_id;
+                            $insert_detail['pill_code'] = $insertReturnInvoice['pill_code'];
+                            $insert_detail['quantity'] = $request->rejected_quantity[$i];
+                            $insert_detail['total_price'] = $request->total_price[$i];
 
-                        $flag = InvoiceOrderDetail::where(['id' => $detail_id, 'invoice_order_id' => $id])->update($update_detail);
-                        if ($flag && $update_detail['rejected_quantity'] > 0) {
+                            OriginalReturnDetails::create($insert_detail);
 
                             $detail_data = InvoiceOrderDetail::where(['id' => $detail_id, 'invoice_order_id' => $id])->get()->first();
                             $item_card_data = InvItemCard::where(['item_code' => $detail_data['item_code'], 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent', 'item_type', 'does_has_retailunit'])->first();
@@ -356,12 +360,12 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
                                 // if master we make the quantity is the same quantity
                                 $quantity = 0;
                                 if ($detail_data['unit_id'] == $item_card_data['unit_id']) {
-                                    $quantity = $detail_data['rejected_quantity'];
+                                    $quantity = $insert_detail['quantity'];
                                 }
                                 else if ($detail_data['unit_id'] == $item_card_data['retail_unit_id']) {
                                     // we will change it to master unit
                                     // by divide the quantity with retail_uom_quntToParent
-                                    $quantity = $detail_data['rejected_quantity'] / $item_card_data['retail_uom_quntToParent'];
+                                    $quantity = $insert_detail['quantity'] / $item_card_data['retail_uom_quntToParent'];
                                 }
 
                                 // before i make insert or update i should get the quantity in all store and current store from the batch
@@ -370,8 +374,10 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
 
                                 // now we check if there is like this batch in the item batches
                                 $batch_quantity = InvItemCardBatch::where(['id' => $detail_data['batch_id']])->value('quantity');
+                                $batch_unit_cost_price = InvItemCardBatch::where(['id' => $detail_data['batch_id']])->value('unit_cost_price');
 
                                 $updateOldBatch['quantity'] = $batch_quantity - $quantity;
+                                $updateOldBatch['total_cost_price'] = $updateOldBatch['quantity'] * $batch_unit_cost_price;
                                 $updateOldBatch['updated_by'] = auth()->user()->id;
                                 $updateOldBatch['updated_at'] = date('Y-m-d H:i:s');
                                 InvItemCardBatch::where(['id' => $detail_data['batch_id']])->update($updateOldBatch);
@@ -395,7 +401,7 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
                                 $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
                                 $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
                                 $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                                $insertItemMovement['byan'] = 'مرتجع مشتريات بأصل الفاتورة للمورد ' . $data['supplier_name'] . ' فاتورة رقم ' . $id;
+                                $insertItemMovement['byan'] = 'مرتجع مشتريات بأصل الفاتورة للمورد ' . $data['supplier_name'] . ' فاتورة رقم ' . $data['pill_code'] . ' رقم المرتجع ' . $insertReturnInvoice['pill_code'];
                                 $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
                                 $insertItemMovement['date'] = date('Y-m-d');
                                 $insertItemMovement['added_by'] = auth()->user()->id;
@@ -442,7 +448,7 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
         }
     }
 
-    public function details($id)
+    public function details($id, $pill_code)
     {
         //
         if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات بالاصل' , 'التفاصيل') == true) {
@@ -457,33 +463,35 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
 
                 $data['added_by_name'] = Admin::where('id', $data['added_by'])->value('name');
                 $data['store_name'] = Store::where(['id' => $purchase_data['store_id'], 'com_code' => $com_code])->value('name');
+                $data['return_date'] = OriginalReturnInvoice::where(['invoice_order_id' => $data['id'], 'pill_code' => $pill_code])->value('return_date');
                 $data['purchase_code'] = $purchase_data['purchase_code'];
                 if ($data['updated_by'] != null) {
                     $data['updated_by_name'] = Admin::where('id', $data['updated_by'])->value('name');
                 }
+
+                $data['tax_value'] = $data['total_before_discount'] * $data['tax_percent'] / 100;
+                $data['total_after_tax'] = $data['total_before_discount'] + $data['tax_value'];
+                $data['discount_percent'] = round($data['discount_value'] / $data['total_after_tax'], 3);
+
 
                 if ($purchase_data['supplier_code'] != null) {
                     $person_id = Supplier::where(['supplier_code' => $purchase_data['supplier_code'], 'com_code' => $com_code])->value('person_id');
                     $supplier = Person::where(['id' => $person_id, 'com_code' => $com_code])->select(['first_name', 'last_name'])->first();
                     $data['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
                 }
-                $data['total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $data['id'])->value('total_cost');
+                $data['total_cost'] = OriginalReturnInvoice::where(['invoice_order_id' => $data['id'], 'pill_code' => $pill_code])->value('total_cost');
+                $data['child_pill_code'] = OriginalReturnInvoice::where(['invoice_order_id' => $data['id'], 'pill_code' => $pill_code])->value('pill_code');
 
-                $details = InvoiceOrderDetail::where(['invoice_order_id' => $id, 'com_code' => $com_code])->where('rejected_quantity', '>', 0)->get();
+                $details = OriginalReturnDetails::where(['invoice_order_id' => $data['id'], 'pill_code' => $pill_code])->get();
 
                 if (!empty($details)) {
                     foreach($details as $detail) {
+                        $parent_details = InvoiceOrderDetail::where(['id' => $detail['invoice_order_details_id'], 'com_code' => $com_code])->first();
+                        $detail['item_code'] = $parent_details['item_code'];
+                        $detail['unit_id'] = $parent_details['unit_id'];
+                        $detail['unit_price'] = $parent_details['unit_price'];
                         $detail['item_card_name'] = InvItemCard::where('item_code', $detail['item_code'])->value('name');
-                        $detail['added_by_name'] = Admin::where('id', $detail['added_by'])->value('name');
                         $detail['unit_name'] = InvUnit::where(['id' => $detail['unit_id'], 'com_code' => $com_code])->value('name');
-
-                        if ($detail['updated_by'] != null) {
-                            $detail['updated_by_name'] = Admin::where('id', $detail['updated_by'])->value('name');
-                        }
-                        $total_price = $detail['unit_price'] * $detail['rejected_quantity'];
-                        $total_price += $total_price * $data['tax_percent'] / 100;
-                        $total_price -= $total_price * $data['discount_percent'];
-                        $detail['total_price'] = round($total_price,2);
                     }
                 }
 
@@ -517,8 +525,8 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
             }
             else {
                 $filed1 = 'pill_code';
-                $operator1 = 'LIKE';
-                $value1 = '%'. $pill_code_search . '%';
+                $operator1 = '=';
+                $value1 = $pill_code_search;
             }
 
 
@@ -546,44 +554,42 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
             }
 
             if ($from_date_search == '') {
-                $filed4 = 'id';
+                $filed4 = 'invoice_order_id';
                 $operator4 = '>';
                 $value4 = 0;
             }
             else {
-                $filed4 = 'order_date';
+                $filed4 = 'return_date';
                 $operator4 = '>=';
                 $value4 = $from_date_search;
             }
 
             if ($to_date_search == '') {
-                $filed5 = 'id';
+                $filed5 = 'invoice_order_id';
                 $operator5 = '>';
                 $value5 = 0;
             }
             else {
-                $filed5 = 'order_date';
+                $filed5 = 'return_date';
                 $operator5 = '<=';
                 $value5 = $to_date_search;
             }
 
-
-            $data_in = PurchaseOrderHeader::where("$filed2", "$operator2", "$value2")->where("$filed3", "$operator3", "$value3")->get('invoice_id');
-            $data = InvoiceOrderHeader::whereIn('id', $data_in)->where("$filed1", "$operator1", "$value1")->where("$filed4", "$operator4", "$value4")->where("$filed5", "$operator5", "$value5")->where(['com_code' => auth()->user()->com_code, 'invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1])->orderBy('id', 'Desc')->paginate(PAGINATION_COUNT);
+            $purchase_in = PurchaseOrderHeader::where("$filed2", "$operator2", "$value2")->where("$filed3", "$operator3", "$value3")->get('invoice_id');
+            $invoice_in = InvoiceOrderHeader::whereIn('id', $purchase_in)->where("$filed1", "$operator1", "$value1")->where(['com_code' => auth()->user()->com_code, 'invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1])->orderBy('id', 'Desc')->get('id');
+            $data = OriginalReturnInvoice::whereIn('invoice_order_id', $invoice_in)->where("$filed4", "$operator4", "$value4")->where("$filed5", "$operator5", "$value5")->orderBy('invoice_order_id' , 'desc')->paginate(PAGINATION_COUNT);
 
             if (!empty($data)) {
                 foreach ($data as $d) {
-                    $d['supplier_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('supplier_code');
-                    $d['purchase_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('purchase_code');
-                    $d['auto_serial'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('auto_serial');
-                    $d['store_id'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['id']])->value('store_id');
+                    $d['parent_pill_code'] = InvoiceOrderHeader::where(['id' => $d['invoice_order_id']])->value('pill_code');
+                    $d['supplier_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['invoice_order_id']])->value('supplier_code');
+                    $d['store_id'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $d['invoice_order_id']])->value('store_id');
                     $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
                     if ($d['supplier_code'] != null) {
                         $person_id = Supplier::where(['supplier_code' => $d['supplier_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
                         $supplier = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name'])->first();
                         $d['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
                     }
-                    $d['total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $d['id'])->value('total_cost');
                 }
             }
 
@@ -591,44 +597,49 @@ class PurchaseOrderHeaderOriginalReturnController extends Controller
         }
     }
 
-    public function printA4($id, $type) {
+    public function printA4($id, $pill_code, $type) {
         if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات بالاصل' , 'طباعة') == true) {
             try {
                 $com_code = auth()->user()->com_code;
-                $data = InvoiceOrderHeader::where('id', $id)->get()->first();
-                if (!empty($data)) {
-                    $data['supplier_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $data['id']])->value('supplier_code');
-                    $data['purchase_code'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $data['id']])->value('purchase_code');
-                    $data['auto_serial'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $data['id']])->value('auto_serial');
-                    $data['store_id'] = PurchaseOrderHeader::where(['com_code' => auth()->user()->com_code, 'invoice_id' => $data['id']])->value('store_id');
-                    $data['store_name'] = Store::where('id', $data['store_id'])->value('name');
-                    if ($data['supplier_code'] != null) {
-                        $person_id = Supplier::where(['supplier_code' => $data['supplier_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
-                        $supplier = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name', 'phone'])->first();
-                        $data['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
-                        $data['supplier_phone'] = $supplier->phone;
-                    }
-                    else {
-                        $data['supplier_name'] = 'لا يوجد';
-                    }
+                $data = InvoiceOrderHeader::where(['id' => $id, 'com_code' => $com_code])->first();
+                $purchase_data = PurchaseOrderHeader::where(['invoice_id' => $id, 'com_code' => auth()->user()->com_code])->first();
 
-                    $data['tax_value'] = $data['total_before_discount'] * $data['tax_percent'] / 100;
-                    $data['total_after_tax'] = $data['total_before_discount'] + $data['tax_value'];
-                    $data['discount_percent'] = round($data['discount_value'] / $data['total_after_tax'], 3);
-                    $data['total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $data['id'])->value('total_cost');
+                if (empty($data)) {
+                    return redirect()->back()->with('error', 'لا يوجد بيانات كهذه');
+                }
+
+                $data['store_name'] = Store::where(['id' => $purchase_data['store_id'], 'com_code' => $com_code])->value('name');
+                $data['purchase_code'] = $purchase_data['purchase_code'];
+                $data['supplier_code'] = $purchase_data['supplier_code'];
+
+                if ($purchase_data['supplier_code'] != null) {
+                    $person_id = Supplier::where(['supplier_code' => $purchase_data['supplier_code'], 'com_code' => auth()->user()->com_code])->value('person_id');
+                    $supplier = Person::where(['id' => $person_id, 'com_code' => auth()->user()->com_code])->select(['first_name', 'last_name', 'phone'])->first();
+                    $data['supplier_name'] = $supplier->first_name . ' ' . $supplier->last_name;
+                    $data['supplier_phone'] = $supplier->phone;
+                }
 
 
-                    $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
-                    $sales_invoices_details = InvoiceOrderDetail::where('invoice_order_id', $id)->get();
-                    if (!empty($sales_invoices_details)) {
-                        foreach ($sales_invoices_details as $detail) {
-                            $detail['item_name'] = InvItemCard::where('item_code', $detail['item_code'])->value('name');
-                            $detail['unit_name'] = InvUnit::where(['id' => $detail['unit_id'], 'com_code' => $com_code])->value('name');
-                            $total_price = $detail['unit_price'] * $detail['rejected_quantity'];
-                            $total_price += $total_price * $data['tax_percent'] / 100;
-                            $total_price -= $total_price * $data['discount_percent'];
-                            $detail['total_price'] = round($total_price,2);
-                        }
+                $oringinal_data = OriginalReturnInvoice::where(['invoice_order_id' => $data['id'], 'pill_code' => $pill_code])->get()->first();
+                $data['total_cost'] = $oringinal_data['total_cost'];
+                $data['child_pill_code'] = $oringinal_data['pill_code'];
+                $data['return_date'] = $oringinal_data['return_date'];
+                $data['pill_type'] = $oringinal_data['pill_type'];
+
+                $data['tax_value'] = $data['total_before_discount'] * $data['tax_percent'] / 100;
+                $data['total_after_tax'] = $data['total_before_discount'] + $data['tax_value'];
+                $data['discount_percent'] = round($data['discount_value'] / $data['total_after_tax'], 3);
+
+                $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
+
+                $sales_invoices_details = OriginalReturnDetails::where(['invoice_order_id' => $data['id'], 'pill_code' => $pill_code])->get();
+
+                if (!empty($sales_invoices_details)) {
+                    foreach($sales_invoices_details as $detail) {
+                        $parent_details = InvoiceOrderDetail::where(['id' => $detail['invoice_order_details_id'], 'com_code' => $com_code])->first();
+                        $detail['unit_price'] = $parent_details['unit_price'];
+                        $detail['item_name'] = InvItemCard::where('item_code', $parent_details['item_code'])->value('name');
+                        $detail['unit_name'] = InvUnit::where(['id' => $parent_details['unit_id'], 'com_code' => $com_code])->value('name');
                     }
                 }
 

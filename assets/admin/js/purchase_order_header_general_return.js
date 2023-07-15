@@ -73,7 +73,7 @@ $(document).ready(function() {
             });
 
             var search_url = $('#ajax_get_item_price_route').val();
-            var sales_type = $('#sales_type').val();
+            var store_id = $('#store_id_add').val();
             jQuery.ajax({
                 url: search_url,
                 type: 'post',
@@ -81,7 +81,7 @@ $(document).ready(function() {
                 cache: false,
                 data: {
                     item_code:item_code,
-                    sales_type:sales_type,
+                    store_id:store_id,
                     '_token':search_token
                 },
                 success: function(data) {
@@ -109,16 +109,17 @@ $(document).ready(function() {
 
         }
 
-
-
     });
 
     $(document).on('change', '#unit_id_add', function() {
-        var item_code = $('#item_code_add').val();
+        reload_batches();
+
         var search_token = $('#token_search').val();
-        var search_url = $('#ajax_get_item_batch_route').val();
-        var store_id = $('#store_id_add').val();
+        var item_code = $('#item_code_add').val();
         var unit_id = $(this).val();
+        var search_url = $('#ajax_get_item_price_route').val();
+        var store_id = $('#store_id_add').val();
+        var batch_id = $('#batch_id_add').val();
         jQuery.ajax({
             url: search_url,
             type: 'post',
@@ -128,31 +129,7 @@ $(document).ready(function() {
                 item_code:item_code,
                 store_id:store_id,
                 unit_id:unit_id,
-                '_token':search_token
-            },
-            success: function(data) {
-                $("#batch_add").html(data);
-            },
-            error: function() {
-                $("#batch_add").html("");
-                $('.relatied_item_card').hide();
-
-                alert("حدث خطا ما");
-            }
-        });
-
-
-        var search_url = $('#ajax_get_item_price_route').val();
-        var sales_type = $('#sales_type').val();
-        jQuery.ajax({
-            url: search_url,
-            type: 'post',
-            dataType: 'html',
-            cache: false,
-            data: {
-                item_code:item_code,
-                sales_type:sales_type,
-                unit_id:unit_id,
+                batch_id:batch_id,
                 '_token':search_token
             },
             success: function(data) {
@@ -169,10 +146,47 @@ $(document).ready(function() {
 
     })
 
+    $(document).on('change', '#batch_id_add', function() {
+        var item_code = $('#item_code_add').val();
+        var search_token = $('#token_search').val();
+        var unit_id = $('#unit_id_add').val();
+        var batch_id = $(this).val();
+        var search_url = $('#ajax_get_item_price_route').val();
+        jQuery.ajax({
+            url: search_url,
+            type: 'post',
+            dataType: 'html',
+            cache: false,
+            data: {
+                item_code:item_code,
+                unit_id:unit_id,
+                batch_id:batch_id,
+                '_token':search_token
+            },
+            success: function(data) {
+                $("#unit_price_add").val(data);
+                calculate_total_price();
+            },
+            error: function() {
+                $("#batch_add").html("");
+                $('.relatied_item_card').hide();
+
+                alert("حدث خطا ما");
+            }
+        });
+
+        var batch_id_add_return = $('.batch_id_add_return').length;
+        if (batch_id != 'new' && batch_id_add_return != 0) {
+            $("#unit_price_add").prop('readonly', true);
+        }
+        else if (batch_id == 'new') {
+            $("#unit_price_add").prop('readonly', false);
+        }
+
+
+    })
 
     /////////////////////////////////////////
-
-
     $(document).on('input', '#quantity_add', function() {
         calculate_total_price();
     });
@@ -459,6 +473,7 @@ $(document).ready(function() {
         var item_code = $('#item_code_add').val();
         var unit_id = $('#unit_id_add').val();
         var search_url = $('#ajax_get_item_batch_route').val();
+        var batch_id = $('#batch_id_add').children('option:selected').data('batch_id');
         var store_id = $('#store_id_add').val();
         jQuery.ajax({
             url: search_url,
@@ -469,6 +484,7 @@ $(document).ready(function() {
                 unit_id:unit_id,
                 item_code:item_code,
                 store_id:store_id,
+                batch_id:batch_id,
                 '_token':search_token
             },
             success: function(data) {
@@ -569,6 +585,7 @@ $(document).ready(function() {
             },
             success: function(data) {
                 $('#add_new_item_row_result').append(data);
+                reload_batches();
                 calc_total_cost();
             },
             error: function(data) {
@@ -602,6 +619,10 @@ $(document).ready(function() {
 
             }
         });
+    });
+
+    $(document).on('mouseenter', '#add_to_detail_active', function() {
+        reload_batches();
     });
 
     $(document).on('click', '.remove_item_active', function(e) {

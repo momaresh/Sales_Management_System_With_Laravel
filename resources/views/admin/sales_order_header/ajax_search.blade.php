@@ -15,6 +15,7 @@
             <th>اجمالي الفاتورة</th>
             @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اضافة') == true || check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'طباعة') == true || check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'حذف') == true)
                 <th>التحكم</th>
+                <th>طباعة بعد الارجاع</th>
             @endif
         </tr>
 
@@ -62,14 +63,22 @@
                         @endif
 
                         @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'اضافة') == true)
-                            <button data-id={{ $datum->id }} id="update_pill" class="btn btn-info">
+                            <button data-id={{ $datum->id }} id="update_pill" class="btn btn-info mt-1">
                                 <i class="fa-solid fa-circle-info"></i>
                             </button>
                         @endif
 
                         @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'حذف') == true)
-                            <a href="{{ route('admin.sales_header.delete', $datum->id) }}" class="are_you_sure btn btn-danger">
+                            <a href="{{ route('admin.sales_header.delete', $datum->id) }}" class="are_you_sure btn btn-danger mt-1">
                                 <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        @endif
+                    </td>
+
+                    <td>
+                        @if (check_control_menu_role('المبيعات', 'فواتير المبيعات' , 'طباعة') == true && $datum->is_original_return == 1)
+                            <a href="{{ route('admin.sales_header.printA4', [$datum->id, 'currentA6']) }}" class="btn btn-success">
+                                A6 <i class="fa-solid fa-print"></i>
                             </a>
                         @endif
                     </td>

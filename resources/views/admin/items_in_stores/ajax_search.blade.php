@@ -3,6 +3,7 @@
     @if (!@empty($data[0]))
 
         <tr style="background-color: #007bff; color:white;">
+            <th>كود الباتش</th>
             <th>اسم المخزن</th>
             <th>اسم الصنف</th>
             <th>نوع الوحدة</th>
@@ -15,6 +16,7 @@
 
         @foreach ($data as $datum)
             <tr>
+                <td>{{ $datum->batch_code }}</td>
                 <td>{{ $datum->store_name }}</td>
                 <td>{{ $datum->item_name }}</td>
                 <td>{{ $datum->unit_name }}</td>

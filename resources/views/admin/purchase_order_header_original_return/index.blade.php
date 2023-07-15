@@ -96,6 +96,7 @@
 
                         <tr style="background-color: #007bff; color:white;">
                             <th>كود الفاتورة الاصل</th>
+                            <th>كود الفاتورة</th>
                             <th>اسم المورد</th>
                             <th>اسم المخزن</th>
                             <th>نوع الفاتورة</th>
@@ -109,6 +110,7 @@
 
                         @foreach ($data as $datum)
                             <tr>
+                                <td>{{ $datum->parent_pill_code }}</td>
                                 <td>{{ $datum->pill_code }}</td>
                                 <td>{{ $datum['supplier_name'] }}</td>
                                 <td>{{ $datum['store_name'] }}</td>
@@ -121,31 +123,26 @@
                                         غير محدد
                                     @endif
                                 </td>
-                                <td>{{ $datum->order_date }}</td>
-                                @if ($datum->is_approved == 0)
-                                <td style="background-color: #5ab6a0a1;">
-                                    مفتوحة
-                                </td>
-                                @elseif ($datum->is_approved == 1)
+                                <td>{{ $datum->return_date }}</td>
+
                                 <td style="background-color: #c15670a1;">
                                     معتمدة
                                 </td>
-                                @endif
 
                                 <td>{{ $datum->total_cost }}</td>
                                 @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات بالاصل' , 'التفاصيل') == true || check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات بالاصل' , 'طباعة') == true)
                                     <td>
                                         @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات بالاصل' , 'طباعة') == true)
-                                            <a href="{{ route('admin.purchase_order_header_original_return.printA4', [$datum->id, 'A4']) }}" class="btn btn-success">
+                                            <a href="{{ route('admin.purchase_order_header_original_return.printA4', [$datum->invoice_order_id, $datum->pill_code, 'A4']) }}" class="btn btn-success">
                                                 A4 <i class="fa-solid fa-print"></i>
                                             </a>
-                                            <a href="{{ route('admin.purchase_order_header_original_return.printA4', [$datum->id, 'A6']) }}" class="btn btn-success">
+                                            <a href="{{ route('admin.purchase_order_header_original_return.printA4', [$datum->invoice_order_id, $datum->pill_code, 'A6']) }}" class="btn btn-success">
                                                 A6 <i class="fa-solid fa-print"></i>
                                             </a>
                                         @endif
 
                                         @if (check_control_menu_role('الحركات المخزنية', 'فواتير المرتجعات بالاصل' , 'التفاصيل') == true)
-                                            <a href="{{ route('admin.purchase_order_header_original_return.details', $datum->id) }}" class="btn btn-info">
+                                            <a href="{{ route('admin.purchase_order_header_original_return.details', [$datum->invoice_order_id, $datum->pill_code]) }}" class="btn btn-info mt-1">
                                                 <i class="fa-solid fa-circle-info"></i>
                                             </a>
                                         @endif

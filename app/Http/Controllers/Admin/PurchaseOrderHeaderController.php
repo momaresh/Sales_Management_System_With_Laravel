@@ -21,6 +21,8 @@ use App\Models\Treasury;
 use App\Models\TreasuryTransaction;
 use App\Models\InvItemCardBatch;
 use App\Models\InvItemCardMovement;
+use App\Models\OriginalReturnDetails;
+use App\Models\OriginalReturnInvoice;
 use Exception;
 
 
@@ -656,6 +658,9 @@ class PurchaseOrderHeaderController extends Controller
                     $auto_serial = $request->auto_serial;
                     $data = InvoiceOrderHeader::where(['com_code' => $com_code, 'id' => $auto_serial])->first();
                     $data['all_items'] = InvoiceOrderDetail::where(['com_code' => $com_code, 'invoice_order_id' => $auto_serial])->count();
+                    $data['tax_percent'] = AdminPanelSetting::where(['com_code' => $com_code])->value('tax_percent_for_invoice');
+                    $data['tax_value'] = $data['total_before_discount'] * ($data['tax_percent'] / 100);
+                    $data['total_after_tax'] = $data['total_before_discount'] + $data['tax_value'];
 
                     //Check if has shift
                     $check_shift = AdminShift::where(['admin_id' => auth()->user()->id, 'com_code' => $com_code, 'is_finished' => 0])->get(['treasuries_id', 'id'])->first();
@@ -711,6 +716,7 @@ class PurchaseOrderHeaderController extends Controller
                 $data = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code, 'order_type' => 1, 'invoice_type' => 1])->first();
                 $data['supplier_code'] = PurchaseOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('supplier_code');
                 $data['store_id'] = PurchaseOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('store_id');
+                $data['pill_code'] = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code])->value('pill_code');
                 $data['total_cost'] = $request->total_cost;
 
                 if (empty($data)) {
@@ -1022,39 +1028,13 @@ class PurchaseOrderHeaderController extends Controller
                                 $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
                                 $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
                                 $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                                $insertItemMovement['byan'] = 'صرف نضير مشتريات للعميل ' . $data['supplier_name'] . ' فاتورة رقم ' . $auto_serial;
+                                $insertItemMovement['byan'] = 'صرف نضير مشتريات للعميل ' . $data['supplier_name'] . ' فاتورة رقم ' . $data['pill_code'];
                                 $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
                                 $insertItemMovement['date'] = date('Y-m-d');
                                 $insertItemMovement['added_by'] = auth()->user()->id;
                                 $insertItemMovement['com_code'] = $com_code;
 
                                 InvItemCardMovement::create($insertItemMovement);
-
-
-                                // update the cost price in the item card
-                                // if has retail unit we will update the cost_price_in_master and cost_price_in_retail
-                                if ($item['unit_id'] == $item_card_data['unit_id']) {
-                                    $update_item_card_price_quantity['cost_price_in_master'] = $item['unit_price'];
-                                    if ($item_card_data['does_has_retailunit'] == 1) {
-                                        $update_item_card_price_quantity['cost_price_in_retail'] = $item['unit_price'] / $item_card_data['retail_uom_quntToParent'];
-                                        $update_item_card_price_quantity['price_per_one_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.1);
-                                        $update_item_card_price_quantity['price_per_half_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.07);
-                                        $update_item_card_price_quantity['price_per_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.05);
-                                    }
-                                }
-                                else if ($item['unit_id'] == $item_card_data['retail_unit_id']) {
-                                    $update_item_card_price_quantity['cost_price_in_retail'] = $item['unit_price'];
-                                    $update_item_card_price_quantity['cost_price_in_master'] = $item['unit_price'] * $item_card_data['retail_uom_quntToParent'];
-                                    $update_item_card_price_quantity['price_per_one_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.1);
-                                    $update_item_card_price_quantity['price_per_half_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.07);
-                                    $update_item_card_price_quantity['price_per_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.05);
-                                }
-
-                                // updates on prices that can be change if you don't like in the item card model it self
-                                $update_item_card_price_quantity['price_per_one_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.1);
-                                $update_item_card_price_quantity['price_per_half_group_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.07);
-                                $update_item_card_price_quantity['price_per_group_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.05);
-
 
                                 // update the quantity in item_card
                                 $all_quantity = InvItemCardBatch::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->sum('quantity');
@@ -1110,10 +1090,20 @@ class PurchaseOrderHeaderController extends Controller
                     else {
                         $data['supplier_name'] = 'لا يوجد';
                     }
+                    if ($type == 'currentA6') {
+                        $data['rejected_total_cost'] = OriginalReturnInvoice::where('invoice_order_id', $data['id'])->sum('total_cost');
+                        $data['total_cost'] = $data['total_cost'] - $data['rejected_total_cost'];
+                    }
+
                     $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
                     $sales_invoices_details = InvoiceOrderDetail::where('invoice_order_id', $id)->get();
                     if (!empty($sales_invoices_details)) {
                         foreach($sales_invoices_details as $s) {
+                            if ($type == 'currentA6') {
+                                $s['rejected_quantity'] = OriginalReturnDetails::where('invoice_order_details_id', $s['id'])->sum('quantity');
+                                $s['quantity'] = $s['quantity'] - $s['rejected_quantity'];
+                                $s['total_price'] = $s['quantity'] * $s['unit_price'];
+                            }
                             $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
                             $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
                         }
@@ -1125,6 +1115,9 @@ class PurchaseOrderHeaderController extends Controller
                 }
                 else if ($type == 'A6') {
                     return view('admin.purchase_order_header.printA6', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
+                }
+                else if ($type == 'currentA6') {
+                    return view('admin.purchase_order_header.print_currentA6', ['data' => $data, 'systemData' => $systemData, 'sales_invoices_details' => $sales_invoices_details]);
                 }
             }
             catch (Exception $e) {

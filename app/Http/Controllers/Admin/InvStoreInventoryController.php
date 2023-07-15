@@ -434,7 +434,7 @@ class InvStoreInventoryController extends Controller
         if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق باتش') == true) {
             try {
                 $com_code = auth()->user()->com_code;
-                $data = InvStoreInventoryHeader::where('id', $header_id)->get(['id', 'is_closed', 'store_id'])->first();
+                $data = InvStoreInventoryHeader::where('id', $header_id)->get(['id', 'inventory_code', 'is_closed', 'store_id'])->first();
                 if (empty($data)) {
                     return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
                 }
@@ -452,7 +452,7 @@ class InvStoreInventoryController extends Controller
                 $quantity_in_batch_current_store_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
 
 
-                $batch = InvItemCardBatch::where('id', $detail['batch_id'])->get(['unit_cost_price', 'inv_unit_id'])->first();
+                $batch = InvItemCardBatch::where('id', $detail['batch_id'])->get(['unit_cost_price', 'inv_unit_id', 'batch_code'])->first();
                 $update_batch['quantity'] = $detail->new_quantity;
                 $update_batch['total_cost_price'] = $detail->new_quantity * $batch->unit_cost_price;
                 $flag = InvItemCardBatch::where('id', $detail['batch_id'])->update($update_batch);
@@ -481,7 +481,7 @@ class InvStoreInventoryController extends Controller
                         $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
                         $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
                         $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                        $insertItemMovement['byan'] = 'جرد مخازن رقم الجرد ' . $data['id'] . '  رقم الباتش في اصناف الجرد ' . $detail['id'];
+                        $insertItemMovement['byan'] = 'جرد مخازن رقم الجرد ' . $data['invntory_code'] . '  رقم الباتش في اصناف الجرد ' . $batch['batch_code'];
                         $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
                         $insertItemMovement['date'] = date('Y-m-d');
                         $insertItemMovement['added_by'] = auth()->user()->id;
@@ -491,7 +491,7 @@ class InvStoreInventoryController extends Controller
 
 
                         // update the quantity in item_card
-                        $all_quantity = InvItemCardBatch::where(['id' => $detail['batch_id']])->sum('quantity');
+                        $all_quantity = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
                         $item_card_data = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->get(['does_has_retailunit', 'retail_uom_quntToParent'])->first();
                         if ($item_card_data['does_has_retailunit'] == 1) {
                             $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
@@ -526,7 +526,7 @@ class InvStoreInventoryController extends Controller
         if (check_control_menu_role('الحركات المخزنية', 'جرد المخازن' , 'اغلاق') == true) {
             try {
                 $com_code = auth()->user()->com_code;
-                $data = InvStoreInventoryHeader::where('id', $header_id)->get(['id', 'is_closed', 'store_id'])->first();
+                $data = InvStoreInventoryHeader::where('id', $header_id)->get(['id', 'inventory_code', 'is_closed', 'store_id'])->first();
                 if (empty($data)) {
                     return redirect()->back()->with('error', 'لا يمكن الوصول الى البيانات المطلوبة');
                 }
@@ -541,7 +541,7 @@ class InvStoreInventoryController extends Controller
                         $quantity_in_batch_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
                         $quantity_in_batch_current_store_before = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'store_id' => $data['store_id'], 'com_code' => $com_code])->sum('quantity');
 
-                        $batch = InvItemCardBatch::where('id', $detail['batch_id'])->get(['unit_cost_price', 'inv_unit_id'])->first();
+                        $batch = InvItemCardBatch::where('id', $detail['batch_id'])->get(['unit_cost_price', 'inv_unit_id', 'batch_code'])->first();
                         $update_batch['quantity'] = $detail->new_quantity;
                         $update_batch['total_cost_price'] = $detail->new_quantity * $batch->unit_cost_price;
                         $flag = InvItemCardBatch::where('id', $detail['batch_id'])->update($update_batch);
@@ -570,7 +570,7 @@ class InvStoreInventoryController extends Controller
                                 $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
                                 $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
                                 $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                                $insertItemMovement['byan'] = 'جرد مخازن رقم الجرد ' . $data['id'] . '  رقم الباتش في اصناف الجرد ' . $detail['id'];
+                                $insertItemMovement['byan'] = 'جرد مخازن رقم الجرد ' . $data['inventory_code'] . '  رقم الباتش في اصناف الجرد ' . $batch['batch_code'];
                                 $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
                                 $insertItemMovement['date'] = date('Y-m-d');
                                 $insertItemMovement['added_by'] = auth()->user()->id;
@@ -580,7 +580,7 @@ class InvStoreInventoryController extends Controller
 
 
                                 // update the quantity in item_card
-                                $all_quantity = InvItemCardBatch::where(['id' => $detail['batch_id']])->sum('quantity');
+                                $all_quantity = InvItemCardBatch::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->sum('quantity');
                                 $item_card_data = InvItemCard::where(['item_code' => $detail['item_code'], 'com_code' => $com_code])->get(['does_has_retailunit', 'retail_uom_quntToParent'])->first();
                                 if ($item_card_data['does_has_retailunit'] == 1) {
                                     $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];

@@ -131,12 +131,18 @@
                 <th style="width: 30%; text-align:center">اجمالي تحصيل النقدية</th>
                 <td style="padding-right: 10px">({{ $data['all_collection'] }}) ريال</td>
             </tr>
+            <tr>
+                <th style="width: 30%; text-align:center">اجمالي الآجل للحساب</th>
+                <td style="padding-right: 10px">({{ $data['all_unpaid'] }}) ريال</td>
+            </tr>
         </table>
 
 
         @if ($data['report_type'] == 2)
             <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-                <h4>فواتير المبيعات</h4>
+                <div class="alert alert-danger">
+                    <h4>فواتير المبيعات</h4>
+                </div>
                 @if ($data['report_type'] == 2 && !@empty($sales_pill[0]))
                     @foreach ($sales_pill as $sales)
                         <table class="table table-striped table-borderless mytable mb-0">
@@ -218,7 +224,9 @@
             </div>
 
             <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-                <h4>فواتير مرتجع المبيعات العام</h4>
+                <div class="alert alert-danger">
+                    <h4>فواتير مرتجع المبيعات العام</h4>
+                </div>
                 @if ($data['report_type'] == 2 && !@empty($sales_general_return_pill[0]))
                     @foreach ($sales_general_return_pill as $sales)
                         <table class="table table-striped table-borderless mytable mb-0">
@@ -300,25 +308,26 @@
             </div>
 
             <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-                <h4>فواتير مرتجع المبيعات بالاصل</h4>
+                <div class="alert alert-danger">
+                    <h4>فواتير مرتجع المبيعات بالاصل</h4>
+                </div>
                 @if ($data['report_type'] == 2 && !@empty($sales_original_return_pill[0]))
                     @foreach ($sales_original_return_pill as $sales)
                         <table class="table table-striped table-borderless mytable mb-0">
                             <thead style="background-color:#84B0CA ;" class="text-white">
                                 <tr>
-                                <th scope="col">رقم الفاتورة</th>
+                                <th scope="col">رقم الفاتورة الاصل</th>
                                 <th scope="col">تاريخ الفاتورة</th>
                                 <th scope="col">نوع الفاتورة</th>
                                 <th scope="col">الاجمالي</th>
                                 <th scope="col">المدفوع</th>
                                 <th scope="col">المتبقي</th>
-                                <th scope="col">الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>{{ $sales['pill_code'] }}</td>
-                                    <td>{{ $sales['order_date'] }}</td>
+                                    <td>{{ $sales['parent_pill_code'] }}</td>
+                                    <td>{{ $sales['return_date'] }}</td>
                                     <td>
                                         @if ($sales['pill_type'] == 1)
                                             كاش
@@ -329,13 +338,6 @@
                                     <td>{{ $sales['total_cost'] }}</td>
                                     <td>{{ $sales['what_paid'] }}</td>
                                     <td>{{ $sales['what_remain'] }}</td>
-                                    <td>
-                                        @if ($sales['is_approved'] == 1)
-                                            معتمدة
-                                        @else
-                                            غير معتمدة
-                                        @endif
-                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -346,7 +348,6 @@
                                 <th>#</th>
                                 <th>اسم الصنف</th>
                                 <th>الوحدة</th>
-                                <th>الكمية</th>
                                 <th>الكمية المرتجعة</th>
                                 <th>سعر الوحدة</th>
                                 <th>الاجمالي</th>
@@ -365,7 +366,6 @@
                                     <td>{{ $detail['item_name'] }}</td>
                                     <td>{{ $detail['unit_name'] }}</td>
                                     <td>{{ $detail['quantity'] }}</td>
-                                    <td>{{ $detail['rejected_quantity'] }}</td>
                                     <td>{{ $detail['unit_price'] }}</td>
                                     <td>{{ $detail['total_price'] }}</td>
                                     <td>{{ $detail['store_name'] }}</td>
@@ -384,7 +384,9 @@
             </div>
 
             <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-                <h4>الحركات على الخزن</h4>
+                <div class="alert alert-danger">
+                    <h4>الحركات على الخزن</h4>
+                </div>
                 @if ($data['report_type'] == 2 && !@empty($transactions[0]))
                     <table class="table table-striped table-borderless mytable">
                         <thead style="background-color:#84B0CA ;" class="text-white">

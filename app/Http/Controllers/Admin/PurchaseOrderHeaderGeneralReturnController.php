@@ -56,7 +56,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                         $sup['supplier_code'] = Supplier::where(['person_id' => $sup['id']])->value('supplier_code');
                     }
                 }
-                
+
                 return view('admin.purchase_order_header_general_return.index', ['data' => $data, 'suppliers' => $suppliers, 'stores' => $stores]);
             }
             catch (Exception $e) {
@@ -239,6 +239,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                     $last_name = Person::where(['id' => $person_id, 'com_code' => $com_code])->value('last_name');
                     $sales_data['supplier_name'] = $first_name . ' ' . $last_name;
                     $sales_data['all_items'] = InvoiceOrderDetail::where('invoice_order_id', $request->id)->count();
+                    $sales_data['tax_percent'] = AdminPanelSetting::where(['com_code' => $com_code])->value('tax_percent_for_invoice');
                     $sales_data['tax_value'] = $sales_data['total_before_discount'] * ($sales_data['tax_percent'] / 100);
                     $sales_data['total_after_tax'] = $sales_data['total_before_discount'] + $sales_data['tax_value'];
 
@@ -302,27 +303,26 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
             $unit_id = $request->unit_id;
 
             $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get(['unit_id', 'retail_unit_id', 'retail_uom_quntToParent', 'item_type'])->first();
-            $unit_name = InvUnit::where(['id' => $unit_id, 'com_code' => $com_code])->value('name');
 
             $item_card_batches = array();
             if (!empty($item_card_data)) {
                 if (empty($store_id)) {
-                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'com_code' => $com_code])->orderBy('production_date', 'DESC')->get();
+                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'com_code' => $com_code])->where('quantity', '>', 0)->orderBy('id', 'DESC')->get();
                 }
                 else {
-                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'store_id' => $store_id, 'com_code' => $com_code])->orderBy('production_date', 'DESC')->get();
+                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'store_id' => $store_id, 'com_code' => $com_code])->where('quantity', '>', 0)->orderBy('id', 'DESC')->get();
                 }
                 /////////////////////////////////////////////
 
                 if ($unit_id == $item_card_data['unit_id'] || $unit_id == null) {
                     if ($item_card_data['item_type'] == 2) {
                         foreach ($item_card_batches as $batch) {
-                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ') ' . $unit_name . ' ' . 'انتاج' . ' (' . $batch['production_date'] . ') ' . 'بسعر' . ' (' . $batch['unit_cost_price'] .')';
+                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ') ' . 'انتاج' . ' (' . $batch['production_date'] . ') ' . 'بسعر' . ' (' . $batch['unit_cost_price'] .')';
                         }
                     }
                     else {
                         foreach ($item_card_batches as $batch) {
-                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ' )' . $unit_name . ' '. 'بسعر' . ' (' . $batch['unit_cost_price']  .')';
+                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ' ) '. 'بسعر' . ' (' . $batch['unit_cost_price']  .')';
                         }
                     }
                 }
@@ -334,7 +334,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                             $batch['quantity'] = $quantity;
                             $price = $batch['unit_cost_price'] / $item_card_data['retail_uom_quntToParent'];
                             $price = round($price, 2);
-                            $batch['all_data'] = 'عدد' . ' (' . $quantity . ') ' . $unit_name . ' ' . 'انتاج' . ' (' . $batch['production_date'] . ') ' . 'بسعر' . ' (' . $price . ')';
+                            $batch['all_data'] = 'عدد' . ' (' . $quantity . ') ' . 'انتاج' . ' (' . $batch['production_date'] . ') ' . 'بسعر' . ' (' . $price . ')';
                         }
                     }
                     else {
@@ -344,13 +344,13 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                             $batch['quantity'] = $quantity;
                             $price = $batch['unit_cost_price'] / $item_card_data['retail_uom_quntToParent'];
                             $price = round($price, 2);
-                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ') ' . $unit_name . ' '. 'بسعر' . ' (' . $price . ')';
+                            $batch['all_data'] = 'عدد' . ' (' . $batch['quantity'] . ') '. 'بسعر' . ' (' . $price . ')';
                         }
                     }
                 }
             }
 
-            return view("admin.purchase_order_header_general_return.get_item_batch", ['item_card_batches' => $item_card_batches]);
+            return view("admin.purchase_order_header_general_return.get_item_batch", ['item_card_batches' => $item_card_batches, 'batch_id' => $request->batch_id]);
         }
     }
 
@@ -360,22 +360,34 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
             $com_code = auth()->user()->com_code;
             $item_code = $request->item_code;
             $unit_id = $request->unit_id;
+            $store_id = $request->store_id;
+            $batch_id = $request->batch_id;
 
             $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get()->first();
 
-            $unit_price = 0;
+            if ($store_id != null)
+                $unit_price = InvItemCardBatch::where(['item_code' => $item_code, 'store_id' => $store_id, 'com_code' => $com_code])->orderBy('id', 'DESC')->value('unit_cost_price');
+            else
+                $unit_price = InvItemCardBatch::where(['item_code' => $item_code, 'com_code' => $com_code])->orderBy('id', 'DESC')->value('unit_cost_price');
+
             if (!empty($item_card_data)) {
                 if ($unit_id == $item_card_data['unit_id'] || $unit_id == null) {
-                    $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('cost_price_in_master');
+                    if ($batch_id != null) {
+                        $unit_price = InvItemCardBatch::where(['id' => $batch_id])->value('unit_cost_price');
+                    }
                 }
                 else if ($unit_id == $item_card_data['retail_unit_id']) {
-                    $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('cost_price_in_retail');
+                    if ($batch_id != null) {
+                        $unit_price = InvItemCardBatch::where(['id' => $batch_id])->value('unit_cost_price');
+                        $unit_price = $unit_price / $item_card_data['retail_uom_quntToParent'];
+                    }
                 }
             }
 
-            return $unit_price;
+            return round($unit_price, 2);
         }
     }
+
 
     public function add_new_item_row(Request $request)
     {
@@ -434,6 +446,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                 $com_code = auth()->user()->com_code;
                 // get supplier name
                 $data['supplier_code'] = PurchaseOrderHeader::where(['invoice_id' => $data['invoice_order_id'], 'com_code' => $com_code])->value('supplier_code');
+                $data['pill_code'] = InvoiceOrderHeader::where(['id' => $data['invoice_order_id'], 'com_code' => $com_code])->value('pill_code');
 
                 if (!empty($data['supplier_code'])) {
                     // get the name from the supplier_code
@@ -462,6 +475,8 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                         $quantity = $data['quantity'] / $item_card_data['retail_uom_quntToParent'];
                     }
 
+                    $quantity = round($quantity, 2);
+
 
                     // before i make insert or update i should get the quantity in all store and current store from the batch
                     $quantity_in_batch_before = InvItemCardBatch::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->sum('quantity');
@@ -469,8 +484,10 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
 
                     // now we check if there is like this batch in the item batches
                     $batch_quantity = InvItemCardBatch::where('id', $data['batch_id'])->value('quantity');
+                    $batch_unit_price = InvItemCardBatch::where('id', $data['batch_id'])->value('unit_cost_price');
 
                     $updateBatch['quantity'] = $batch_quantity - $quantity;
+                    $updateBatch['total_cost_price'] = $updateBatch['quantity'] * $batch_unit_price;
                     $updateBatch['updated_by'] = auth()->user()->id;
                     $updateBatch['updated_at'] = date('Y-m-d H:i:s');
 
@@ -494,7 +511,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
                     $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
                     $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
                     $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                    $insertItemMovement['byan'] = 'صرف نضير مرتجع مشتريات للمورد ' . $data['supplier_name'] . ' فاتورة رقم ' . $data['invoice_order_id'];
+                    $insertItemMovement['byan'] = 'صرف نضير مرتجع مشتريات عام للمورد ' . $data['supplier_name'] . ' فاتورة رقم ' . $data['pill_code'];
                     $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
                     $insertItemMovement['date'] = date('Y-m-d');
                     $insertItemMovement['added_by'] = auth()->user()->id;
@@ -504,7 +521,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
 
 
                     // update the quantity in item_card
-                    $all_quantity = InvItemCardBatch::where(['id' => $data['batch_id']])->sum('quantity');
+                    $all_quantity = InvItemCardBatch::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->sum('quantity');
                     if ($item_card_data['does_has_retailunit'] == 1) {
                         $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
                         $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);
@@ -660,7 +677,7 @@ class PurchaseOrderHeaderGeneralReturnController extends Controller
 
 
                     // update the quantity in item_card
-                    $all_quantity = InvItemCardBatch::where(['id' => $data['batch_id']])->sum('quantity');
+                    $all_quantity = InvItemCardBatch::where(['item_code' => $data['item_code'], 'com_code' => $com_code])->sum('quantity');
                     if ($item_card_data['does_has_retailunit'] == 1) {
                         $all_retail = $all_quantity * $item_card_data['retail_uom_quntToParent'];
                         $all_master = intdiv($all_retail, $item_card_data['retail_uom_quntToParent']);

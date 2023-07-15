@@ -37,8 +37,13 @@
             @if (!@empty($data))
 
                 <tr>
-                    <th>كود الفاتورة</th>
+                    <th>كود الفاتورة الاصل</th>
                     <td>{{ $data->pill_code }}</td>
+                </tr>
+
+                <tr>
+                    <th>كود الفاتورة</th>
+                    <td>{{ $data->child_pill_code }}</td>
                 </tr>
 
                 <tr>
@@ -48,7 +53,7 @@
 
                 <tr>
                     <th>تاريخ الفاتورة</th>
-                    <td>{{ $data->order_date }}</td>
+                    <td>{{ $data->return_date }}</td>
                 </tr>
 
 
@@ -66,21 +71,10 @@
                 </tr>
 
                 <tr>
-                    <th>كود الفاتورة بأصل فاتورة الاصل لدى المورد</th>
-                    <td>{{ $data->pill_number }}</td>
-                </tr>
-
-                <tr>
                     <th>حالة الفاتورة</th>
-                    @if ($data->is_approved == 0)
-                    <td style="background-color: #5ab6a0a1;">
-                        مفتوحة
-                    </td>
-                    @elseif ($data->is_approved == 1)
                     <td style="background-color: #c15670a1;;">
                         معتمدة
                     </td>
-                    @endif
                 </tr>
 
                 <tr>
@@ -164,7 +158,7 @@
                                         <span style="color: green">{{ $detail['production_date'] }}</span> <br/>
                                         <span style="color: red">{{ $detail['expire_date'] }}</span>
                                     </td>
-                                    <td>{{ $detail->rejected_quantity * 1 }}</td>
+                                    <td>{{ $detail->quantity * 1 }}</td>
                                     <td>{{ $detail->unit_name }}</td>
                                     <td>{{ $detail->unit_price * 1 }}</td>
                                     <td>{{ $detail->total_price * 1 }}</td>

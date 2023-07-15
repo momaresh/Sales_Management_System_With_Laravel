@@ -6,22 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Account;
 use App\Models\Customer;
-use App\Models\Delegate;
 use App\Models\InvoiceOrderDetail;
 use App\Models\InvoiceOrderHeader;
 use App\Models\PurchaseOrderHeader;
 use App\Models\SalesOrderHeader;
 use App\Models\Supplier;
-use App\Models\Admin;
-use App\Http\Requests\CreateAccountRequest;
-use App\Http\Requests\UpdateAccountRequest;
 use App\Models\AdminPanelSetting;
 use App\Models\InvItemCard;
 use App\Models\InvUnit;
 use App\Models\MoveType;
+use App\Models\OriginalReturnDetails;
 use App\Models\OriginalReturnInvoice;
 use App\Models\Person;
 use App\Models\Store;
+use App\Models\Treasury;
 use App\Models\TreasuryTransaction;
 use Exception;
 
@@ -60,10 +58,11 @@ class ReportController extends Controller
                             $supplier['all_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'com_code' => $com_code])->sum('total_cost');
                             $supplier['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->count();
                             $supplier['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->sum('total_cost');
-                            $supplier['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->count();
-                            $supplier['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->sum('total_cost');
+                            $supplier['all_original_return_purchase_count'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->count();
+                            $supplier['all_original_return_purchase_cost'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->sum('total_cost');
                             $supplier['all_exchange'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->sum('money');
                             $supplier['all_collection'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->sum('money');
+                            $supplier['all_unpaid'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 3])->sum('money_for_account');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
                             return view('admin.reports.print_supplier_report_A4', ['data' => $supplier, 'systemData' => $systemData]);
                         }
@@ -75,10 +74,11 @@ class ReportController extends Controller
                             $supplier['all_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
                             $supplier['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->count();
                             $supplier['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
-                            $supplier['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->count();
-                            $supplier['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->sum('total_cost');
+                            $supplier['all_original_return_purchase_count'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->count();
+                            $supplier['all_original_return_purchase_cost'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->sum('total_cost');
                             $supplier['all_exchange'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('money');
                             $supplier['all_collection'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('money');
+                            $supplier['all_unpaid'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 3])->sum('money_for_account');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
 
                             $sales_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
@@ -111,21 +111,19 @@ class ReportController extends Controller
                                 }
                             }
 
-                            $sales_original_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
+                            $sales_original_return_pill = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->where('return_date', '>=', $supplier['from_date'])->where('return_date', '<=', $supplier['to_date'])->get();
                             if(!empty($sales_original_return_pill)) {
                                 foreach ($sales_original_return_pill as $pill) {
-                                    $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('store_id');
+                                    $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['invoice_order_id'])->value('store_id');
+                                    $pill['parent_pill_code'] = InvoiceOrderHeader::where('id', $pill['invoice_order_id'])->value('pill_code');
                                     $pill['store_name'] = Store::where('id', $pill['store_id'])->value('name');
-                                    $sales_original_data = OriginalReturnInvoice::where('invoice_order_id', $pill['id'])->get()->first();
-                                    $pill['total_cost'] = $sales_original_data['total_cost'];
-                                    $pill['what_paid'] = $sales_original_data['what_paid'];
-                                    $pill['what_remain'] = $sales_original_data['what_remain'];
-                                    $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                                    $pill['details'] = OriginalReturnDetails::where(['invoice_order_id' => $pill['invoice_order_id'], 'pill_code' => $pill['pill_code']])->get();
                                     if (!empty($pill['details'])) {
-                                        foreach($pill['details'] as $s) {
-                                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
-                                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
-                                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                                        foreach($pill['details'] as $detail) {
+                                            $parent_details = InvoiceOrderDetail::where(['id' => $detail['invoice_order_details_id'], 'com_code' => $com_code])->get()->first();
+                                            $detail['unit_price'] = $parent_details['unit_price'];
+                                            $detail['item_name'] = InvItemCard::where('item_code', $parent_details['item_code'])->value('name');
+                                            $detail['unit_name'] = InvUnit::where(['id' => $parent_details['unit_id'], 'com_code' => $com_code])->value('name');
                                         }
                                     }
                                 }
@@ -194,6 +192,7 @@ class ReportController extends Controller
                             $supplier['all_exchange'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('money');
                             $supplier['all_collection'] = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('money');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
+
                             $exchange_transactions = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'transaction_type' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
                             if (!empty($exchange_transactions)) {
                                 foreach ($exchange_transactions as $tran) {
@@ -208,35 +207,41 @@ class ReportController extends Controller
                                 }
                             }
 
-                            return view('admin.reports.print_supplier_transaction_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'exchange_transactions' => $exchange_transactions, 'collection_transactions' => $collection_transactions]);
+                            $unpaid_transactions = TreasuryTransaction::where(['account_number' => $supplier['account_number'], 'transaction_type' => 3, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
+                            if (!empty($unpaid_transactions)) {
+                                foreach ($unpaid_transactions as $tran) {
+                                    $tran['type_name'] = MoveType::where('id', $tran['move_type'])->value('name');
+                                }
+                            }
+
+                            return view('admin.reports.print_supplier_transaction_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'exchange_transactions' => $exchange_transactions, 'collection_transactions' => $collection_transactions, 'unpaid_transactions' => $unpaid_transactions]);
                         }
                         else if ($supplier['report_type'] == 6) {
                             $supplier['from_date'] = $request->from_date;
                             $supplier['to_date'] = $request->to_date;
                             $all_purchase = PurchaseOrderHeader::where(['supplier_code' => $supplier['supplier_code'], 'com_code' => $com_code])->get('invoice_id');
-                            $supplier['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->count();
-                            $supplier['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->sum('total_cost');
+                            $supplier['all_original_return_purchase_cost'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->sum('total_cost');
+                            $supplier['all_original_return_purchase_count'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->count();
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
 
-                            $sales_original_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 1, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $supplier['from_date'])->where('date', '<=', $supplier['to_date'])->get();
+                            $sales_original_return_pill = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->where('return_date', '>=', $supplier['from_date'])->where('return_date', '<=', $supplier['to_date'])->get();
                             if(!empty($sales_original_return_pill)) {
                                 foreach ($sales_original_return_pill as $pill) {
-                                    $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['id'])->value('store_id');
+                                    $pill['store_id'] = PurchaseOrderHeader::where('invoice_id', $pill['invoice_order_id'])->value('store_id');
+                                    $pill['parent_pill_code'] = InvoiceOrderHeader::where('id', $pill['invoice_order_id'])->value('pill_code');
                                     $pill['store_name'] = Store::where('id', $pill['store_id'])->value('name');
-                                    $sales_original_data = OriginalReturnInvoice::where('invoice_order_id', $pill['id'])->get()->first();
-                                    $pill['total_cost'] = $sales_original_data['total_cost'];
-                                    $pill['what_paid'] = $sales_original_data['what_paid'];
-                                    $pill['what_remain'] = $sales_original_data['what_remain'];
-                                    $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                                    $pill['details'] = OriginalReturnDetails::where(['invoice_order_id' => $pill['invoice_order_id'], 'pill_code' => $pill['pill_code']])->get();
                                     if (!empty($pill['details'])) {
-                                        foreach($pill['details'] as $s) {
-                                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
-                                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
-                                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                                        foreach($pill['details'] as $detail) {
+                                            $parent_details = InvoiceOrderDetail::where(['id' => $detail['invoice_order_details_id'], 'com_code' => $com_code])->get()->first();
+                                            $detail['unit_price'] = $parent_details['unit_price'];
+                                            $detail['item_name'] = InvItemCard::where('item_code', $parent_details['item_code'])->value('name');
+                                            $detail['unit_name'] = InvUnit::where(['id' => $parent_details['unit_id'], 'com_code' => $com_code])->value('name');
                                         }
                                     }
                                 }
                             }
+
                             return view('admin.reports.print_supplier_purchase_original_return_report_A4', ['data' => $supplier, 'systemData' => $systemData, 'sales_original_return_pill' => $sales_original_return_pill]);
                         }
                     }
@@ -288,10 +293,11 @@ class ReportController extends Controller
                             $customer['all_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->sum('total_cost');
                             $customer['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->count();
                             $customer['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->sum('total_cost');
-                            $customer['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->count();
-                            $customer['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->sum('total_cost');
+                            $customer['all_original_return_purchase_cost'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->sum('total_cost');
+                            $customer['all_original_return_purchase_count'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->count();
                             $customer['all_exchange'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->sum('money');
                             $customer['all_collection'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->sum('money');
+                            $customer['all_unpaid'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 3])->sum('money_for_account');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
                             return view('admin.reports.print_customer_report_A4', ['data' => $customer, 'systemData' => $systemData]);
                         }
@@ -303,10 +309,11 @@ class ReportController extends Controller
                             $customer['all_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
                             $customer['all_general_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->count();
                             $customer['all_general_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
-                            $customer['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->count();
-                            $customer['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->sum('total_cost');
+                            $customer['all_original_return_purchase_cost'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->sum('total_cost');
+                            $customer['all_original_return_purchase_count'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->count();
                             $customer['all_exchange'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 1])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('money');
                             $customer['all_collection'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 2])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('money');
+                            $customer['all_unpaid'] = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'com_code' => $com_code, 'transaction_type' => 3])->sum('money_for_account');
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
 
                             $sales_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
@@ -338,19 +345,18 @@ class ReportController extends Controller
                                 }
                             }
 
-                            $sales_original_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
+                            $sales_original_return_pill = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->where('return_date', '>=', $customer['from_date'])->where('return_date', '<=', $customer['to_date'])->get();
                             if(!empty($sales_original_return_pill)) {
                                 foreach ($sales_original_return_pill as $pill) {
-                                    $sales_original_data = OriginalReturnInvoice::where('invoice_order_id', $pill['id'])->get()->first();
-                                    $pill['total_cost'] = $sales_original_data['total_cost'];
-                                    $pill['what_paid'] = $sales_original_data['what_paid'];
-                                    $pill['what_remain'] = $sales_original_data['what_remain'];
-                                    $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                                    $pill['parent_pill_code'] = InvoiceOrderHeader::where('id', $pill['invoice_order_id'])->value('pill_code');
+                                    $pill['details'] = OriginalReturnDetails::where(['invoice_order_id' => $pill['invoice_order_id'], 'pill_code' => $pill['pill_code']])->get();
                                     if (!empty($pill['details'])) {
-                                        foreach($pill['details'] as $s) {
-                                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
-                                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
-                                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                                        foreach($pill['details'] as $detail) {
+                                            $parent_details = InvoiceOrderDetail::where(['id' => $detail['invoice_order_details_id'], 'com_code' => $com_code])->get()->first();
+                                            $detail['unit_price'] = $parent_details['unit_price'];
+                                            $detail['item_name'] = InvItemCard::where('item_code', $parent_details['item_code'])->value('name');
+                                            $detail['unit_name'] = InvUnit::where(['id' => $parent_details['unit_id'], 'com_code' => $com_code])->value('name');
+                                            $detail['store_name'] = Store::where('id', $parent_details['store_id'])->value('name');
                                         }
                                     }
                                 }
@@ -431,29 +437,35 @@ class ReportController extends Controller
                                 }
                             }
 
-                            return view('admin.reports.print_customer_transaction_report_A4', ['data' => $customer, 'systemData' => $systemData, 'exchange_transactions' => $exchange_transactions, 'collection_transactions' => $collection_transactions]);
+                            $unpaid_transactions = TreasuryTransaction::where(['account_number' => $customer['account_number'], 'transaction_type' => 3, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
+                            if (!empty($unpaid_transactions)) {
+                                foreach ($unpaid_transactions as $tran) {
+                                    $tran['type_name'] = MoveType::where('id', $tran['move_type'])->value('name');
+                                }
+                            }
+
+                            return view('admin.reports.print_customer_transaction_report_A4', ['data' => $customer, 'systemData' => $systemData, 'exchange_transactions' => $exchange_transactions, 'collection_transactions' => $collection_transactions, 'unpaid_transactions' => $unpaid_transactions]);
                         }
                         else if ($customer['report_type'] == 6) {
                             $customer['from_date'] = $request->from_date;
                             $customer['to_date'] = $request->to_date;
                             $all_purchase = SalesOrderHeader::where(['customer_code' => $customer['customer_code'], 'com_code' => $com_code])->get('invoice_id');
-                            $customer['all_original_return_purchase_count'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->count();
-                            $customer['all_original_return_purchase_cost'] = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->sum('total_cost');
+                            $customer['all_original_return_purchase_cost'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->sum('total_cost');
+                            $customer['all_original_return_purchase_count'] = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->count();
                             $systemData = AdminPanelSetting::where(['com_code' => $com_code])->get()->first();
 
-                            $sales_original_return_pill = InvoiceOrderHeader::whereIn('id', $all_purchase)->where(['invoice_type' => 2, 'order_type' => 1, 'is_original_return' => 1, 'com_code' => $com_code])->where('date', '>=', $customer['from_date'])->where('date', '<=', $customer['to_date'])->get();
+                            $sales_original_return_pill = OriginalReturnInvoice::whereIn('invoice_order_id', $all_purchase)->where('return_date', '>=', $customer['from_date'])->where('return_date', '<=', $customer['to_date'])->get();
                             if(!empty($sales_original_return_pill)) {
                                 foreach ($sales_original_return_pill as $pill) {
-                                    $sales_original_data = OriginalReturnInvoice::where('invoice_order_id', $pill['id'])->get()->first();
-                                    $pill['total_cost'] = $sales_original_data['total_cost'];
-                                    $pill['what_paid'] = $sales_original_data['what_paid'];
-                                    $pill['what_remain'] = $sales_original_data['what_remain'];
-                                    $pill['details'] = InvoiceOrderDetail::where('invoice_order_id', $pill['id'])->get();
+                                    $pill['parent_pill_code'] = InvoiceOrderHeader::where('id', $pill['invoice_order_id'])->value('pill_code');
+                                    $pill['details'] = OriginalReturnDetails::where(['invoice_order_id' => $pill['invoice_order_id'], 'pill_code' => $pill['pill_code']])->get();
                                     if (!empty($pill['details'])) {
-                                        foreach($pill['details'] as $s) {
-                                            $s['store_name'] = Store::where('id', $s['store_id'])->value('name');
-                                            $s['unit_name'] = InvUnit::where('id', $s['unit_id'])->value('name');
-                                            $s['item_name'] = InvItemCard::where('item_code', $s['item_code'])->value('name');
+                                        foreach($pill['details'] as $detail) {
+                                            $parent_details = InvoiceOrderDetail::where(['id' => $detail['invoice_order_details_id'], 'com_code' => $com_code])->get()->first();
+                                            $detail['unit_price'] = $parent_details['unit_price'];
+                                            $detail['item_name'] = InvItemCard::where('item_code', $parent_details['item_code'])->value('name');
+                                            $detail['unit_name'] = InvUnit::where(['id' => $parent_details['unit_id'], 'com_code' => $com_code])->value('name');
+                                            $detail['store_name'] = Store::where('id', $parent_details['store_id'])->value('name');
                                         }
                                     }
                                 }
@@ -487,17 +499,18 @@ class ReportController extends Controller
 
     public function daily_report(Request $request)
     {
-        if (check_control_menu_role('التقارير', 'كشف حساب عميل' , 'عرض') == true || check_control_menu_role('التقارير', 'كشف حساب عميل' , 'طباعة') == true) {
+        if (check_control_menu_role('التقارير', 'كشف التقارير اليومية' , 'عرض') == true || check_control_menu_role('التقارير', 'كشف التقارير اليومية' , 'طباعة') == true) {
             try {
                 $com_code = auth()->user()->com_code;
                 if ($_POST) {
-                    if (check_control_menu_role('التقارير', 'كشف حساب عميل' , 'طباعة') == true) {
+                    if (check_control_menu_role('التقارير', 'كشف التقارير اليومية' , 'طباعة') == true) {
                         $report_type = $request->report_type;
                         $from_date = $request->from_date;
                         $to_date = $request->to_date;
 
                         $all_exchange_movements = TreasuryTransaction::where(['transaction_type' => 1, 'com_code' => $com_code])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('move_type');
                         $all_collection_movements = TreasuryTransaction::where(['transaction_type' => 2, 'com_code' => $com_code])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('move_type');
+                        $all_unpaid_movements = TreasuryTransaction::where(['transaction_type' => 3, 'com_code' => $com_code])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('move_type');
 
                         if (!empty($all_exchange_movements)) {
                             foreach ($all_exchange_movements as $move) {
@@ -508,7 +521,10 @@ class ReportController extends Controller
                                     $move['accounts'] = TreasuryTransaction::where(['transaction_type' => 1, 'com_code' => $com_code, 'move_type' => $move->move_type])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('account_number');
                                     foreach ($move['accounts'] as $acc) {
                                         $account_type = Account::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('account_type');
-                                        if ($account_type == 2 || $account_type == 3 || $account_type == 4 || $account_type == 5) {
+                                        if ($account_type == 14) {
+                                            $acc->account_name = Treasury::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('name');
+                                        }
+                                        else if ($account_type == 2 || $account_type == 3 || $account_type == 4 || $account_type == 5) {
                                             $name = Person::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->get(['first_name', 'last_name'])->first();
                                             $acc->account_name = $name->first_name . ' ' . $name->last_name;
                                         }
@@ -531,7 +547,10 @@ class ReportController extends Controller
                                     $move['accounts'] = TreasuryTransaction::where(['transaction_type' => 2, 'com_code' => $com_code, 'move_type' => $move->move_type])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('account_number');
                                     foreach ($move['accounts'] as $acc) {
                                         $account_type = Account::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('account_type');
-                                        if ($account_type == 2 || $account_type == 3 || $account_type == 4 || $account_type == 5) {
+                                        if ($account_type == 14) {
+                                            $acc->account_name = Treasury::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('name');
+                                        }
+                                        else if ($account_type == 2 || $account_type == 3 || $account_type == 4 || $account_type == 5) {
                                             $name = Person::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->get(['first_name', 'last_name'])->first();
                                             $acc->account_name = $name->first_name . ' ' . $name->last_name;
                                         }
@@ -545,16 +564,42 @@ class ReportController extends Controller
                             }
                         }
 
+                        if (!empty($all_unpaid_movements)) {
+                            foreach ($all_unpaid_movements as $move) {
+                                $move['total_money'] = TreasuryTransaction::where(['transaction_type' => 3, 'com_code' => $com_code, 'move_type' => $move->move_type])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money_for_account');
+                                $move['name'] = MoveType::where(['id' => $move->move_type])->value('name');
+
+                                if ($report_type == 2) {
+                                    $move['accounts'] = TreasuryTransaction::where(['transaction_type' => 3, 'com_code' => $com_code, 'move_type' => $move->move_type])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->distinct()->get('account_number');
+                                    foreach ($move['accounts'] as $acc) {
+                                        $account_type = Account::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('account_type');
+                                        if ($account_type == 14) {
+                                            $acc->account_name = Treasury::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('name');
+                                        }
+                                        else if ($account_type == 2 || $account_type == 3 || $account_type == 4 || $account_type == 5) {
+                                            $name = Person::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->get(['first_name', 'last_name'])->first();
+                                            $acc->account_name = $name->first_name . ' ' . $name->last_name;
+                                        }
+                                        else {
+                                            $acc->account_name = Account::where(['account_number' => $acc->account_number, 'com_code' => $com_code])->value('notes');
+                                        }
+                                        $acc->account_money = TreasuryTransaction::where(['transaction_type' => 3, 'com_code' => $com_code, 'move_type' => $move->move_type, 'account_number' => $acc->account_number])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money_for_account');
+                                    }
+                                    $move['total_money_with_no_account'] = TreasuryTransaction::where(['transaction_type' => 3, 'com_code' => $com_code, 'move_type' => $move->move_type, 'is_account' => 0])->where('move_date', '>=', $from_date)->where('move_date', '<=', $to_date)->sum('money_for_account');
+                                }
+                            }
+                        }
+
                         $systemData = AdminPanelSetting::where('com_code', $com_code)->get()->first();
 
-                        return view('admin.reports.print_daily_report_A4', ['all_exchange_movements' => $all_exchange_movements, 'all_collection_movements' => $all_collection_movements, 'from_date' => $from_date, 'to_date' => $to_date, 'systemData' => $systemData, 'report_type' => $report_type]);
+                        return view('admin.reports.print_daily_report_A4', ['all_exchange_movements' => $all_exchange_movements, 'all_collection_movements' => $all_collection_movements, 'all_unpaid_movements' => $all_unpaid_movements, 'from_date' => $from_date, 'to_date' => $to_date, 'systemData' => $systemData, 'report_type' => $report_type]);
                     }
                     else {
                         return redirect()->back();
                     }
                 }
                 else {
-                    if (check_control_menu_role('التقارير', 'كشف حساب مورد' , 'عرض') == true) {
+                    if (check_control_menu_role('التقارير', 'كشف التقارير اليومية' , 'عرض') == true) {
                         return view('admin.reports.daily_report');
                     }
                     else {

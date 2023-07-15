@@ -45,6 +45,12 @@ $(document).ready(function() {
     $(document).on('change', '#item_code_add', function(e) {
         var item_code = $(this).val();
         var search_token = $('#token_search').val();
+        if ($('#store_id_add').val() == '') {
+            alert('من فضلك اختر المخزن اولاً');
+            $('#item_code_add').val('');
+            return false;
+        }
+
         if (item_code != "") {
             var search_url = $('#ajax_get_item_unit_route').val();
             jQuery.ajax({
@@ -109,6 +115,7 @@ $(document).ready(function() {
                 data: {
                     item_code:item_code,
                     sales_type:sales_type,
+                    store_id:store_id,
                     '_token':search_token
                 },
                 success: function(data) {
@@ -118,9 +125,12 @@ $(document).ready(function() {
                 error: function() {
                     $("#batch_add").html("");
                     $('.relatied_item_card').hide();
+
                     alert("حدث خطا ما");
                 }
             });
+
+            $("#unit_price_add").prop('readonly', false);
 
         }
         else {
@@ -128,40 +138,17 @@ $(document).ready(function() {
             $('.relatied_item_card').hide();
 
         }
-
-
-
     });
 
     $(document).on('change', '#unit_id_add', function() {
+        reload_batches();
+    })
+
+    $(document).on('change', '#batch_id_add', function() {
         var item_code = $('#item_code_add').val();
         var search_token = $('#token_search').val();
-        var search_url = $('#ajax_get_item_batch_route').val();
-        var store_id = $('#store_id_add').val();
-        var unit_id = $(this).val();
-        jQuery.ajax({
-            url: search_url,
-            type: 'post',
-            dataType: 'html',
-            cache: false,
-            data: {
-                item_code:item_code,
-                store_id:store_id,
-                unit_id:unit_id,
-                '_token':search_token
-            },
-            success: function(data) {
-                $("#batch_add").html(data);
-            },
-            error: function() {
-                $("#batch_add").html("");
-                $('.relatied_item_card').hide();
-
-                alert("حدث خطا ما");
-            }
-        });
-
-
+        var unit_id = $('#unit_id_add').val();
+        var batch_id = $(this).val();
         var search_url = $('#ajax_get_item_price_route').val();
         var sales_type = $('#sales_type').val();
         jQuery.ajax({
@@ -173,6 +160,7 @@ $(document).ready(function() {
                 item_code:item_code,
                 sales_type:sales_type,
                 unit_id:unit_id,
+                batch_id:batch_id,
                 '_token':search_token
             },
             success: function(data) {
@@ -187,7 +175,16 @@ $(document).ready(function() {
             }
         });
 
+        var batch_id_add_return = $('.batch_id_add_return').length;
+        if (batch_id != 'new' && batch_id_add_return != 0) {
+            $("#unit_price_add").prop('readonly', true);
+        }
+        else if (batch_id == 'new') {
+            $("#unit_price_add").prop('readonly', false);
+        }
     })
+
+
 
     $(document).on('change', '#store_id_add', function() {
         var item_code = $('#item_code_add').val();
@@ -208,6 +205,31 @@ $(document).ready(function() {
             },
             success: function(data) {
                 $("#batch_add").html(data);
+            },
+            error: function() {
+                $("#batch_add").html("");
+                $('.relatied_item_card').hide();
+
+                alert("حدث خطا ما");
+            }
+        });
+
+        var search_url = $('#ajax_get_item_price_route').val();
+        var sales_type = $('#sales_type').val();
+        jQuery.ajax({
+            url: search_url,
+            type: 'post',
+            dataType: 'html',
+            cache: false,
+            data: {
+                item_code:item_code,
+                sales_type:sales_type,
+                store_id:store_id,
+                '_token':search_token
+            },
+            success: function(data) {
+                $("#unit_price_add").val(data);
+                calculate_total_price();
             },
             error: function() {
                 $("#batch_add").html("");
@@ -635,6 +657,7 @@ $(document).ready(function() {
             },
             success: function(data) {
                 $("#batch_add").html(data);
+                reload_unit_price();
             },
             error: function() {
                 $("#batch_add").html("");
@@ -699,6 +722,19 @@ $(document).ready(function() {
             }
         }
 
+        if (batch_id == 'new' && batch_id_add_return != 0) {
+            if ($('#production_date_add').val() == '') {
+                alert('من فضلك ادخل تايخ الانتاج');
+                $('#production_date_add').focus();
+                return false;
+            }
+            if ($('#expire_date_add').val() == '') {
+                alert('من فضلك ادخل تايخ الانتهاء');
+                $('#expire_date_add').focus();
+                return false;
+            }
+        }
+
         // in case is return pill
         if (batch_id != 'new') {
             var production_date = $('#batch_id_add').children('option:selected').data('production_date');
@@ -748,7 +784,70 @@ $(document).ready(function() {
 
             }
         });
+
     });
+
+    function reload_unit_price() {
+        var item_code = $('#item_code_add').val();
+        var search_token = $('#token_search').val();
+        var unit_id = $('#unit_id_add').val();
+        var batch_id = $('#batch_id_add').val();
+        var store_id = $('#store_id_add').val();
+        var search_url = $('#ajax_get_item_price_route').val();
+        var sales_type = $('#sales_type').val();
+        jQuery.ajax({
+            url: search_url,
+            type: 'post',
+            dataType: 'html',
+            cache: false,
+            data: {
+                item_code:item_code,
+                sales_type:sales_type,
+                unit_id:unit_id,
+                batch_id:batch_id,
+                store_id:store_id,
+                '_token':search_token
+            },
+            success: function(data) {
+                $("#unit_price_add").val(data);
+                calculate_total_price();
+            },
+            error: function() {
+                $("#batch_add").html("");
+                $('.relatied_item_card').hide();
+
+                alert("حدث خطا ما");
+            }
+        });
+    }
+
+    $(document).on('input', '#production_date_add', function() {
+        if (!valid_date()) {
+            alert('من فضلك تاريخ الانتاج اقل من تاريخ الانتهاء');
+            $('#production_date_add').val('');
+            return false;
+        }
+    });
+
+    $(document).on('input', '#expire_date_add', function() {
+        if (!valid_date()) {
+            alert('من فضلك تاريخ الانتهاء اكبر من تاريخ الانتاج');
+            $('#expire_date_add').val('');
+            return false;
+        }
+    });
+
+    function valid_date() {
+        var production_date = $('#production_date_add').val();
+        var expire_date = $('#expire_date_add').val();
+
+        if (production_date == '')  production_date = new Date(2000, 10, 10);
+        if (expire_date == '')  expire_date = new Date(3000, 10, 10);
+
+        if (Date.parse(production_date) < Date.parse(expire_date)) return true;
+        else return false;
+    }
+
 
     $(document).on('mouseenter', '#add_to_detail_active', function() {
         reload_batches();

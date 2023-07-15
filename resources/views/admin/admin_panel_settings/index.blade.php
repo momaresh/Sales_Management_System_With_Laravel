@@ -8,7 +8,7 @@
 
 
 @section('title')
-    Panel settings
+    الضبط العام
 @endsection
 
 @section('content')
@@ -106,6 +106,26 @@
                     <tr>
                         <th>صيغة كود الموظفين</th>
                         <td>{{ $data->employee_first_code }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>نسبة البيع على الصنف في حالة البيع جملة</th>
+                        <td>{{ $data->commission_for_group_sales }} %</td>
+                    </tr>
+
+                    <tr>
+                        <th>نسبة البيع على الصنف في حالة البيع نص جملة</th>
+                        <td>{{ $data->commission_for_half_group_sales }} %</td>
+                    </tr>
+
+                    <tr>
+                        <th>نسبة البيع على الصنف في حالة البيع قطاعي</th>
+                        <td>{{ $data->commission_for_one_sales }} %</td>
+                    </tr>
+
+                    <tr>
+                        <th>نسبة الضريبة على الفواتير</th>
+                        <td>{{ $data->tax_percent_for_invoice }} %</td>
                     </tr>
 
                     <tr>

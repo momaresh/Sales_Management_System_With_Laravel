@@ -22,12 +22,9 @@ $(function() {
             var name = $('#unit_id option:selected').text();
 
             $('.parent_unit_name').text(name);
-            $('.relatied_parent_counter').show();
         }
         else {
             $('.parent_unit_name').text('اختر وحدة القياس الجملة');
-            $('.relatied_parent_counter').hide();
-
         }
     });
 
@@ -88,54 +85,6 @@ $(function() {
                 $('#retail_uom_quntToParent').focus();
                 return false;
             }
-            if ($('#price_per_one_in_retail_unit').val() == "") {
-                alert('من فضلك ادخل السعر بالحبة  للتجزئة');
-                $('#price_per_one_in_retail_unit').focus();
-                return false;
-            }
-
-            if ($('#price_per_half_group_in_retail_unit').val() == "") {
-                alert('من فضلك ادخل السعر لنص جملة  للتجزئة');
-                $('#price_per_half_group_in_retail_unit').focus();
-                return false;
-            }
-
-            if ($('#price_per_group_in_retail_unit').val() == "") {
-                alert('من فضلك ادخل السعر  بالجملة  للتجزئة');
-                $('#price_per_group_in_retail_unit').focus();
-                return false;
-            }
-
-            if ($('#cost_price_in_retail').val() == "") {
-                alert('من فضلك ادخل سعر تكلفة الشراء للتجزئة');
-                $('#cost_price_in_retail').focus();
-                return false;
-            }
-
-        }
-
-        if ($('#price_per_one_in_master_unit').val() == "") {
-            alert('من فضلك ادخل السعر بالحبة  للوحدة الاب');
-            $('#price_per_one_in_master_unit').focus();
-            return false;
-        }
-
-        if ($('#price_per_half_group_in_master_unit').val() == "") {
-            alert('من فضلك ادخل السعر لنص جملة  للوحدة الاب');
-            $('#price_per_half_group_in_master_unit').focus();
-            return false;
-        }
-
-        if ($('#price_per_group_in_master_unit').val() == "") {
-            alert('من فضلك ادخل السعر  بالجملة  للوحدة الاب');
-            $('#price_per_group_in_master_unit').focus();
-            return false;
-        }
-
-        if ($('#cost_price_in_master').val() == "") {
-            alert('من فضلك ادخل سعر تكلفة الشراء للاب');
-            $('#cost_price_in_master').focus();
-            return false;
         }
 
         if ($('#has_fixced_price').val() == "") {

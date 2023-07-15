@@ -163,7 +163,7 @@
                     <div class="col-md-3">
                         <div class="form-group">
                             <label>نسبة الضريبة</label>
-                            <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="tax-percent" class="form-control" name="tax_percent" value="{{ $sales_data->tax_percent }}">
+                            <input readonly type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="tax-percent" class="form-control" name="tax_percent" value="{{ $sales_data->tax_percent }}">
                         </div>
                     </div>
 

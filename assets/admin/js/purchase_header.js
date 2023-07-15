@@ -187,6 +187,23 @@ $(document).ready(function() {
                 alert('انت لا تمتلك شفت حالياً');
             }
         });
+
+                var total_before_discount = $('#total-before-discount').val();
+        if (total_before_discount == '') {
+            total_before_discount = 0;
+        }
+        total_before_discount = parseFloat(total_before_discount);
+
+        var tax_percent = $('#tax-percent').val();
+        if (tax_percent == '') {
+            tax_percent = 0;
+        }
+        tax_percent = parseFloat(tax_percent);
+
+        var tax_value = total_before_discount * (tax_percent / 100);
+        $('#tax-value').val(tax_value);
+        total_after_tax = total_before_discount + tax_value;
+        $('#total-after-tax').val(total_after_tax);
     });
 
     // هذا يقوم بعملية التعديل والحفظ للبيانات تلقائيا باستخدام الاجاكس ويقوم بعمل تحقق من ان جميع البيانات الازمة مدخلة

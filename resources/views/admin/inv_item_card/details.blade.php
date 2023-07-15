@@ -94,55 +94,6 @@
                 </tr>
 
                 <tr>
-                    <th> سعر القطاعي بوحدة ({{ $data->unit_name }}) </th>
-                    <th> سعر النص جملة بوحدة ({{ $data->unit_name }}) </th>
-                    <th> سعر الجملة بوحدة ({{ $data->unit_name }}) </th>
-                </tr>
-
-                <tr>
-                    <td>{{ $data->price_per_one_in_master_unit }}</td>
-                    <td>{{ $data->price_per_half_group_in_master_unit }}</td>
-                    <td>{{ $data->price_per_group_in_master_unit }}</td>
-                </tr>
-
-                @if ($data->does_has_retailunit == 1)
-                <tr>
-                    <th> سعر القطاعي بوحدة ({{ $data->retail_unit_name }}) </th>
-                    <th> سعر النص جملة بوحدة ({{ $data->retail_unit_name }}) </th>
-                    <th> سعر الجملة بوحدة ({{ $data->retail_unit_name }}) </th>
-                </tr>
-
-                <tr>
-                    <td>{{ $data->price_per_one_in_retail_unit }}</td>
-                    <td>{{ $data->price_per_half_group_in_retail_unit }}</td>
-                    <td>{{ $data->price_per_group_in_retail_unit }}</td>
-                </tr>
-                @endif
-
-
-                <tr>
-                    <th> سعر تكلفة الشراء لوحدة ({{ $data->unit_name }}) </th>
-                    @if ($data->does_has_retailunit == 1)
-                        <th> سعر تكلفة الشراء لوحدة ({{ $data->retail_unit_name }}) </th>
-                    @endif
-                    <th>هل للصنف سعر ثابت</th>
-                </tr>
-
-                <tr>
-                    <td>{{ $data->cost_price_in_master }}</td>
-                    @if ($data->does_has_retailunit == 1)
-                        <td>{{ $data->cost_price_in_retail }}</td>
-                    @endif
-                    <td>
-                        @if ($data->has_fixed_price == 1)
-                            نعم
-                        @else
-                            لا
-                        @endif
-                    </td>
-                </tr>
-
-                <tr>
                     <th>كل الكمية بوحدة ({{ $data->unit_name }})</th>
                     @if ($data->does_has_retailunit == 1)
                         <th>المتبقي من ({{ $data->unit_name }})</th>
@@ -157,7 +108,6 @@
                         <td>{{ $data->all_quantity_with_retail_unit }}</td>
                     @endif
                 </tr>
-
 
                 <tr>
                     <th>حالة الصنف</th>
@@ -203,13 +153,21 @@
                             لا يوجد اي تحديث
                         @endif
                     </td>
+                </tr>
 
-                    <tr>
-                        <th>الصورة</th>
-                    </tr>
-                    <tr>
-                        <td><img id="uploadedimg" src="{{ asset('assets/admin/uploads/item_card_images/'.$data->item_img) }}" alt="uploaded img" style="width: 300px; width: 300px;" ></td>
-                    </tr>
+                <tr>
+                    <th>هل للصنف سعر ثابت</th>
+                    <th>الصورة</th>
+                </tr>
+                <tr>
+                    <td>
+                        @if ($data->has_fixed_price == 1)
+                        نعم
+                        @else
+                        لا
+                        @endif
+                    </td>
+                    <td><img id="uploadedimg" src="{{ asset('assets/admin/uploads/item_card_images/'.$data->item_img) }}" alt="uploaded img" style="width: 300px; width: 300px;" ></td>
                 </tr>
 
             @else

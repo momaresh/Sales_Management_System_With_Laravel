@@ -20,7 +20,7 @@ class ItemInStoreController extends Controller
         if (check_control_menu_role('الحركات المخزنية', 'الاصناف في المخازن' , 'عرض') == true) {
             try {
                 $com_code = auth()->user()->com_code;
-                $data = InvItemCardBatch::where(['com_code' => $com_code])->paginate(PAGINATION_COUNT);
+                $data = InvItemCardBatch::where(['com_code' => $com_code])->orderBy('id', 'desc')->paginate(PAGINATION_COUNT);
                 if (!empty($data)) {
                     foreach ($data as $d) {
                         $d['store_name'] = Store::where('id', $d['store_id'])->value('name');
@@ -110,7 +110,7 @@ class ItemInStoreController extends Controller
             }
 
             $com_code = auth()->user()->com_code;
-            $data = InvItemCardBatch::where($filed1, $operator1, $value1)->where($filed2, $operator2, $value2)->where($filed3, $operator3, $value3)->where($filed4, $operator4, $value4)->where($filed5, $operator5, $value5)->where(['com_code' => $com_code])->paginate(PAGINATION_COUNT);
+            $data = InvItemCardBatch::where($filed1, $operator1, $value1)->where($filed2, $operator2, $value2)->where($filed3, $operator3, $value3)->where($filed4, $operator4, $value4)->where($filed5, $operator5, $value5)->where(['com_code' => $com_code])->orderBy('id', 'desc')->paginate(PAGINATION_COUNT);
             if (!empty($data)) {
                 foreach ($data as $d) {
                     $d['store_name'] = Store::where('id', $d['store_id'])->value('name');

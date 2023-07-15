@@ -58,7 +58,10 @@
     <body style="padding-top: 10px;font-family: tahoma;">
         <table class="mainheadtable" cellspacing="0" dir="rtl">
             <tr>
-                <td style="padding: 5px; text-align: right;font-weight: bold;">  فاتورة مرتجع مبيعات رقم  <span>/ {{ $data['pill_code'] }}</span></td>
+                <td style="padding: 5px; text-align: right;font-weight: bold;"> رقم الفاتورة الاصل <span>/ {{ $data['pill_code'] }}</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 5px; text-align: right;font-weight: bold;"> رقم الفاتورة المرتجع <span>/ {{ $data['child_pill_code'] }}</span></td>
             </tr>
             <tr>
                 <td class="tdhead">كود العميل
@@ -76,13 +79,10 @@
                 <td style="padding: 5px; text-align: right; font-weight: bold;">رقم التيلفون<span>/{{ $data['customer_phone'] }}</span></td>
             </tr>
             <tr>
-                <td style="padding: 5px; text-align: right; font-weight: bold;">تاريخ الفاتورة<span>/{{ $data['order_date'] }}</span></td>
+                <td style="padding: 5px; text-align: right; font-weight: bold;">تاريخ الفاتورة<span>/{{ $data['return_date'] }}</span></td>
             </tr>
             <tr>
                 <td style="padding: 5px; text-align: right; font-weight: bold;">نوع الفاتورة<span>/@if ($data['pill_type'] == 1)كاش @else آجل @endif</span></td>
-            </tr>
-            <tr>
-                <td style="padding: 5px; text-align: right; font-weight: bold;">حالة الفاتورة<span>/@if ($data['is_approved'] == 1) معتمدة @else غير معتمدة @endif</span></td>
             </tr>
         </table>
 
@@ -123,7 +123,7 @@
                             {{ $info->unit_name }}
                         </td>
                         <td>
-                            {{ $info->rejected_quantity * 1 }}
+                            {{ $info->quantity * 1 }}
                         </td>
                         <td>
                             {{ $info->unit_price * 1 }}

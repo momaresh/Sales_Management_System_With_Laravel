@@ -91,7 +91,9 @@
 
 
         <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-            <h4>الحركات الصرفية على الخزن</h4>
+            <div class="alert alert-danger">
+                <h4>الحركات الصرفية للحساب</h4>
+            </div>
             @if ($data['report_type'] == 5 && !@empty($exchange_transactions[0]))
                 <table class="table table-striped table-borderless mytable">
                     <thead style="background-color:#84B0CA ;" class="text-white">
@@ -99,7 +101,7 @@
                             <th scope="col">رقم الايصال</th>
                             <th scope="col">تاريخ الحركة</th>
                             <th scope="col">نوع الحركة</th>
-                            <th scope="col">المبلغ</th>
+                            <th scope="col">المبلغ المصروف</th>
                             <th scope="col">البيان</th>
                         </tr>
                     </thead>
@@ -124,7 +126,9 @@
 
 
         <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
-            <h4>الحركات التحصيلية على الخزن</h4>
+            <div class="alert alert-danger">
+                <h4>الحركات التحصيلية من الحساب</h4>
+            </div>
             @if ($data['report_type'] == 5 && !@empty($collection_transactions[0]))
             <table class="table table-striped table-borderless mytable">
                 <thead style="background-color:#84B0CA ;" class="text-white">
@@ -132,7 +136,7 @@
                         <th scope="col">رقم الايصال</th>
                         <th scope="col">تاريخ الحركة</th>
                         <th scope="col">نوع الحركة</th>
-                        <th scope="col">المبلغ</th>
+                        <th scope="col">المبلغ المحصل</th>
                         <th scope="col">البيان</th>
                     </tr>
                 </thead>
@@ -154,6 +158,41 @@
                 </div>
             @endif
         </div>
+
+        <div class="row my-2 mx-1 justify-content-center m-3" dir="rtl" border="1">
+            <div class="alert alert-danger">
+                <h4>الحركات الآجل</h4>
+            </div>
+            @if ($data['report_type'] == 5 && !@empty($unpaid_transactions[0]))
+            <table class="table table-striped table-borderless mytable">
+                <thead style="background-color:#84B0CA ;" class="text-white">
+                    <tr>
+                        <th scope="col">رقم الايصال</th>
+                        <th scope="col">تاريخ الحركة</th>
+                        <th scope="col">نوع الحركة</th>
+                        <th scope="col">المبلغ للحساب او عليه</th>
+                        <th scope="col">البيان</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($unpaid_transactions as $trans)
+                        <tr>
+                            <td>{{ $trans['last_arrive'] }}</td>
+                            <td>{{ $trans['date'] }}</td>
+                            <td>{{ $trans['type_name'] }}</td>
+                            <td>{{ $trans['money_for_account'] }}</td>
+                            <td>{{ $trans['byan'] }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @else
+                <div class="alert alert-info col-12 text-center">
+                    لا يوجد بيانات
+                </div>
+            @endif
+        </div>
+
 
         <br>
 

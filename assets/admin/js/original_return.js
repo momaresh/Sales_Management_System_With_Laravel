@@ -100,12 +100,12 @@ $(document).ready(function() {
         batch_quantity = parseFloat(batch_quantity);
         if (batch_quantity == '') batch_quantity = 0;
 
-        var quantity = $(this).data('quantity');
-        quantity = parseFloat(quantity);
-        if (quantity == '') quantity = 0;
+        var remain_quantity = $(this).data('remain_quantity');
+        remain_quantity = parseFloat(remain_quantity);
+        if (remain_quantity == '') remain_quantity = 0;
 
-        if (rejected > quantity) {
-            alert('لا تكون الكمية المرتجعة اكبر من الكمية نفسها');
+        if (rejected > remain_quantity) {
+            alert('يجب ان لا تكون الكمية المرتجعة اكبر من الكمية المتبقية');
             $(this).val('0');
             var close_total_price = $(this).closest('tr').find('.total_price').val();
             if (close_total_price != 0) {
@@ -201,12 +201,24 @@ $(document).ready(function() {
 
 
     $(document).on('click', '#approve_pill', function() {
-        if ($('.rejected_quantity').val() == '' || $('.rejected_quantity').val() == 0) {
-            alert('من فضلك ادخل الكمية المرتجعه');
+        var flag = false;
+        $('.rejected_quantity').each(function() {
+            if ($(this).val() != 0 && $(this).val() != '') {
+                flag = true;
+            }
+        })
+        if (!flag) {
+            alert('من فضلك ادخل الكمية المرتجعه ولو لصنف واحد');
             return false;
         }
 
-        if ($('.total_price').val() == '' || $('.total_price').val() == 0) {
+        var flag = false;
+        $('.total_price').each(function() {
+            if ($(this).val() != 0 && $(this).val() != '') {
+                flag = true;
+            }
+        })
+        if (!flag) {
             alert('من فضلك ادخل الاجمالي ');
             return false;
         }

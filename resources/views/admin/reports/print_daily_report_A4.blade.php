@@ -70,7 +70,7 @@
         </div>
 
         <div class="row" dir="rtl" style="margin: auto; width: 98%">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <h4 class="text-center mb-1 alert alert-info" style="padding: 0.5rem 1.25rem">التحصيلات</h4>
                 <table dir="rtl" id="example2" class="table table-bordered table-hover">
                     <tr style="background-color: #007bff; color:white;">
@@ -112,7 +112,7 @@
                 </table>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <h4 class="text-center mb-1 alert alert-info" style="padding: 0.5rem 1.25rem">المصروفات</h4>
 
                 <table dir="rtl" id="example2" class="table table-bordered table-hover">
@@ -122,6 +122,49 @@
                     </tr>
 
                     @foreach ($all_exchange_movements as $move)
+                        <tr>
+                            <td>{{ $move['name'] }}</td>
+                            <td>
+                                <p class="text-center mb-2" style="color:#d61e0a">{{ $move['total_money'] * (-1) }}</p>
+
+                                @if ($report_type == 2)
+                                    <table dir="rtl" id="example2" class="table table-bordered table-hover">
+                                        <tr style="background-color: #81983f; color:white;">
+                                            <th>اسم الحساب</th>
+                                            <th>المبلغ</td>
+                                        </tr>
+
+                                        @foreach ($move['accounts'] as $acc)
+                                            <tr>
+                                                <td>{{ $acc->account_name }}</td>
+                                                <td>{{ $acc->account_money * (-1)}}</td>
+                                            </tr>
+                                        @endforeach
+
+                                        @if ($move['total_money_with_no_account'] != 0)
+                                            <tr>
+                                                <td>بدون حساب</td>
+                                                <td>{{ $move['total_money_with_no_account'] }}</td>
+                                            </tr>
+                                        @endif
+                                    </table>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </table>
+            </div>
+
+            <div class="col-md-4">
+                <h4 class="text-center mb-1 alert alert-info" style="padding: 0.5rem 1.25rem">الآجل</h4>
+
+                <table dir="rtl" id="example2" class="table table-bordered table-hover">
+                    <tr style="background-color: #007bff; color:white;">
+                        <th>نوع الحركة</th>
+                        <th>الاجمالي</td>
+                    </tr>
+
+                    @foreach ($all_unpaid_movements as $move)
                         <tr>
                             <td>{{ $move['name'] }}</td>
                             <td>

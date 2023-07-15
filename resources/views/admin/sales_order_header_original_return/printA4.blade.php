@@ -28,10 +28,7 @@
                 <td style="padding: 5px; text-align: right;font-weight: bold;">رقم التيلفون<span style="margin-right: 10px;">/ {{ $data['customer_phone'];}}</span></td>
             </tr>
             <tr>
-                <td style="padding: 5px; text-align: right;font-weight: bold;">تاريخ الفاتورة<span style="margin-right: 10px;">/ {{ $data['order_date'];}}</span></td>
-            </tr>
-            <tr>
-                <td style="padding: 5px; text-align: right;font-weight: bold;">حالة الفاتورة<span style="margin-right: 10px;">/ @if ($data['is_approved'] == 1) معتمدة @else غير معتمدة @endif</span></td>
+                <td style="padding: 5px; text-align: right;font-weight: bold;">تاريخ الفاتورة<span style="margin-right: 10px;">/ {{ $data['return_date'];}}</span></td>
             </tr>
         </table>
 
@@ -49,11 +46,11 @@
             </tr>
             <tr>
                 <td style="text-align: center;padding: 5px;font-weight: bold;">  <span style=" display: inline-block;
-                    width: 200px;
+                    width: 250px;
                     height: 30px;
                     text-align: center;
                     color: red;
-                    border: 1px solid black; "> رقم : {{ $data['pill_code'] }} </span>
+                    border: 1px solid black; ">رقم الاصل : {{ $data['pill_code'] }} رقم المرتجع: {{ $data['child_pill_code'] }} </span>
                 </td>
             </tr>
             <tr>
@@ -103,7 +100,7 @@
                             {{ $info->unit_name }}
                         </td>
                         <td>
-                            {{ $info->rejected_quantity * 1 }}
+                            {{ $info->quantity * 1 }}
                         </td>
                         <td>
                             {{ $info->unit_price * 1 }}

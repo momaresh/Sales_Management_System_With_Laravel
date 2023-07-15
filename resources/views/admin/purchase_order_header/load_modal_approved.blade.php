@@ -25,7 +25,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label>نسبة الضريبة</label>
-                    <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="tax-percent" class="form-control" name="tax_percent" value="0">
+                    <input type="text" readonly oninput="this.value=this.value.replace(/[^0-9]/g,'')" id="tax-percent" class="form-control" name="tax_percent" value="{{ $data->tax_percent}}">
                 </div>
             </div>
 
@@ -33,14 +33,14 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label>قيمة الضريبة</label>
-                    <input type="text" id="tax-value" class="form-control" name="tax_value" disabled value="">
+                    <input type="text" id="tax-value" class="form-control" name="tax_value" readonly value="{{ $data->tax_value }}">
                 </div>
             </div>
 
             <div class="col-md-4">
                 <div class="form-group">
                     <label>الاجمالي بعد الضريبة</label>
-                    <input type="text" id="total-after-tax" class="form-control" disabled value="">
+                    <input type="text" id="total-after-tax" class="form-control" readonly value="{{ $data->total_after_tax }}">
                 </div>
             </div>
 

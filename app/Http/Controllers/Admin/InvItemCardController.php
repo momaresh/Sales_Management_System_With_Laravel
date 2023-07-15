@@ -146,14 +146,6 @@ class InvItemCardController extends Controller
                 $inserted['unit_id'] = $request->unit_id;
                 $inserted['retail_unit_id'] = $request->retail_unit_id;
                 $inserted['retail_uom_quntToParent'] = $request->retail_uom_quntToParent;
-                $inserted['price_per_one_in_master_unit'] = $request->price_per_one_in_master_unit;
-                $inserted['price_per_half_group_in_master_unit'] = $request->price_per_half_group_in_master_unit;
-                $inserted['price_per_group_in_master_unit'] = $request->price_per_group_in_master_unit;
-                $inserted['price_per_one_in_retail_unit'] = $request->price_per_one_in_retail_unit;
-                $inserted['price_per_half_group_in_retail_unit'] = $request->price_per_half_group_in_retail_unit;
-                $inserted['price_per_group_in_retail_unit'] = $request->price_per_group_in_retail_unit;
-                $inserted['cost_price_in_master'] = $request->cost_price_in_master;
-                $inserted['cost_price_in_retail'] = $request->cost_price_in_retail;
                 $inserted['has_fixed_price'] = $request->has_fixed_price;
                 $inserted['active'] = $request->active;
                 $inserted['added_by'] = auth()->user()->id;
@@ -239,10 +231,6 @@ class InvItemCardController extends Controller
                     $updated['parent_inv_itemcard_id'] = $request->parent_inv_itemcard_id;
                 }
                 $updated['unit_id'] = $request->unit_id;
-                $updated['price_per_one_in_master_unit'] = $request->price_per_one_in_master_unit;
-                $updated['price_per_half_group_in_master_unit'] = $request->price_per_half_group_in_master_unit;
-                $updated['price_per_group_in_master_unit'] = $request->price_per_group_in_master_unit;
-                $updated['cost_price_in_master'] = $request->cost_price_in_master;
                 $updated['has_fixed_price'] = $request->has_fixed_price;
                 $updated['active'] = $request->active;
                 $updated['updated_by'] = auth()->user()->id;
@@ -255,10 +243,6 @@ class InvItemCardController extends Controller
                 if ($request->does_has_retailunit != 0 || $request->does_has_retailunit != '') {
                     $updated['retail_unit_id'] = $request->retail_unit_id;
                     $updated['retail_uom_quntToParent'] = $request->retail_uom_quntToParent;
-                    $updated['price_per_one_in_retail_unit'] = $request->price_per_one_in_retail_unit;
-                    $updated['price_per_half_group_in_retail_unit'] = $request->price_per_half_group_in_retail_unit;
-                    $updated['price_per_group_in_retail_unit'] = $request->price_per_group_in_retail_unit;
-                    $updated['cost_price_in_retail'] = $request->cost_price_in_retail;
                 }
 
                 if (!empty($request->item_img)) {

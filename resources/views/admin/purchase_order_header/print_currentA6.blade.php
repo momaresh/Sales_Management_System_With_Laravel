@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title> طباعة فاتورة مرتجع مشتريات بالفاتورة الاصل </title>
+        <title>طباعة فاتورة مشتريات مرتجعة</title>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
         <style>
             td{font-size: 15px !important;text-align: center;}
@@ -58,10 +58,7 @@
     <body style="padding-top: 10px;font-family: tahoma;">
         <table class="mainheadtable" cellspacing="0" dir="rtl">
             <tr>
-                <td style="padding: 5px; text-align: right;font-weight: bold;"> رقم الفاتورة الاصل <span>/ {{ $data['pill_code'] }}</span></td>
-            </tr>
-            <tr>
-                <td style="padding: 5px; text-align: right;font-weight: bold;"> رقم الفاتورة المرتجع <span>/ {{ $data['child_pill_code'] }}</span></td>
+                <td style="padding: 5px; text-align: right;font-weight: bold;">  فاتورة مشتريات رقم  <span>/ {{ $data['pill_code'] }}</span></td>
             </tr>
             <tr>
                 <td class="tdhead">كود المورد
@@ -79,10 +76,13 @@
                 <td style="padding: 5px; text-align: right; font-weight: bold;">رقم التيلفون<span>/{{ $data['supplier_phone'] }}</span></td>
             </tr>
             <tr>
-                <td style="padding: 5px; text-align: right; font-weight: bold;">تاريخ الفاتورة<span>/{{ $data['return_date'] }}</span></td>
+                <td style="padding: 5px; text-align: right; font-weight: bold;">تاريخ الفاتورة<span>/{{ $data['order_date'] }}</span></td>
             </tr>
             <tr>
                 <td style="padding: 5px; text-align: right; font-weight: bold;">نوع الفاتورة<span>/@if ($data['pill_type'] == 1)كاش @else آجل @endif</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 5px; text-align: right; font-weight: bold;">حالة الفاتورة<span>/@if ($data['is_approved'] == 1) معتمدة @else غير معتمدة @endif</span></td>
             </tr>
             <tr>
                 <td style="padding: 5px; text-align: right; font-weight: bold;">المخزن<span>/ {{ $data['store_name'] }}</span></td>
@@ -104,7 +104,7 @@
                 <td style="font-weight: bold;">م</td>
                 <td  style="font-weight: bold;">الصنف</td>
                 <td  style="font-weight: bold;">الوحدة </td>
-                <td style="font-weight: bold;">الكمية المرتجعة</td>
+                <td style="font-weight: bold;">الكمية</td>
                 <td  style="font-weight: bold;">السعر</td>
                 <td style="font-weight: bold;">اجمالي</td>
             </tr>
@@ -134,7 +134,7 @@
                     <?php $i++;?>
                 @endforeach
                 <tr>
-                    <td colspan="8" style="color:brown !important"><br>  اجمالي الاصناف
+                    <td colspan="8" style="color:brown !important"><br>  اجمالي الفاتورة
                         {{ $data['total_cost'] * 1 }} جنيه فقط لاغير
                     </td>
                 </tr>
@@ -142,19 +142,6 @@
         </table>
 
         <br>
-
-        <table  dir="rtl" border="1" style="width: 98%; margin: 0 auto;"  id="example2" cellpadding="1" cellspacing="0"  aria-describedby="example2_info" >
-            <tr >
-                <td style="font-weight: bold;">نسبة الضريبة</td>
-                <td style="font-weight: bold;">خصم</td>
-                <td style="font-weight: bold;">صافي الفاتورة </td>
-            </tr>
-            <tr>
-                <td>{{ $data['tax_percent'] * (1) }}</td>
-                <td>{{ $data['discount_percent'] * (1) }}</td>
-                <td>{{ $data['total_cost'] * (1) }}</td>
-            </tr>
-        </table>
         <p style="position: fixed;
             padding: 10px 10px 0px 10px;
             bottom: 0;

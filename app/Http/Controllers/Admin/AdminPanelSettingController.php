@@ -79,6 +79,10 @@ class AdminPanelSettingController extends Controller
             $updated['supplier_first_code'] = $request->supplier_first_code;
             $updated['delegate_first_code'] = $request->delegate_first_code;
             $updated['employee_first_code'] = $request->employee_first_code;
+            $updated['commission_for_group_sales'] = $request->commission_for_group_sales;
+            $updated['commission_for_half_group_sales'] = $request->commission_for_half_group_sales;
+            $updated['commission_for_one_sales'] = $request->commission_for_one_sales;
+            $updated['tax_percent_for_invoice'] = $request->tax_percent_for_invoice;
             $updated['active'] = $request->active;
             $updated['updated_by'] = auth()->user()->id;
             $updated['updated_at'] = date('Y-m-d H:i:s');

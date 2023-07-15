@@ -267,6 +267,7 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                         $sales_data['customer_code'] = SalesOrderHeader::where('invoice_id', $request->id)->value('customer_code');
                         $sales_data['delegate_code'] = SalesOrderHeader::where('invoice_id', $request->id)->value('delegate_code');
                         $sales_data['all_items'] = InvoiceOrderDetail::where('invoice_order_id', $request->id)->count();
+                        $sales_data['tax_percent'] = AdminPanelSetting::where(['com_code' => $com_code])->value('tax_percent_for_invoice');
                         $sales_data['tax_value'] = $sales_data['total_before_discount'] * ($sales_data['tax_percent'] / 100);
                         $sales_data['total_after_tax'] = $sales_data['total_before_discount'] + $sales_data['tax_value'];
 
@@ -350,10 +351,10 @@ class SalesOrderHeaderGeneralReturnController extends Controller
             $item_card_batches = array();
             if (!empty($item_card_data)) {
                 if (empty($store_id)) {
-                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'com_code' => $com_code])->orderBy('production_date', 'DESC')->get();
+                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'com_code' => $com_code])->orderBy('id', 'DESC')->get();
                 }
                 else {
-                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'store_id' => $store_id, 'com_code' => $com_code])->orderBy('production_date', 'DESC')->get();
+                    $item_card_batches = InvItemCardBatch::where(['item_code' => $item_code, 'store_id' => $store_id, 'com_code' => $com_code])->orderBy('id', 'DESC')->get();
                 }
                 /////////////////////////////////////////////
 
@@ -404,37 +405,55 @@ class SalesOrderHeaderGeneralReturnController extends Controller
             $item_code = $request->item_code;
             $sales_type = $request->sales_type;
             $unit_id = $request->unit_id;
+            $store_id = $request->store_id;
+            $batch_id = $request->batch_id;
 
             $item_card_data = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->get()->first();
 
-            $unit_price = 0;
+            $commission_in_group = AdminPanelSetting::where(['com_code' => $com_code])->value('commission_for_group_sales');
+            $commission_in_half_group = AdminPanelSetting::where(['com_code' => $com_code])->value('commission_for_half_group_sales');
+            $commission_in_one = AdminPanelSetting::where(['com_code' => $com_code])->value('commission_for_one_sales');
+
+            if ($store_id != null)
+                $unit_price = InvItemCardBatch::where(['item_code' => $item_code, 'store_id' => $store_id, 'com_code' => $com_code])->orderBy('id', 'DESC')->value('unit_cost_price');
+            else
+                $unit_price = InvItemCardBatch::where(['item_code' => $item_code, 'com_code' => $com_code])->orderBy('id', 'DESC')->value('unit_cost_price');
+
             if (!empty($item_card_data)) {
                 if ($unit_id == $item_card_data['unit_id'] || $unit_id == null) {
+                    if ($batch_id != null) {
+                        $unit_price = InvItemCardBatch::where(['id' => $batch_id])->value('unit_cost_price');
+                    }
+
                     if ($sales_type == '1') {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_group_in_master_unit');
+                        $unit_price = $unit_price + ($unit_price * $commission_in_group);
                     }
                     else if ($sales_type == '2') {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_half_group_in_master_unit');
+                        $unit_price = $unit_price + ($unit_price * $commission_in_half_group);
                     }
                     else if ($sales_type == '3') {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_master_unit');
+                        $unit_price = $unit_price + ($unit_price * $commission_in_one);
                     }
                     else {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_master_unit');
+                        $unit_price = $unit_price + ($unit_price * $commission_in_one);
                     }
                 }
                 else if ($unit_id == $item_card_data['retail_unit_id']) {
+                    if ($batch_id != null) {
+                        $unit_price = InvItemCardBatch::where(['id' => $batch_id])->value('unit_cost_price');
+                        $unit_price = $unit_price / $item_card_data['retail_uom_quntToParent'];
+                    }
                     if ($sales_type == 1) {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_group_in_retail_unit');
+                        $unit_price = $unit_price + ($unit_price * $commission_in_group);
                     }
                     else if ($sales_type == 2) {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_half_group_in_retail_unit');
+                        $unit_price = $unit_price + ($unit_price * $commission_in_half_group);
                     }
                     else if ($sales_type == 3) {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_retail_unit');
+                        $unit_price = $unit_price + ($unit_price * $commission_in_one);
                     }
                     else {
-                        $unit_price = InvItemCard::where(['item_code' => $item_code, 'com_code' => $com_code])->value('price_per_one_in_retail_unit');
+                        $unit_price = $unit_price + ($unit_price * $commission_in_one);
                     }
                 }
             }
@@ -676,6 +695,7 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                 $data['customer_code'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('customer_code');
                 $data['delegate_code'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('delegate_code');
                 $data['sales_type'] = SalesOrderHeader::where(['invoice_id' => $auto_serial, 'com_code' => $com_code])->value('sales_type');
+                $data['pill_code'] = InvoiceOrderHeader::where(['id' => $auto_serial, 'com_code' => $com_code])->value('pill_code');
                 $data['total_cost'] = $request->total_cost;
 
                 if (empty($data)) {
@@ -979,6 +999,20 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                                 // if master we make the quantity is the same quantity
                                 $quantity = 1;
                                 $unit_price = 1;
+                                $commission_in_group = AdminPanelSetting::where(['com_code' => $com_code])->value('commission_for_group_sales');
+                                $commission_in_half_group = AdminPanelSetting::where(['com_code' => $com_code])->value('commission_for_half_group_sales');
+                                $commission_in_one = AdminPanelSetting::where(['com_code' => $com_code])->value('commission_for_one_sales');
+
+                                if ($data['sales_type'] == '1') {
+                                    $unit_price = $unit_price - ($unit_price * $commission_in_group);
+                                }
+                                else if ($data['sales_type'] == '2') {
+                                    $unit_price = $unit_price - ($unit_price * $commission_in_half_group);
+                                }
+                                else if ($data['sales_type'] == '3') {
+                                    $unit_price = $unit_price - ($unit_price * $commission_in_one);
+                                }
+
                                 if ($item['unit_id'] == $item_card_data['unit_id']) {
                                     $quantity = $item['quantity'];
                                     $unit_price = $item['unit_price'];
@@ -991,8 +1025,6 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                                     // by multiple it with retail_uom_quntToParent
                                     $unit_price =  $item['unit_price'] * $item_card_data['retail_uom_quntToParent'];
                                 }
-
-
 
                                 $update_item_batch_id = array();
                                 $update_item_batch_id['batch_id'] = $item['batch_id'];
@@ -1098,40 +1130,13 @@ class SalesOrderHeaderGeneralReturnController extends Controller
                                 $insertItemMovement['quantity_after_movement'] = $quantity_in_batch_after . ' ' . $parent_unit_name;
                                 $insertItemMovement['quantity_before_movement_in_current_store'] = $quantity_in_batch_current_store_before . ' ' . $parent_unit_name;
                                 $insertItemMovement['quantity_after_movement_in_current_store'] = $quantity_in_batch_current_store_after . ' ' . $parent_unit_name;
-                                $insertItemMovement['byan'] = 'صرف نضير مرتجع مبيعات للعميل ' . $data['customer_name'] . ' فاتورة رقم ' . $auto_serial;
+                                $insertItemMovement['byan'] = 'صرف نضير مرتجع مبيعات للعميل ' . $data['customer_name'] . ' فاتورة رقم ' . $data['pill_code'];
                                 $insertItemMovement['created_at'] = date('Y-m-d H:i:s');
                                 $insertItemMovement['date'] = date('Y-m-d');
                                 $insertItemMovement['added_by'] = auth()->user()->id;
                                 $insertItemMovement['com_code'] = $com_code;
 
                                 InvItemCardMovement::create($insertItemMovement);
-
-
-                                if ($item['batch_id'] == null) {
-                                    // update the cost price in the item card
-                                    // if has retail unit we will update the cost_price_in_master and cost_price_in_retail
-                                    if ($item['unit_id'] == $item_card_data['unit_id']) {
-                                        $update_item_card_price_quantity['cost_price_in_master'] = $item['unit_price'];
-                                        if ($item_card_data['does_has_retailunit'] == 1) {
-                                            $update_item_card_price_quantity['cost_price_in_retail'] = $item['unit_price'] / $item_card_data['retail_uom_quntToParent'];
-                                            $update_item_card_price_quantity['price_per_one_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.1);
-                                            $update_item_card_price_quantity['price_per_half_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.07);
-                                            $update_item_card_price_quantity['price_per_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.05);
-                                        }
-                                    }
-                                    else if ($item['unit_id'] == $item_card_data['retail_unit_id']) {
-                                        $update_item_card_price_quantity['cost_price_in_retail'] = $item['unit_price'];
-                                        $update_item_card_price_quantity['cost_price_in_master'] = $item['unit_price'] * $item_card_data['retail_uom_quntToParent'];
-                                        $update_item_card_price_quantity['price_per_one_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.1);
-                                        $update_item_card_price_quantity['price_per_half_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.07);
-                                        $update_item_card_price_quantity['price_per_group_in_retail_unit'] = $update_item_card_price_quantity['cost_price_in_retail'] + ($update_item_card_price_quantity['cost_price_in_retail'] * 0.05);
-                                    }
-
-                                    // updates on prices that can be change if you don't like in the item card model it self
-                                    $update_item_card_price_quantity['price_per_one_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.1);
-                                    $update_item_card_price_quantity['price_per_half_group_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.07);
-                                    $update_item_card_price_quantity['price_per_group_in_master_unit'] = $update_item_card_price_quantity['cost_price_in_master'] + ($update_item_card_price_quantity['cost_price_in_master'] * 0.05);
-                                }
 
                                 // update the quantity in item_card
                                 $all_quantity = InvItemCardBatch::where(['item_code' => $item['item_code'], 'com_code' => $com_code])->sum('quantity');
